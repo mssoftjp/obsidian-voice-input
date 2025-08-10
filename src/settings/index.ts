@@ -1,0 +1,1 @@
+export { VoiceInputSettingTab } from './VoiceInputSettingTab';

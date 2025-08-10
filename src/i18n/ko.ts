@@ -1,0 +1,200 @@
+/**
+ * Korean translation resource
+ */
+import { TranslationResource } from '../interfaces';
+
+export const ko: TranslationResource = {
+    error: {
+        api: {
+            noKey: 'OpenAI API 키가 설정되지 않았습니다',
+            invalidKey: '유효하지 않은 API 키 형식입니다',
+            invalidKeyDetail: '유효하지 않은 API 키 형식입니다. sk-로 시작하는 API 키를 입력해주세요.',
+            connectionFailed: 'API 연결에 실패했습니다',
+            quotaExceeded: 'API 사용량 한도에 도달했습니다',
+            rateLimited: 'API 요청 제한에 도달했습니다. 잠시 후 다시 시도해주세요.',
+            unauthorized: 'API 키가 유효하지 않습니다. 설정을 확인해주세요.'
+        },
+        audio: {
+            micPermission: '마이크 액세스 권한이 필요합니다',
+            micNotFound: '마이크를 찾을 수 없습니다',
+            micInitFailed: '마이크 초기화에 실패했습니다',
+            recordingFailed: '녹음 시작에 실패했습니다',
+            audioContextFailed: '오디오 컨텍스트 생성에 실패했습니다'
+        },
+        transcription: {
+            failed: '음성 텍스트 변환에 실패했습니다',
+            emptyResult: '음성 텍스트 변환 결과가 비어있습니다',
+            serviceInitFailed: '서비스 초기화에 실패했습니다'
+        },
+        file: {
+            createFailed: '파일 생성에 실패했습니다',
+            notFound: '파일을 찾을 수 없습니다',
+            wasmLoadFailed: 'WebAssembly 모듈 로드에 실패했습니다'
+        },
+        general: {
+            unknown: '알 수 없는 오류가 발생했습니다',
+            network: '네트워크 오류가 발생했습니다',
+            timeout: '요청 시간이 초과되었습니다',
+            fatal: '플러그인에서 치명적인 오류가 발생했습니다. 재시작해주세요.',
+            default: '처리 중 문제가 발생했습니다.'
+        }
+    },
+    status: {
+        idle: '상태: 대기 중',
+        memoCleared: '상태: 메모를 지웠습니다',
+        clipboardCopied: '상태: 클립보드에 복사했습니다',
+        noteInserted: '상태: 노트에 삽입했습니다',
+        noteAppended: '상태: 노트 끝에 추가했습니다',
+        cleanupInProgress: '상태: 처리 중...',
+        cleanupCompleted: '상태: 처리 완료',
+        draftRestored: '상태: 이전 초안을 복원했습니다',
+        recording: {
+            preparing: '상태: 녹음 준비 중...',
+            micInit: '상태: 마이크 초기화 중...',
+            recording: '상태: 녹음 중...',
+            stopped: '상태: 중지됨',
+            cancelled: '상태: 취소됨'
+        },
+        processing: {
+            transcribing: '상태: 음성 텍스트 변환 중...',
+            correcting: '상태: 텍스트 정리 중...',
+            completed: '상태: 완료'
+        },
+        transcription: {
+            vadAutoStopped: '상태: 무음 감지로 자동 중지됨',
+            maxDurationReached: '상태: 최대 녹음 시간에 도달했습니다',
+            audioTooShort: '상태: 오디오가 너무 짧습니다',
+            noAudioDetected: '상태: 오디오가 감지되지 않았습니다'
+        },
+        warning: {
+            noTextToClear: '상태: 지울 텍스트가 없습니다',
+            noTextToCopy: '상태: 복사할 텍스트가 없습니다',
+            noTextToCleanup: '상태: 처리할 텍스트가 없습니다',
+            noTextToInsert: '상태: 삽입할 텍스트가 없습니다',
+            clearConfirm: '상태: 다시 눌러서 지우기'
+        },
+        error: '상태: 오류'
+    },
+    notification: {
+        success: {
+            copied: '클립보드에 복사했습니다',
+            inserted: '텍스트를 노트에 삽입했습니다',
+            cleared: '메모를 지웠습니다',
+            cleanupDone: '처리가 완료되었습니다',
+            newNoteCreated: '새 노트를 생성했습니다',
+            dictionaryExported: '사전을 성공적으로 내보냈습니다',
+            dictionaryImported: '사전을 성공적으로 가져왔습니다',
+            apiKeyValid: '성공: API 키 검증 성공'
+        },
+        warning: {
+            noTextToCopy: '복사할 텍스트가 없습니다',
+            noTextToInsert: '삽입할 텍스트가 없습니다',
+            noTextToClear: '지울 텍스트가 없습니다',
+            noTextToCleanup: '처리할 텍스트가 없습니다',
+            noEditorFound: '에디터를 찾을 수 없습니다. 클립보드에 복사했습니다.',
+            enterApiKey: 'API 키를 입력해주세요',
+            serviceInitFailed: '서비스 초기화에 실패했습니다',
+            audioTooShort: '오디오가 너무 짧습니다',
+            noAudioDetected: '오디오가 감지되지 않았습니다'
+        },
+        error: {
+            clipboardFailed: '클립보드 복사에 실패했습니다',
+            noteCreateFailed: '노트 생성에 실패했습니다. 클립보드에 복사했습니다.',
+            apiKeyInvalid: '오류: API 키 검증 실패',
+            testError: '테스트 중 오류가 발생했습니다',
+            cleanupFailed: '처리에 실패했습니다: {error}',
+            dictionaryParseFailed: '사전 파싱에 실패했습니다: {error}',
+            dictionaryImportFailed: '가져오기에 실패했습니다: ',
+            noDictionaryData: '내보낼 사전 데이터가 없습니다',
+            dictionaryExportFailed: '사전 내보내기에 실패했습니다'
+        }
+    },
+    ui: {
+        buttons: {
+            recordStart: '음성 입력 시작',
+            recordStop: '음성 입력 중지',
+            recordPushToTalk: '계속 말해주세요...',
+            recordStopPushToTalk: '놓으면 중지',
+            recordPreparing: '마이크 준비 중...',
+            cleanup: '텍스트 정리',
+            copy: '복사',
+            insert: '노트에 삽입',
+            insertAtCursor: '커서 위치에 삽입',
+            append: '끝에 추가',
+            clear: '지우기',
+            cancel: '취소',
+            connectionTest: '연결 테스트',
+            testing: '테스트 중...',
+            testSuccess: '성공',
+            testFailed: '실패',
+            openSettings: '설정 열기',
+            reset: '기본값으로 재설정',
+            preview: 'JSON 미리보기',
+            export: '내보내기',
+            import: '가져오기'
+        },
+        placeholders: {
+            textarea: '음성 텍스트 변환 결과가 여기에 표시됩니다...',
+            apiKey: 'sk-...',
+            language: 'ko'
+        },
+        titles: {
+            main: 'Voice Input',
+            settings: 'Voice Input 설정',
+            visualizer: '오디오 레벨'
+        },
+        settings: {
+            apiKey: 'OpenAI API 키',
+            apiKeyDesc: '음성 텍스트 변환용 OpenAI API 키',
+            aiPostProcessing: '사전 교정',
+            aiPostProcessingDesc: '음성 텍스트 변환 결과를 사전으로 교정',
+            transcriptionCorrection: '음성 텍스트 변환 교정',
+            transcriptionCorrectionDesc: '사전 교정을 적용하여 더 정확한 텍스트 생성',
+            transcriptionModel: '음성 텍스트 변환 모델',
+            transcriptionModelDesc: '음성 인식에 사용할 모델 선택',
+            maxRecordingDuration: '최대 녹음 시간',
+            maxRecordingDurationDesc: '최대 녹음 시간(초) (30초~10분)',
+            pluginLanguage: '플러그인 언어',
+            pluginLanguageDesc: 'UI 표시, 음성 처리 및 교정 사전의 언어 설정',
+            customDictionary: '사용자 정의 사전',
+            customDictionaryDesc: '후처리에 사용되는 교정 사전 관리',
+            dictionaryDefinite: '고정 교정 (최대 50개)',
+            dictionaryContextual: '문맥 교정 (최대 150개)',
+            dictionaryImportExport: '사전 가져오기/내보내기',
+            dictionaryImportExportDesc: '교정 사전을 JSON 파일로 가져오기 또는 내보내기'
+        },
+        options: {
+            modelMini: 'GPT-4o mini Transcribe',
+            modelFull: 'GPT-4o Transcribe'
+        },
+        tooltips: {
+            copy: '클립보드에 복사',
+            insert: '커서 위치에 삽입',
+            insertAtCursor: '커서 위치에 삽입',
+            append: '노트 끝에 추가',
+            clear: '두 번 눌러서 텍스트 영역 지우기',
+            settingsButton: '설정 화면 열기'
+        },
+        units: {
+            seconds: '초',
+            minutes: '분'
+        },
+        labels: {
+            from: '입력어',
+            fromMultiple: '입력어（쉼표구분）',
+            to: '교정어',
+            category: '카테고리',
+            context: '문맥 키워드'
+        },
+        categories: {
+            noun: '명사',
+            person: '인명',
+            place: '지명',
+            org: '기관명',
+            proper: '기타 고유명사',
+            technical: '전문용어',
+            spoken: '구어체',
+            symbol: '기호/단위'
+        }
+    }
+};

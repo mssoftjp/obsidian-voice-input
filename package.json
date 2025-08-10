@@ -1,0 +1,51 @@
+{
+  "name": "voice-input",
+  "version": "0.8.0",
+  "description": "Voice input plugin for Obsidian with accurate transcription",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "build-plugin": "npm run build && node scripts/post-build.mjs",
+    "build-timestamp": "./scripts/build-timestamp.sh",
+    "deploy": "./scripts/build-timestamp.sh",
+    "analyze:unused": "node scripts/analyze-unused.mjs",
+    "deploy-local": "npm run build-plugin && node scripts/deploy-local.mjs",
+    "deploy-icloud": "npm run build-plugin && node scripts/deploy-icloud.mjs",
+    "deploy:quick": "npm run deploy-local",
+    "check": "npm run lint && npm run build",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "version": "node version-bump.mjs && git add manifest.json versions.json"
+  },
+  "keywords": [
+    "obsidian",
+    "plugin",
+    "voice",
+    "transcription",
+    "gpt-4o"
+  ],
+  "author": "Musashino Software",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^16.11.6",
+    "@typescript-eslint/eslint-plugin": "^5.29.0",
+    "@typescript-eslint/parser": "^5.29.0",
+    "builtin-modules": "3.3.0",
+    "esbuild": "0.17.3",
+    "eslint": "^8.57.1",
+    "jest-environment-jsdom": "^30.0.5",
+    "obsidian": "latest",
+    "tslib": "2.4.0",
+    "typescript": "4.7.4"
+  },
+  "dependencies": {
+    "@echogarden/fvad-wasm": "^0.2.0",
+    "@types/jest": "^30.0.0",
+    "jest": "^30.0.5",
+    "ts-jest": "^29.4.0"
+  }
+}

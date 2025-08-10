@@ -1,0 +1,450 @@
+.voice-input-view {
+	padding: 16px;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+.voice-input-title {
+	margin-bottom: 16px;
+}
+
+/* Title bar with settings button */
+.voice-input-title-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 16px;
+}
+
+.voice-input-settings-button {
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	padding: 4px;
+	border-radius: 4px;
+	color: var(--text-muted);
+	transition: background-color 0.2s, color 0.2s;
+}
+
+.voice-input-settings-button:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.voice-input-visualizer {
+	margin-bottom: 8px;
+	height: 60px;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	position: relative;
+}
+
+/* ステータス表示エリア */
+.voice-input-status-container {
+	margin-bottom: 16px;
+	text-align: center;
+	padding: 8px;
+	min-height: 36px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.voice-input-status-text {
+	font-size: 16px;
+	font-weight: 500;
+	color: var(--text-normal);
+}
+
+.voice-input-status-text.processing {
+	color: var(--interactive-accent);
+	animation: pulse 1.5s infinite;
+}
+
+.voice-input-status-text.error {
+	color: var(--text-error);
+}
+
+.voice-input-text-container {
+	flex: 1;
+	margin-bottom: 16px;
+	min-height: 200px;
+}
+
+.voice-input-textarea {
+	width: 100%;
+	height: 100%;
+	padding: 12px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary-alt);
+	color: var(--text-normal);
+	font-family: var(--font-text);
+	font-size: 14px;
+	resize: none;
+}
+
+.voice-input-record-container {
+	margin-bottom: 12px;
+}
+
+.voice-input-record-button {
+	width: 100%;
+	padding: 32px 20px;
+	font-size: 20px;
+	font-weight: 600;
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	min-height: 80px;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: background-color 0.2s;
+}
+
+/* Full-width cancel button - matches height of 2 button rows */
+.voice-input-cancel-button-full {
+	width: 100%;
+	/* Matching 2 button rows with exact calculation:
+	   Button height = padding(24*2) + line-height(~20px) = 68px
+	   2 rows + gap = 68px + 12px + 68px = 148px
+	   Cancel button = padding needed for 148px total height */
+	padding: 54px 12px;
+	font-size: 20px;
+	font-weight: 600;
+	background: #f9e79f; /* Soft yellow */
+	color: var(--text-normal);
+	border: 1px solid #f4d03f;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: background-color 0.2s;
+	margin-bottom: 12px;
+	display: none; /* Default hidden, controlled by CSS classes */
+	align-items: center;
+	justify-content: center;
+}
+
+.voice-input-cancel-button-full:hover {
+	background: #f4d03f; /* Slightly darker yellow on hover */
+}
+
+
+.voice-input-record-button:hover {
+	background: var(--interactive-accent-hover);
+}
+
+.voice-input-record-button.recording {
+	background: var(--text-error);
+	animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+	0% { opacity: 1; }
+	50% { opacity: 0.8; }
+	100% { opacity: 1; }
+}
+
+.voice-input-buttons {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 16px;
+}
+
+.voice-input-button-group {
+	margin-bottom: 12px;
+}
+
+.voice-input-action-buttons {
+	display: flex;
+	gap: 8px;
+	align-items: stretch;
+}
+
+.voice-input-secondary-actions {
+	display: flex;
+	gap: 6px;
+}
+
+.voice-input-button-large {
+	flex: 1;
+}
+
+.voice-input-button {
+	flex: 1 1 0;
+	min-width: 0;
+	padding: 24px 12px;
+	border: none;
+	border-radius: 4px;
+	background: var(--interactive-normal);
+	color: var(--text-normal);
+	cursor: pointer;
+	font-size: 14px;
+	transition: background-color 0.2s;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Removed hover effects from regular buttons - only recording and primary buttons should have hover effects */
+
+.voice-input-button-primary {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.voice-input-button-primary:hover {
+	background: var(--interactive-accent-hover);
+}
+
+.voice-input-button.recording {
+	background: var(--text-error);
+	color: var(--text-on-accent);
+}
+
+.voice-input-button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.voice-input-button-medium {
+	padding: 24px 16px;
+	font-size: 14px;
+}
+
+.voice-input-button-icon {
+	display: inline-block;
+	font-size: 16px;
+	margin-right: 6px;
+	vertical-align: -2px;
+}
+
+.voice-input-button-text {
+	display: inline-block;
+	vertical-align: middle;
+}
+
+
+.setting-error {
+	color: var(--text-error);
+}
+
+.setting-duration-text {
+	display: inline-block;
+	min-width: 3em;
+	text-align: right;
+	margin-left: 8px;
+	color: var(--text-muted);
+	font-size: 14px;
+}
+
+.setting-item-description {
+	padding: 8px 0;
+	font-size: 13px;
+	color: var(--text-muted);
+	margin-bottom: 16px;
+}
+
+/* Settings panel in right pane */
+.voice-input-settings-panel {
+	margin-bottom: 16px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	padding-bottom: 16px;
+}
+
+.voice-input-inline-setting {
+	padding: 8px 0;
+}
+
+.voice-input-inline-setting:last-child {
+	padding-bottom: 0;
+}
+
+/* Dictionary Table Styles */
+.dictionary-table-container {
+    margin: 1em 0;
+}
+
+.dictionary-table-container h4 {
+    margin: 1em 0 0.5em;
+    font-size: 0.9em;
+    font-weight: 600;
+}
+
+.dictionary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1em;
+    font-size: 0.85em;
+}
+
+.dictionary-table th,
+.dictionary-table td {
+    border: 1px solid var(--background-modifier-border);
+    padding: 6px 8px;
+    text-align: left;
+}
+
+.dictionary-table th {
+    background-color: var(--background-secondary);
+    font-weight: 600;
+}
+
+.dictionary-table input[type="text"],
+.dictionary-table input[type="number"],
+.dictionary-table select {
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 2px;
+}
+
+.dictionary-table input[type="text"]:focus,
+.dictionary-table input[type="number"]:focus,
+.dictionary-table select:focus {
+    outline: 1px solid var(--interactive-accent);
+    background: var(--background-primary);
+}
+
+.dictionary-table input[type="number"] {
+    max-width: 60px;
+}
+
+.dictionary-table .action-column {
+    width: 40px;
+    text-align: center;
+}
+
+.dictionary-delete-button {
+    background: none;
+    border: none;
+    color: var(--text-error);
+    cursor: pointer;
+    font-size: 1.2em;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    line-height: 1;
+}
+
+.dictionary-delete-button:hover {
+    background: var(--background-modifier-error);
+    border-radius: 3px;
+}
+
+.dictionary-add-button {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border: none;
+    border-radius: 3px;
+    padding: 4px 12px;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.dictionary-add-button:hover {
+    background: var(--interactive-accent-hover);
+}
+
+/* Dictionary Tabs */
+.dictionary-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 1em;
+    border-bottom: 2px solid var(--background-modifier-border);
+}
+
+.dictionary-tab {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 8px 16px;
+    font-size: 0.9em;
+    font-weight: 500;
+    transition: all 0.2s;
+    margin-bottom: -2px;
+}
+
+.dictionary-tab:hover {
+    color: var(--text-normal);
+}
+
+.dictionary-tab.active {
+    color: var(--text-normal);
+    border-bottom-color: var(--interactive-accent);
+}
+
+/* Read-only table styles */
+.dictionary-table tr.read-only td {
+    background: var(--background-secondary-alt);
+    color: var(--text-muted);
+}
+
+/* Utility classes for JavaScript style replacements */
+.voice-input-hidden {
+    display: none !important;
+}
+
+.voice-input-flex {
+    display: flex !important;
+}
+
+/* Audio Visualizer Styles */
+.audio-visualizer-canvas {
+    width: calc(100% - 4px);
+    height: 56px;
+    background: transparent;
+    border-radius: 4px;
+    display: block;
+    margin: 2px;
+}
+
+.audio-level-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    height: 60px;
+    background: transparent;
+    box-sizing: border-box;
+}
+
+.audio-level-container {
+    flex: 1;
+    height: 6px;
+    background: var(--background-modifier-border);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.audio-level-bar {
+    height: 100%;
+    width: var(--audio-level-width, 0%);
+    background: linear-gradient(90deg, var(--interactive-accent), var(--interactive-accent-hover));
+    transition: width 0.05s ease-out;
+    border-radius: 3px;
+}
+
+.audio-vad-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: background-color 0.2s ease;
+}
+
+.audio-vad-indicator.speech {
+    background: var(--color-green);
+}
+
+/* Form element styles */
+.voice-input-textarea-wide {
+    width: 100% !important;
+    min-height: 100px !important;
+}
