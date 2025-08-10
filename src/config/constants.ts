@@ -177,6 +177,11 @@ export const DICTIONARY_CONSTANTS = {
  * UI関連の定数
  */
 export const UI_CONSTANTS = {
+    /** 録音時間のUI下限・上限・刻み */
+    RECORDING_SECONDS_MIN: 30,
+    RECORDING_SECONDS_MAX: 600,
+    RECORDING_SECONDS_STEP: 30,
+
     /** プッシュ・トゥ・トークの閾値 (ms) */
     PUSH_TO_TALK_THRESHOLD: 300,
 

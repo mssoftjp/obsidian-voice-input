@@ -6,7 +6,7 @@ import {
 } from 'obsidian';
 import VoiceInputPlugin from '../plugin';
 import { DEFAULT_SETTINGS } from '../interfaces';
-import { DICTIONARY_CONSTANTS } from '../config';
+import { DICTIONARY_CONSTANTS, UI_CONSTANTS } from '../config';
 import { CorrectionEntry } from '../interfaces';
 import { SecurityUtils } from '../security';
 import { getI18n, createServiceLogger } from '../services';
@@ -188,7 +188,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
         // Maximum Recording Duration
         const maxRecordingSetting = new Setting(containerEl)
             .setName(this.i18n.t('ui.settings.maxRecordingDuration'))
-            .setDesc(this.i18n.t('ui.settings.maxRecordingDurationDesc', { min: 30, max: Math.floor(600 / 60) }));
+            .setDesc(this.i18n.t('ui.settings.maxRecordingDurationDesc', { min: UI_CONSTANTS.RECORDING_SECONDS_MIN, max: Math.floor(UI_CONSTANTS.RECORDING_SECONDS_MAX / 60) }));
 
         // Add text display for current value
         const durationText = maxRecordingSetting.controlEl.createEl('span', {
@@ -198,7 +198,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
 
         maxRecordingSetting
             .addSlider(slider => slider
-                .setLimits(30, 600, 30) // 30秒〜10分、30秒刻み
+                .setLimits(UI_CONSTANTS.RECORDING_SECONDS_MIN, UI_CONSTANTS.RECORDING_SECONDS_MAX, UI_CONSTANTS.RECORDING_SECONDS_STEP) // 30秒〜10分、定数に基づく刻み
                 .setValue(this.plugin.settings.maxRecordingSeconds)
                 .setDynamicTooltip()
                 .onChange(async (value) => {
