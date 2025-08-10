@@ -35,7 +35,9 @@ export const ja: TranslationResource = {
             unknown: '不明なエラーが発生しました',
             network: 'ネットワークエラーが発生しました',
             timeout: 'タイムアウトしました',
+            error: 'エラーが発生しました',
             fatal: 'プラグインで致命的なエラーが発生しました。再起動してください。',
+            warning: '警告',
             default: '処理中に問題が発生しました。'
         }
     },

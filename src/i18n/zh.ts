@@ -35,7 +35,9 @@ export const zh: TranslationResource = {
             unknown: '发生未知错误',
             network: '发生网络错误',
             timeout: '请求超时',
+            error: '发生错误',
             fatal: '插件发生致命错误。请重启。',
+            warning: '警告',
             default: '处理过程中发生问题。'
         }
     },

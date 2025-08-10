@@ -35,7 +35,9 @@ export const ko: TranslationResource = {
             unknown: '알 수 없는 오류가 발생했습니다',
             network: '네트워크 오류가 발생했습니다',
             timeout: '요청 시간이 초과되었습니다',
+            error: '오류가 발생했습니다',
             fatal: '플러그인에서 치명적인 오류가 발생했습니다. 재시작해주세요.',
+            warning: '경고',
             default: '처리 중 문제가 발생했습니다.'
         }
     },

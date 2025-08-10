@@ -35,7 +35,9 @@ export const en: TranslationResource = {
             unknown: 'An unknown error occurred',
             network: 'Network error occurred',
             timeout: 'Request timed out',
+            error: 'An error occurred',
             fatal: 'A fatal error occurred in the plugin. Please restart.',
+            warning: 'Warning',
             default: 'A problem occurred during processing.'
         }
     },

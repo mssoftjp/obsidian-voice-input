@@ -54,6 +54,8 @@ export type TranslationResource = {
       unknown: string;
       network: string;
       timeout: string;
+      error: string;
+      warning: string;
       fatal: string;
       default: string;
     };
