@@ -91,6 +91,8 @@ export default class VoiceInputPlugin extends Plugin {
         try {
             this.logger.debug('Initializing UI components...');
 
+            const i18n = getI18nService();
+
             // Register the view
             this.registerView(
                 VIEW_TYPE_VOICE_INPUT,
@@ -99,7 +101,7 @@ export default class VoiceInputPlugin extends Plugin {
             this.logger.debug('VoiceInputView registered');
 
             // Add ribbon icon
-            this.addRibbonIcon('microphone', 'Voice Input', () => {
+            this.addRibbonIcon('microphone', i18n.t('ui.titles.main'), () => {
                 this.logger.debug('Ribbon icon clicked');
                 this.viewManager.activateVoiceInputView();
             });
@@ -108,7 +110,7 @@ export default class VoiceInputPlugin extends Plugin {
             // Add command
             this.addCommand({
                 id: 'open-voice-input',
-                name: 'Open Voice Input',
+                name: i18n.t('ui.titles.main'),
                 callback: () => {
                     this.logger.debug('Command executed: open-voice-input');
                     this.viewManager.activateVoiceInputView();

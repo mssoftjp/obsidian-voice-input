@@ -152,7 +152,7 @@ export const FILE_CONSTANTS = {
  */
 export const DICTIONARY_CONSTANTS = {
     /** 固定補正の最大個数 */
-    MAX_DEFINITE_CORRECTIONS: 50,
+    MAX_DEFINITE_CORRECTIONS: 200,
 
     /** 文脈補正の最大個数 */
     MAX_CONTEXTUAL_CORRECTIONS: 150,
