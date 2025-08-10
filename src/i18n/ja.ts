@@ -129,9 +129,7 @@ export const ja: TranslationResource = {
             testing: 'テスト中...',
             testSuccess: '成功',
             testFailed: '失敗',
-            openSettings: '設定を開く',
             reset: 'デフォルトに戻す',
-            preview: 'JSONを表示',
             export: 'エクスポート',
             import: 'インポート'
         },
@@ -143,7 +141,6 @@ export const ja: TranslationResource = {
         titles: {
             main: 'Voice Input',
             settings: 'Voice Input 設定',
-            visualizer: '音声レベル'
         },
         settings: {
             apiKey: 'OpenAI API キー',
@@ -161,7 +158,6 @@ export const ja: TranslationResource = {
             customDictionary: 'カスタム辞書',
             customDictionaryDesc: '補正辞書を管理',
             dictionaryDefinite: '固定補正（最大{max}個）',
-            dictionaryContextual: '文脈補正（最大{max}個）',
             dictionaryImportExport: '辞書のインポート/エクスポート',
             dictionaryImportExportDesc: '補正辞書をJSONファイルとしてインポート・エクスポート'
         },

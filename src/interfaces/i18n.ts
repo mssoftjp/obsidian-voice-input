@@ -148,9 +148,7 @@ export type TranslationResource = {
       testing: string;
       testSuccess: string;
       testFailed: string;
-      openSettings: string;
       reset: string;
-      preview: string;
       export: string;
       import: string;
     };
@@ -162,7 +160,6 @@ export type TranslationResource = {
     titles: {
       main: string;
       settings: string;
-      visualizer: string;
     };
     settings: {
       apiKey: string;
@@ -180,7 +177,6 @@ export type TranslationResource = {
       customDictionary: string;
       customDictionaryDesc: string;
       dictionaryDefinite: string;
-      dictionaryContextual: string;
       dictionaryImportExport: string;
       dictionaryImportExportDesc: string;
     };

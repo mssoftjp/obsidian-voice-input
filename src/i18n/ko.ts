@@ -129,9 +129,7 @@ export const ko: TranslationResource = {
             testing: '테스트 중...',
             testSuccess: '성공',
             testFailed: '실패',
-            openSettings: '설정 열기',
             reset: '기본값으로 재설정',
-            preview: 'JSON 미리보기',
             export: '내보내기',
             import: '가져오기'
         },
@@ -143,7 +141,6 @@ export const ko: TranslationResource = {
         titles: {
             main: 'Voice Input',
             settings: 'Voice Input 설정',
-            visualizer: '오디오 레벨'
         },
         settings: {
             apiKey: 'OpenAI API 키',
@@ -161,7 +158,6 @@ export const ko: TranslationResource = {
             customDictionary: '사용자 정의 사전',
             customDictionaryDesc: '후처리에 사용되는 교정 사전 관리',
             dictionaryDefinite: '고정 교정 (최대 {max}개)',
-            dictionaryContextual: '문맥 교정 (최대 {max}개)',
             dictionaryImportExport: '사전 가져오기/내보내기',
             dictionaryImportExportDesc: '교정 사전을 JSON 파일로 가져오기 또는 내보내기'
         },

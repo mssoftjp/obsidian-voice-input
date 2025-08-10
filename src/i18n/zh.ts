@@ -129,9 +129,7 @@ export const zh: TranslationResource = {
             testing: '测试中...',
             testSuccess: '成功',
             testFailed: '失败',
-            openSettings: '打开设置',
             reset: '重置为默认值',
-            preview: '预览JSON',
             export: '导出',
             import: '导入'
         },
@@ -143,7 +141,6 @@ export const zh: TranslationResource = {
         titles: {
             main: 'Voice Input',
             settings: 'Voice Input 设置',
-            visualizer: '音频级别'
         },
         settings: {
             apiKey: 'OpenAI API 密钥',
@@ -161,7 +158,6 @@ export const zh: TranslationResource = {
             customDictionary: '自定义词典',
             customDictionaryDesc: '管理用于后处理的校正词典',
             dictionaryDefinite: '固定校正（最多{max}个）',
-            dictionaryContextual: '语境校正（最多{max}个）',
             dictionaryImportExport: '词典导入/导出',
             dictionaryImportExportDesc: '将校正词典作为JSON文件导入或导出'
         },

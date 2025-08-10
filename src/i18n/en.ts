@@ -129,9 +129,7 @@ export const en: TranslationResource = {
             testing: 'Testing...',
             testSuccess: 'Success',
             testFailed: 'Failed',
-            openSettings: 'Open Settings',
             reset: 'Reset to default',
-            preview: 'Preview JSON',
             export: 'Export',
             import: 'Import'
         },
@@ -143,7 +141,6 @@ export const en: TranslationResource = {
         titles: {
             main: 'Voice Input',
             settings: 'Voice Input Settings',
-            visualizer: 'Audio Level'
         },
         settings: {
             apiKey: 'OpenAI API Key',
@@ -161,7 +158,6 @@ export const en: TranslationResource = {
             customDictionary: 'Custom Dictionary',
             customDictionaryDesc: 'Manage corrections used for post-processing',
             dictionaryDefinite: 'Definite Corrections (max {max})',
-            dictionaryContextual: 'Contextual Corrections (max {max})',
             dictionaryImportExport: 'Dictionary Import/Export',
             dictionaryImportExportDesc: 'Import or export your correction dictionary as JSON'
         },
