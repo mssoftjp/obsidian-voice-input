@@ -34,7 +34,7 @@ export class VoiceInputView extends ItemView {
     }
 
     getDisplayText() {
-        return 'Voice Input';
+        return getI18n().t('ui.titles.main');
     }
 
     getIcon() {
