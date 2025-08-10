@@ -6,6 +6,7 @@ import {
 } from 'obsidian';
 import VoiceInputPlugin from '../plugin';
 import { DEFAULT_SETTINGS } from '../interfaces';
+import { DICTIONARY_CONSTANTS } from '../config';
 import { CorrectionEntry } from '../interfaces';
 import { SecurityUtils } from '../security';
 import { getI18n, createServiceLogger } from '../services';
@@ -187,7 +188,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
         // Maximum Recording Duration
         const maxRecordingSetting = new Setting(containerEl)
             .setName(this.i18n.t('ui.settings.maxRecordingDuration'))
-            .setDesc(this.i18n.t('ui.settings.maxRecordingDurationDesc'));
+            .setDesc(this.i18n.t('ui.settings.maxRecordingDurationDesc', { min: 30, max: Math.floor(600 / 60) }));
 
         // Add text display for current value
         const durationText = maxRecordingSetting.controlEl.createEl('span', {
@@ -224,7 +225,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
             const tableContainer = containerEl.createDiv('dictionary-table-container');
 
             // Definite Corrections Section
-            tableContainer.createEl('h4', { text: this.i18n.t('ui.settings.dictionaryDefinite') });
+            tableContainer.createEl('h4', { text: this.i18n.t('ui.settings.dictionaryDefinite', { max: DICTIONARY_CONSTANTS.MAX_DEFINITE_CORRECTIONS }) });
             this.createCorrectionTable(
                 tableContainer,
                 this.plugin.settings.customDictionary.definiteCorrections,
