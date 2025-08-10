@@ -153,13 +153,13 @@ export const ja: TranslationResource = {
             transcriptionModel: '文字起こしモデル',
             transcriptionModelDesc: '音声認識に使用するモデルを選択',
             maxRecordingDuration: '最大録音時間',
-            maxRecordingDurationDesc: '最大録音時間（秒）（{min}秒〜{max}分）',
+            maxRecordingDurationDesc: '最大録音時間（秒）（30秒〜10分）',
             pluginLanguage: 'プラグイン言語',
             pluginLanguageDesc: 'UI表示、音声認識処理、補正辞書の言語を設定',
             customDictionary: 'カスタム辞書',
             customDictionaryDesc: '補正辞書を管理',
-            dictionaryDefinite: '固定補正（最大{max}個）',
-            dictionaryContextual: '文脈補正（最大{max}個）',
+            dictionaryDefinite: '固定補正（最大50個）',
+            dictionaryContextual: '文脈補正（最大150個）',
             dictionaryImportExport: '辞書のインポート/エクスポート',
             dictionaryImportExportDesc: '補正辞書をJSONファイルとしてインポート・エクスポート'
         },
@@ -183,18 +183,7 @@ export const ja: TranslationResource = {
             from: '入力語',
             fromMultiple: '入力語（カンマ区切り）',
             to: '修正語',
-            category: 'カテゴリ',
             context: '文脈キーワード'
         },
-        categories: {
-            noun: '名詞',
-            person: '人名',
-            place: '地名',
-            org: '組織名',
-            proper: 'その他固有名詞',
-            technical: '専門用語',
-            spoken: '話し言葉',
-            symbol: '記号・単位'
-        }
     }
 };

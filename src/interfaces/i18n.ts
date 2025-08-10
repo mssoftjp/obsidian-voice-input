@@ -201,19 +201,7 @@ export type TranslationResource = {
     labels: {
       from: string;
       fromMultiple: string;
-      to: string;
-      category: string;
-      context: string;
-    };
-    categories: {
-      noun: string;
-      person: string;
-      place: string;
-      org: string;
-      proper: string;
-      technical: string;
-      spoken: string;
-      symbol: string;
+      to: string;      context: string;
     };
   };
 };

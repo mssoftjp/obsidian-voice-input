@@ -183,18 +183,7 @@ export const zh: TranslationResource = {
             from: '输入词',
             fromMultiple: '输入词（逗号分隔）',
             to: '校正词',
-            category: '类别',
             context: '语境关键词'
         },
-        categories: {
-            noun: '名词',
-            person: '人名',
-            place: '地名',
-            org: '机构名',
-            proper: '其他专有名词',
-            technical: '专业术语',
-            spoken: '口语',
-            symbol: '符号/单位'
-        }
     }
 };

@@ -183,18 +183,7 @@ export const ko: TranslationResource = {
             from: '입력어',
             fromMultiple: '입력어（쉼표구분）',
             to: '교정어',
-            category: '카테고리',
             context: '문맥 키워드'
         },
-        categories: {
-            noun: '명사',
-            person: '인명',
-            place: '지명',
-            org: '기관명',
-            proper: '기타 고유명사',
-            technical: '전문용어',
-            spoken: '구어체',
-            symbol: '기호/단위'
-        }
     }
 };

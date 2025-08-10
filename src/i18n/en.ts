@@ -183,18 +183,7 @@ export const en: TranslationResource = {
             from: 'From',
             fromMultiple: 'From (comma-separated)',
             to: 'To',
-            category: 'Category',
             context: 'Context Keywords'
         },
-        categories: {
-            noun: 'Noun',
-            person: 'Person Name',
-            place: 'Place Name',
-            org: 'Organization',
-            proper: 'Other Proper Noun',
-            technical: 'Technical Term',
-            spoken: 'Spoken Form',
-            symbol: 'Symbol/Unit'
-        }
     }
 };
