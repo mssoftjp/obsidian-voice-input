@@ -302,21 +302,9 @@ export class SimpleAudioLevelIndicator {
     }
 
     private setLevelBarClass(percentage: number): void {
-        // Remove all existing level classes
-        this.levelBar.className = this.levelBar.className.replace(/\blevel-\d+\b/g, '').trim();
-        if (!this.levelBar.className) {
-            this.levelBar.className = 'audio-level-bar';
-        }
-        
-        // Map percentage to predefined levels
-        let level: number;
-        if (percentage <= 0) level = 0;
-        else if (percentage <= 10) level = Math.floor(percentage);
-        else if (percentage <= 100) level = Math.floor(percentage / 5) * 5;
-        else level = 100;
-        
-        // Add the appropriate level class
-        this.levelBar.classList.add(`level-${level}`);
+        // Add active class for theme compatibility and set CSS custom property
+        this.levelBar.classList.add('active');
+        this.levelBar.style.setProperty('--audio-level-width', `${Math.round(percentage)}%`);
     }
 
     destroy(): void {
