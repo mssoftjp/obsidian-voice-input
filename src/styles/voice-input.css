@@ -425,11 +425,42 @@
 
 .audio-level-bar {
     height: 100%;
-    width: var(--audio-level-width, 0%);
+    width: 0%;
     background: linear-gradient(90deg, var(--interactive-accent), var(--interactive-accent-hover));
     transition: width 0.05s ease-out;
     border-radius: 3px;
 }
+
+/* Audio level bar controlled by CSS classes */
+.audio-level-bar.level-0 { width: 0%; }
+.audio-level-bar.level-1 { width: 1%; }
+.audio-level-bar.level-2 { width: 2%; }
+.audio-level-bar.level-3 { width: 3%; }
+.audio-level-bar.level-4 { width: 4%; }
+.audio-level-bar.level-5 { width: 5%; }
+.audio-level-bar.level-6 { width: 6%; }
+.audio-level-bar.level-7 { width: 7%; }
+.audio-level-bar.level-8 { width: 8%; }
+.audio-level-bar.level-9 { width: 9%; }
+.audio-level-bar.level-10 { width: 10%; }
+.audio-level-bar.level-15 { width: 15%; }
+.audio-level-bar.level-20 { width: 20%; }
+.audio-level-bar.level-25 { width: 25%; }
+.audio-level-bar.level-30 { width: 30%; }
+.audio-level-bar.level-35 { width: 35%; }
+.audio-level-bar.level-40 { width: 40%; }
+.audio-level-bar.level-45 { width: 45%; }
+.audio-level-bar.level-50 { width: 50%; }
+.audio-level-bar.level-55 { width: 55%; }
+.audio-level-bar.level-60 { width: 60%; }
+.audio-level-bar.level-65 { width: 65%; }
+.audio-level-bar.level-70 { width: 70%; }
+.audio-level-bar.level-75 { width: 75%; }
+.audio-level-bar.level-80 { width: 80%; }
+.audio-level-bar.level-85 { width: 85%; }
+.audio-level-bar.level-90 { width: 90%; }
+.audio-level-bar.level-95 { width: 95%; }
+.audio-level-bar.level-100 { width: 100%; }
 
 .audio-vad-indicator {
     width: 8px;

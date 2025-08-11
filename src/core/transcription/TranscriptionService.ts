@@ -80,7 +80,16 @@ export class TranscriptionService implements ITranscriptionProvider {
 
             if (status >= 400) {
                 const errorData = responseData as Record<string, unknown> | undefined;
-                const errorMessage = (errorData as any)?.error?.message || `HTTP ${status}`;
+                let errorMessage = `HTTP ${status}`;
+                
+                if (errorData && typeof errorData === 'object' && 'error' in errorData 
+                    && typeof errorData.error === 'object' && errorData.error 
+                    && 'message' in errorData.error) {
+                    const errorObj = errorData.error as Record<string, unknown>;
+                    if (typeof errorObj.message === 'string') {
+                        errorMessage = errorObj.message;
+                    }
+                }
                 
                 // Determine error type based on status and message
                 let errorType = TranscriptionErrorType.TRANSCRIPTION_FAILED;
