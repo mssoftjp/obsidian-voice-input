@@ -268,7 +268,7 @@ export class SimpleAudioLevelIndicator {
             cancelAnimationFrame(this.animationId);
             this.animationId = null;
         }
-        this.levelBar.style.setProperty('--audio-level-width', '0%');
+        this.setLevelBarClass(0);
     }
 
     setVADStatus(status: 'silence' | 'speech'): void {
@@ -298,7 +298,13 @@ export class SimpleAudioLevelIndicator {
         // Apply scaling for better visibility
         const percentage = Math.min((average / 128) * 100, 100);
         
-        this.levelBar.style.setProperty('--audio-level-width', `${percentage}%`);
+        this.setLevelBarClass(percentage);
+    }
+
+    private setLevelBarClass(percentage: number): void {
+        // Add active class for theme compatibility and set CSS custom property
+        this.levelBar.classList.add('active');
+        this.levelBar.style.setProperty('--audio-level-width', `${Math.round(percentage)}%`);
     }
 
     destroy(): void {

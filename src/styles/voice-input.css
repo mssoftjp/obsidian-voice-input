@@ -425,10 +425,15 @@
 
 .audio-level-bar {
     height: 100%;
-    width: var(--audio-level-width, 0%);
+    width: 0%;
     background: linear-gradient(90deg, var(--interactive-accent), var(--interactive-accent-hover));
     transition: width 0.05s ease-out;
     border-radius: 3px;
+}
+
+/* Audio level bar controlled by CSS custom property - theme compatible */
+.audio-level-bar.active {
+    width: var(--audio-level-width, 0%);
 }
 
 .audio-vad-indicator {
