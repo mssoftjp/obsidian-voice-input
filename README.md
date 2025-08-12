@@ -9,7 +9,7 @@ High-accuracy voice input for Obsidian. Uses OpenAI GPT-4o Audio Transcriptions 
 - Model selection: GPT‑4o Transcribe or GPT‑4o mini Transcribe
 - Language separation: independent UI language and voice recognition language settings
 - Auto language detection: automatic voice recognition language based on Obsidian locale
-- AI post‑processing: optional dictionary-based cleanup (Japanese only)
+- AI post‑processing: optional dictionary-based cleanup (applied to all languages when enabled)
 - Quick controls in view: copy/clear/insert at cursor/append to end
 - Auto‑save drafts: periodic and on blur, automatic restore
 - Multilingual support: Japanese, English, Chinese, Korean interface languages
@@ -51,7 +51,7 @@ Tip: A settings gear in the view header opens the plugin’s settings.
 - OpenAI API Key: stored locally (encrypted at rest)
 - Transcription Model: `gpt-4o-transcribe` or `gpt-4o-mini-transcribe`
 - **Transcription Language**: Auto/Japanese/English/Chinese/Korean (auto-detection recommended)
-- AI Post‑processing: enable dictionary‑based cleanup (applied to Japanese only)
+- AI Post‑processing: enable dictionary‑based cleanup (applied to all languages when enabled)
 - Maximum Recording Duration: slider (default 5 min)
 - Plugin Language: English/Japanese (controls UI display only, auto‑detected from Obsidian, adjustable)
 

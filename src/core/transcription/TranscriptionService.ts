@@ -419,6 +419,9 @@ export class TranscriptionService implements ITranscriptionProvider {
      */
     setTranscriptionCorrection(enabled: boolean) {
         this.enableTranscriptionCorrection = enabled;
+        this.corrector.updateSettings({
+            enabled: enabled
+        });
     }
 
     /**
@@ -428,9 +431,10 @@ export class TranscriptionService implements ITranscriptionProvider {
         this.apiKey = apiKey;
         // API key is no longer needed for the simplified corrector
         // Preserve existing dictionary settings when updating API key
-        const currentDict = this.corrector.getSettings().correctionDictionary;
+        const currentSettings = this.corrector.getSettings();
         this.corrector = new DictionaryCorrector({
-            correctionDictionary: currentDict
+            enabled: currentSettings.enabled,
+            correctionDictionary: currentSettings.correctionDictionary
         });
     }
 
