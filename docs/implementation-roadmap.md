@@ -51,7 +51,7 @@ Extend the `DictionaryCorrector` class to support language-specific dictionaries
 - `tests/unit/core/transcription/multilingual-dictionary-correction.test.ts`
 
 **Acceptance Criteria**:
-- Fallback order works: currentLang → 'en' → global
+- Fallback order works: currentLang → global (optional 'en' fallback only when a setting is enabled)
 - Legacy dictionaries continue to work
 - Performance does not degrade significantly
 - All edge cases are covered with tests
