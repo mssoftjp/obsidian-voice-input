@@ -60,7 +60,8 @@ export const ko: TranslationResource = {
         processing: {
             transcribing: '상태: 음성 텍스트 변환 중...',
             correcting: '상태: 텍스트 정리 중...',
-            completed: '상태: 완료'
+            completed: '상태: 완료',
+            waiting: '{count} 대기 중'
         },
         transcription: {
             vadAutoStopped: '상태: 무음 감지로 자동 중지됨',

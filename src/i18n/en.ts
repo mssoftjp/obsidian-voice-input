@@ -60,7 +60,8 @@ export const en: TranslationResource = {
         processing: {
             transcribing: 'Status: Transcribing...',
             correcting: 'Status: Correcting...',
-            completed: 'Status: Completed'
+            completed: 'Status: Completed',
+            waiting: '{count} waiting'
         },
         transcription: {
             vadAutoStopped: 'Status: Auto-stopped due to silence',

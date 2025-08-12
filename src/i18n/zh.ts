@@ -60,7 +60,8 @@ export const zh: TranslationResource = {
         processing: {
             transcribing: '状态：语音转文字中...',
             correcting: '状态：文本处理中...',
-            completed: '状态：完成'
+            completed: '状态：完成',
+            waiting: '{count} 等待中'
         },
         transcription: {
             vadAutoStopped: '状态：检测到静音自动停止',
