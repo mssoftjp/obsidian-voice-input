@@ -24,8 +24,5 @@ module.exports = {
   testTimeout: 10000,
   moduleNameMapper: {
     '^obsidian$': '<rootDir>/tests/mocks/obsidian.ts',
-    '^../src/core/transcription/DictionaryCorrector$': '<rootDir>/tests/mocks/DictionaryCorrector.ts',
-    '^../src/utils/ObsidianHttpClient$': '<rootDir>/tests/mocks/ObsidianHttpClient.ts',
-    '^../src/services$': '<rootDir>/tests/mocks/services.ts',
   },
 };

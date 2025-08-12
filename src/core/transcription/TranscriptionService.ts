@@ -226,14 +226,15 @@ export class TranscriptionService implements ITranscriptionProvider {
      * Apply language-specific cleaning patterns
      */
     private applyLanguageSpecificCleaning(text: string, language: string): string {
-        switch (language) {
+        // Normalize language code (handle cases like 'en-US', 'zh-CN')
+        const normalizedLang = language.toLowerCase().split('-')[0];
+        
+        switch (normalizedLang) {
             case 'ja':
                 return this.cleanJapaneseMetaText(text);
             case 'en':
                 return this.cleanEnglishMetaText(text);
             case 'zh':
-            case 'zh-CN':
-            case 'zh-TW':
                 return this.cleanChineseMetaText(text);
             case 'ko':
                 return this.cleanKoreanMetaText(text);
@@ -323,9 +324,10 @@ export class TranscriptionService implements ITranscriptionProvider {
      */
     private cleanGenericMetaText(text: string): string {
         // Only remove very basic instruction patterns that are likely meta-text
+        // Using colon-terminated patterns to be more conservative
         const genericMetaPatterns = [
-            /^Output format.*?$/gm,
-            /^Format.*?$/gm,
+            /^Output\s*format\s*:.*/gmi,
+            /^Format\s*:.*/gmi,
         ];
 
         for (const pattern of genericMetaPatterns) {
@@ -339,7 +341,10 @@ export class TranscriptionService implements ITranscriptionProvider {
      * Detect if the response contains prompt error patterns (when audio is silent)
      */
     private isPromptErrorDetected(text: string, language: string): boolean {
-        switch (language) {
+        // Normalize language code (handle cases like 'en-US', 'zh-CN')
+        const normalizedLang = language.toLowerCase().split('-')[0];
+        
+        switch (normalizedLang) {
             case 'ja':
                 return text.includes('この指示文は出力に含めないでください') || 
                        text.includes('話者の発言内容だけを正確に記録してください') ||
@@ -351,8 +356,6 @@ export class TranscriptionService implements ITranscriptionProvider {
                        text === '(speaker\'s words only)' ||
                        text.trim().toLowerCase() === 'speaker\'s words only';
             case 'zh':
-            case 'zh-CN':
-            case 'zh-TW':
                 return text.includes('请不要在输出中包含此指示') ||
                        text.includes('请只记录说话者的发言内容') ||
                        text === '（仅说话者发言）' ||
