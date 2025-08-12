@@ -1,5 +1,5 @@
 import { DictionaryCorrector } from './DictionaryCorrector';
-import { TranscriptionResult, ITranscriptionProvider, SimpleCorrectionDictionary, Locale } from '../../interfaces';
+import { TranscriptionResult, ITranscriptionProvider, SimpleCorrectionDictionary } from '../../interfaces';
 import { TranscriptionError, TranscriptionErrorType } from '../../errors';
 import { SecurityUtils } from '../../security';
 import { API_CONSTANTS, DEFAULT_TRANSCRIPTION_SETTINGS, TRANSCRIPTION_MODEL_COSTS } from '../../config';
@@ -55,7 +55,7 @@ export class TranscriptionService implements ITranscriptionProvider {
             }
 
             // Build prompt for transcription
-            const prompt = this.buildTranscriptionPrompt(language as Locale);
+            const prompt = this.buildTranscriptionPrompt(language);
             if (prompt) {
                 formData.append('prompt', prompt);
             }
@@ -183,7 +183,7 @@ export class TranscriptionService implements ITranscriptionProvider {
     /**
      * Build prompt for GPT-4o transcription based on language
      */
-    private buildTranscriptionPrompt(language: Locale): string {
+    private buildTranscriptionPrompt(language: string): string {
         // For Japanese, use detailed prompt for better accuracy
         if (language === 'ja') {
             return `以下の音声内容のみを文字に起こしてください。この指示文は出力に含めないでください。
