@@ -15,7 +15,6 @@ export class TranscriptionService implements ITranscriptionProvider {
     // コスト重視なら mini、わずかな精度向上が必要なら通常版を選択
     private model: 'gpt-4o-transcribe' | 'gpt-4o-mini-transcribe' = DEFAULT_TRANSCRIPTION_SETTINGS.model;
     private enableTranscriptionCorrection: boolean = DEFAULT_TRANSCRIPTION_SETTINGS.enableTranscriptionCorrection;
-    private language: string = 'ja';
 
     constructor(apiKey: string, dictionary?: SimpleCorrectionDictionary) {
         this.apiKey = apiKey;
@@ -25,11 +24,11 @@ export class TranscriptionService implements ITranscriptionProvider {
         });
     }
 
-    async transcribe(audioBlob: Blob, language: string = 'ja'): Promise<TranscriptionResult> {
+    async transcribe(audioBlob: Blob, language: string): Promise<TranscriptionResult> {
         return this.transcribeAudio(audioBlob, language);
     }
 
-    async transcribeAudio(audioBlob: Blob, language: string = 'ja'): Promise<TranscriptionResult> {
+    async transcribeAudio(audioBlob: Blob, language: string): Promise<TranscriptionResult> {
         const startTime = Date.now();
         const perfStartTime = performance.now();
         
@@ -143,8 +142,10 @@ export class TranscriptionService implements ITranscriptionProvider {
                 };
             }
             
-            // Apply corrections if enabled
-            const correctedText = this.enableTranscriptionCorrection
+            // Apply corrections if enabled and for supported languages
+            // Dictionary correction is most effective for Japanese and Chinese
+            const supportsCorrectionForLanguage = ['ja', 'zh'].includes(language);
+            const correctedText = this.enableTranscriptionCorrection && supportsCorrectionForLanguage
                 ? await this.corrector.correct(originalText)
                 : originalText;
             

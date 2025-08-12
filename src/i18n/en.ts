@@ -60,7 +60,8 @@ export const en: TranslationResource = {
         processing: {
             transcribing: 'Status: Transcribing...',
             correcting: 'Status: Correcting...',
-            completed: 'Status: Completed'
+            completed: 'Status: Completed',
+            waiting: 'waiting'
         },
         transcription: {
             vadAutoStopped: 'Status: Auto-stopped due to silence',
@@ -153,6 +154,8 @@ export const en: TranslationResource = {
             transcriptionModelDesc: 'Select the model for voice recognition',
             maxRecordingDuration: 'Max Recording Duration',
             maxRecordingDurationDesc: 'Maximum recording time in seconds ({min}s - {max}min)',
+            language: 'Voice Recognition Language',
+            languageDesc: 'Language for voice recognition and transcription. Auto-detection is recommended for best results.',
             pluginLanguage: 'Plugin Language',
             pluginLanguageDesc: 'Set language for UI, voice processing, and correction dictionary',
             customDictionary: 'Custom Dictionary',
@@ -163,7 +166,12 @@ export const en: TranslationResource = {
         },
         options: {
             modelMini: 'GPT-4o mini Transcribe',
-            modelFull: 'GPT-4o Transcribe'
+            modelFull: 'GPT-4o Transcribe',
+            languageAuto: 'Auto (Recommended)',
+            languageJa: 'Japanese',
+            languageEn: 'English',
+            languageZh: 'Chinese',
+            languageKo: 'Korean'
         },
         tooltips: {
             copy: 'Copy to clipboard',

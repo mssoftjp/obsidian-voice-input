@@ -73,6 +73,22 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                     this.display();
                 }));
 
+        // Voice Recognition Language Setting
+        new Setting(containerEl)
+            .setName(this.i18n.t('ui.settings.language'))
+            .setDesc(this.i18n.t('ui.settings.languageDesc'))
+            .addDropdown(dropdown => dropdown
+                .addOption('auto', this.i18n.t('ui.options.languageAuto'))
+                .addOption('ja', this.i18n.t('ui.options.languageJa'))
+                .addOption('en', this.i18n.t('ui.options.languageEn'))
+                .addOption('zh', this.i18n.t('ui.options.languageZh'))
+                .addOption('ko', this.i18n.t('ui.options.languageKo'))
+                .setValue(this.plugin.settings.language)
+                .onChange(async (value: 'auto' | Locale) => {
+                    this.plugin.settings.language = value;
+                    await this.plugin.saveSettings();
+                }));
+
         // OpenAI API Key
         const apiKeySetting = new Setting(containerEl)
             .setName(this.i18n.t('ui.settings.apiKey'))

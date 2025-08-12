@@ -346,6 +346,17 @@ export default class VoiceInputPlugin extends Plugin {
         return 'en';
     }
 
+    /**
+     * Get resolved language for voice recognition
+     * Auto-detects from Obsidian locale when 'auto' is selected
+     */
+    public getResolvedLanguage(): 'ja' | 'en' | 'zh' | 'ko' {
+        if (this.settings.language === 'auto') {
+            return this.detectPluginLanguage();
+        }
+        return this.settings.language;
+    }
+
     async saveSettings() {
         // APIキーを暗号化して保存
         const dataToSave = {
