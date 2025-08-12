@@ -221,16 +221,35 @@ export default class VoiceInputPlugin extends Plugin {
                 this.logger?.info('Migrating interfaceLanguage to pluginLanguage');
             }
 
-            // languageからpluginLanguageへの移行
-            if ('language' in data && !('pluginLanguage' in data)) {
-                // 言語コードを正規化（ja → ja、en → en、その他 → en）
-                const langCode = data.language as string;
-                migratedData.pluginLanguage = (langCode === 'ja' || langCode === 'en') ? langCode : 'en';
+            // languageからtranscriptionLanguageへの移行
+            if ('language' in data && !('transcriptionLanguage' in data)) {
+                // 既存のlanguageフィールドをtranscriptionLanguageに移行
+                const langValue = data.language;
+                if (langValue === 'auto' || langValue === 'ja' || langValue === 'en' || langValue === 'zh' || langValue === 'ko') {
+                    migratedData.transcriptionLanguage = langValue;
+                } else {
+                    migratedData.transcriptionLanguage = 'auto';
+                }
                 delete migratedData.language;
                 needsSave = true;
+                this.logger?.info(`Migrating language (${data.language}) to transcriptionLanguage (${migratedData.transcriptionLanguage})`);
+            }
+
+            // languageからpluginLanguageへの移行（古いバージョンとの互換性のため）
+            if ('language' in data && !('pluginLanguage' in data)) {
+                // 言語コードを正規化（ja → ja、en → en、zh → zh、ko → ko、その他 → en）
+                const langCode = data.language as string;
+                if (langCode === 'ja' || langCode === 'en' || langCode === 'zh' || langCode === 'ko') {
+                    migratedData.pluginLanguage = langCode;
+                } else {
+                    migratedData.pluginLanguage = 'en';
+                }
+                needsSave = true;
                 this.logger?.info(`Migrating language (${data.language}) to pluginLanguage (${migratedData.pluginLanguage})`);
-            } else if ('language' in data) {
-                // pluginLanguageが既に存在する場合は、languageフィールドを削除
+            }
+
+            // 不要になったlanguageフィールドの削除
+            if ('language' in data) {
                 delete migratedData.language;
                 needsSave = true;
                 this.logger?.info('Removing redundant language field');
@@ -298,10 +317,9 @@ export default class VoiceInputPlugin extends Plugin {
             // pluginLanguageが設定されていない場合
             if (!hasSettingsKey(data, 'pluginLanguage') &&
                 !hasSettingsKey(data, 'interfaceLanguage')) {
-                const obsidianLocale = this.getObsidianLocale();
-                this.settings.pluginLanguage = obsidianLocale.startsWith('ja') ? 'ja' : 'en';
+                this.settings.pluginLanguage = this.detectPluginLanguage();
                 needsSave = true;
-                this.logger?.info(`Auto-detected language: ${this.settings.pluginLanguage} (from Obsidian: ${obsidianLocale})`);
+                this.logger?.info(`Auto-detected language: ${this.settings.pluginLanguage} (from Obsidian: ${this.getObsidianLocale()})`);
             }
 
             // transcriptionLanguageが設定されていない場合
@@ -312,9 +330,13 @@ export default class VoiceInputPlugin extends Plugin {
             }
         } else {
             // 保存データが存在しない場合（初回起動）
+<<<<<<< HEAD
             const obsidianLocale = this.getObsidianLocale();
             this.settings.pluginLanguage = obsidianLocale.startsWith('ja') ? 'ja' : 'en';
             this.settings.transcriptionLanguage = 'auto'; // 初回起動時は自動検出
+=======
+            this.settings.pluginLanguage = this.detectPluginLanguage();
+>>>>>>> origin/feat/multilingual-improvements
             needsSave = true;
             this.logger?.info(`First run - auto-detected language: ${this.settings.pluginLanguage}, transcriptionLanguage: auto`);
         }
@@ -342,6 +364,7 @@ export default class VoiceInputPlugin extends Plugin {
     }
 
     /**
+<<<<<<< HEAD
      * 音声認識用の言語を解決する
      * transcriptionLanguage が 'auto' の場合は Obsidian のロケールから自動判定
      */
@@ -367,6 +390,27 @@ export default class VoiceInputPlugin extends Plugin {
         } else {
             return 'en'; // デフォルト
         }
+=======
+     * Detect plugin language from Obsidian locale
+     */
+    private detectPluginLanguage(): 'ja' | 'en' | 'zh' | 'ko' {
+        const obsidianLocale = this.getObsidianLocale().toLowerCase();
+        if (obsidianLocale.startsWith('ja')) return 'ja';
+        if (obsidianLocale.startsWith('zh')) return 'zh';
+        if (obsidianLocale.startsWith('ko')) return 'ko';
+        return 'en';
+    }
+
+    /**
+     * Get resolved language for voice recognition
+     * Auto-detects from Obsidian locale when 'auto' is selected
+     */
+    public getResolvedLanguage(): 'ja' | 'en' | 'zh' | 'ko' {
+        if (this.settings.transcriptionLanguage === 'auto') {
+            return this.detectPluginLanguage();
+        }
+        return this.settings.transcriptionLanguage;
+>>>>>>> origin/feat/multilingual-improvements
     }
 
     async saveSettings() {

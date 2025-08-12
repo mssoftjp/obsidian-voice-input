@@ -9,7 +9,7 @@ export interface VoiceInputSettings {
     // 録音設定
     maxRecordingSeconds: number; // 最大録音時間（秒）
     // 言語設定
-    transcriptionLanguage: 'auto' | 'ja' | 'en' | 'zh' | 'ko'; // 音声認識の言語
+    transcriptionLanguage: 'auto' | 'ja' | 'en' | 'zh' | 'ko'; // 音声認識言語
     pluginLanguage: Locale; // プラグインUI表示の言語
     customDictionary: SimpleCorrectionDictionary;
     // デバッグ設定
@@ -24,7 +24,7 @@ export const DEFAULT_SETTINGS: VoiceInputSettings = {
     // 録音設定
     maxRecordingSeconds: 300, // 5分（300秒）
     // 言語設定
-    transcriptionLanguage: 'auto', // 自動検出
+    transcriptionLanguage: 'auto', // 音声認識言語のデフォルトは自動検出
     pluginLanguage: 'en', // 初期値、実際はObsidianの設定に従う
     customDictionary: { definiteCorrections: [] },
     // デバッグ設定

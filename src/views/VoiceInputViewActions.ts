@@ -398,7 +398,7 @@ export class VoiceInputViewActions {
             // When processing, the first item is being processed, others are waiting
             const waitingCount = queueLength > 0 ? queueLength - 1 : 0;
             if (waitingCount > 0) {
-                statusText += ` (${waitingCount} 待機中)`;
+                statusText += ` (${waitingCount} ${this.i18n.t('status.processing.waiting')})`;
             }
             this.view.ui.statusEl.setText(statusText);
             this.view.ui.statusEl.addClass('processing');

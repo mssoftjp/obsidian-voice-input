@@ -60,7 +60,8 @@ export const ko: TranslationResource = {
         processing: {
             transcribing: '상태: 음성 텍스트 변환 중...',
             correcting: '상태: 텍스트 정리 중...',
-            completed: '상태: 완료'
+            completed: '상태: 완료',
+            waiting: '대기 중'
         },
         transcription: {
             vadAutoStopped: '상태: 무음 감지로 자동 중지됨',
@@ -153,6 +154,10 @@ export const ko: TranslationResource = {
             transcriptionModelDesc: '음성 인식에 사용할 모델 선택',
             maxRecordingDuration: '최대 녹음 시간',
             maxRecordingDurationDesc: '최대 녹음 시간(초) ({min}초~{max}분)',
+            language: '음성 인식 언어',
+            languageDesc: '음성 인식 및 전사를 위한 언어입니다. 최상의 결과를 위해 자동 감지를 권장합니다.',
+            transcriptionLanguage: '음성 인식 언어',
+            transcriptionLanguageDesc: '음성 인식 및 전사를 위한 언어입니다. 최상의 결과를 위해 자동 감지를 권장합니다.',
             pluginLanguage: '플러그인 언어',
             pluginLanguageDesc: 'UI 표시, 음성 처리 및 교정 사전의 언어 설정',
             customDictionary: '사용자 정의 사전',
@@ -163,7 +168,12 @@ export const ko: TranslationResource = {
         },
         options: {
             modelMini: 'GPT-4o mini Transcribe',
-            modelFull: 'GPT-4o Transcribe'
+            modelFull: 'GPT-4o Transcribe',
+            languageAuto: '자동 (권장)',
+            languageJa: '일본어',
+            languageEn: '영어',
+            languageZh: '중국어',
+            languageKo: '한국어'
         },
         tooltips: {
             copy: '클립보드에 복사',
