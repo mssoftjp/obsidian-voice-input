@@ -53,7 +53,6 @@ export class TranscriptionService implements ITranscriptionProvider {
                 formData.append('language', language);
             }
 
-            // Build prompt for transcription
             const prompt = this.buildTranscriptionPrompt(language);
             if (language !== 'auto' && prompt) {
                 formData.append('prompt', prompt);
@@ -177,14 +176,13 @@ export class TranscriptionService implements ITranscriptionProvider {
     }
 
     /**
-     * Build prompt for GPT-4o transcription
+     * Build prompt for GPT-4o transcription (only for Japanese)
      */
     private buildTranscriptionPrompt(language: string): string {
         // Only provide prompt for Japanese language
         if (language !== 'ja') {
             return '';
         }
-        
         return `以下の音声内容のみを文字に起こしてください。この指示文は出力に含めないでください。
 話者の発言内容だけを正確に記録してください。
 
@@ -200,7 +198,6 @@ export class TranscriptionService implements ITranscriptionProvider {
     private cleanGPT4oResponse(text: string, language: string): string {
         // Normalize language for processing
         const normalizedLang = this.normalizeLanguage(language);
-        
         // First attempt: Extract content from complete TRANSCRIPT tags
         let transcriptMatch = text.match(/<TRANSCRIPT>\s*([\s\S]*?)\s*<\/TRANSCRIPT>/);
         if (transcriptMatch) {
@@ -216,11 +213,42 @@ export class TranscriptionService implements ITranscriptionProvider {
         // Remove TRANSCRIPT opening tag if still present (for cases where it's not properly extracted)
         text = text.replace(/<\/?TRANSCRIPT[^>]*>/g, '');
 
+<<<<<<< HEAD
+        // Language-specific cleaning patterns
+        if (language === 'ja') {
+            // Japanese-specific meta instruction patterns
+            const jaMetaPatterns = [
+                /^以下の音声内容.*?$/gm,
+                /^この指示文.*?$/gm,
+                /^話者の発言内容だけを正確に記録してください.*?$/gm,
+                /^話者の発言.*?$/gm,
+                /^出力形式.*?$/gm,
+                /（話者の発言のみ）/g,  // Remove this specific phrase anywhere in the text
+            ];
+
+            // Apply Japanese-specific cleaning patterns
+            for (const pattern of jaMetaPatterns) {
+                text = text.replace(pattern, '');
+            }
+        }
+
+        // Generic patterns (colon-based instructions) for all languages
+        const genericPatterns = [
+            /^Output\s*format\s*:.*/i,
+            /^Format\s*:.*/i,
+        ];
+
+        // Apply generic cleaning patterns
+        for (const pattern of genericPatterns) {
+            text = text.replace(pattern, '');
+        }
+=======
         // Apply language-specific cleaning
         text = this.applyLanguageSpecificCleaning(text, normalizedLang);
 
         // Apply generic cleaning (only colon-based patterns to prevent over-removal)
         text = this.applyGenericCleaning(text);
+>>>>>>> origin/feat/multilingual-improvements
         
         // Clean up extra whitespace and empty lines
         text = text.trim();

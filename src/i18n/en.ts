@@ -159,7 +159,7 @@ export const en: TranslationResource = {
             transcriptionLanguage: 'Transcription Language',
             transcriptionLanguageDesc: 'Language for voice recognition and transcription. Auto-detection is recommended for best results.',
             pluginLanguage: 'Plugin Language',
-            pluginLanguageDesc: 'Set language for UI, voice processing, and correction dictionary',
+            pluginLanguageDesc: 'Set language for UI display (voice recognition language is auto-detected separately)',
             customDictionary: 'Custom Dictionary',
             customDictionaryDesc: 'Manage corrections used for post-processing',
             dictionaryDefinite: 'Definite Corrections (max {max})',

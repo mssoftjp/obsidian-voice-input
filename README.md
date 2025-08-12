@@ -53,31 +53,7 @@ Tip: A settings gear in the view header opens the plugin’s settings.
 - **Transcription Language**: Auto/Japanese/English/Chinese/Korean (auto-detection recommended)
 - AI Post‑processing: enable dictionary‑based cleanup (applied to Japanese only)
 - Maximum Recording Duration: slider (default 5 min)
-- **Plugin Language**: English/Japanese/Chinese/Korean (controls UI display, auto‑detected from Obsidian)
-
-### Language Settings Explained
-
-The plugin provides **complete separation** between UI language and voice recognition language for optimal user experience:
-
-- **Plugin Language**: Controls the interface language (menus, buttons, messages). Auto-detected from your Obsidian language setting.
-- **Transcription Language**: Determines the language for speech recognition and transcription. "Auto" is recommended - it automatically selects the optimal language based on your Obsidian interface language.
-
-### Auto-Detection Behavior
-
-When **Transcription Language** is set to "Auto":
-- **Japanese locale** (ja-*) → Japanese transcription
-- **Chinese locale** (zh-*) → Chinese transcription  
-- **Korean locale** (ko-*) → Korean transcription
-- **All other locales** → English transcription
-
-### Language-specific Processing
-
-The plugin applies different processing strategies based on the selected transcription language:
-
-- **Japanese (ja)**: Enhanced prompts for optimal transcription accuracy + dictionary correction for technical terms
-- **Chinese (zh)**: Clean transcription without language-specific processing
-- **English/Korean (en/ko)**: Clean transcription without prompts or correction to avoid interference
-- **Auto Mode**: Dynamically selects the optimal language and processing strategy based on your Obsidian interface language
+- Plugin Language: English/Japanese (controls UI display only, auto‑detected from Obsidian, adjustable)
 
 ## Security & Privacy
 
@@ -159,6 +135,9 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 - **音声認識言語**: 自動/日本語/英語/中国語/韓国語（自動検出を推奨）
 - AI後処理: 辞書ベースの補正（日本語のみ適用）
 - 最大録音時間: スライダー（初期値5分）
+<<<<<<< HEAD
+- プラグイン言語: 英語/日本語（UI表示のみ制御、Obsidian設定から自動検出、変更可）
+=======
 - **プラグイン言語**: 英語/日本語/中国語/韓国語（UI表示言語、Obsidian設定から自動検出）
 
 ### 言語設定について
@@ -184,6 +163,7 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 - **中国語 (zh)**: 言語固有処理なしのクリーンな文字起こし
 - **英語/韓国語 (en/ko)**: 干渉を避けるため、プロンプトや補正なしのクリーンな文字起こし
 - **自動モード**: Obsidianのインターフェース言語に基づいて最適な言語と処理戦略を動的に選択
+>>>>>>> origin/feat/multilingual-improvements
 
 ## セキュリティ / プライバシー
 
