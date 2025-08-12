@@ -140,7 +140,7 @@ export const ko: TranslationResource = {
         },
         titles: {
             main: 'Voice Input',
-            settings: 'Voice Input 설정',
+            settings: 'Voice Input 설정'
         },
         settings: {
             apiKey: 'OpenAI API 키',
@@ -182,6 +182,6 @@ export const ko: TranslationResource = {
             fromMultiple: '입력어（쉼표구분）',
             to: '교정어',
             context: '문맥 키워드'
-        },
+        }
     }
 };

@@ -140,7 +140,7 @@ export const en: TranslationResource = {
         },
         titles: {
             main: 'Voice Input',
-            settings: 'Voice Input Settings',
+            settings: 'Voice Input Settings'
         },
         settings: {
             apiKey: 'OpenAI API Key',
@@ -182,6 +182,6 @@ export const en: TranslationResource = {
             fromMultiple: 'From (comma-separated)',
             to: 'To',
             context: 'Context Keywords'
-        },
+        }
     }
 };
