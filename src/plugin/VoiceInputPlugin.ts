@@ -298,15 +298,13 @@ export default class VoiceInputPlugin extends Plugin {
             // pluginLanguageが設定されていない場合
             if (!hasSettingsKey(data, 'pluginLanguage') &&
                 !hasSettingsKey(data, 'interfaceLanguage')) {
-                const obsidianLocale = this.getObsidianLocale();
-                this.settings.pluginLanguage = obsidianLocale.startsWith('ja') ? 'ja' : 'en';
+                this.settings.pluginLanguage = this.detectPluginLanguage();
                 needsSave = true;
-                this.logger?.info(`Auto-detected language: ${this.settings.pluginLanguage} (from Obsidian: ${obsidianLocale})`);
+                this.logger?.info(`Auto-detected language: ${this.settings.pluginLanguage} (from Obsidian: ${this.getObsidianLocale()})`);
             }
         } else {
             // 保存データが存在しない場合（初回起動）
-            const obsidianLocale = this.getObsidianLocale();
-            this.settings.pluginLanguage = obsidianLocale.startsWith('ja') ? 'ja' : 'en';
+            this.settings.pluginLanguage = this.detectPluginLanguage();
             needsSave = true;
             this.logger?.info(`First run - auto-detected language: ${this.settings.pluginLanguage}`);
         }
@@ -331,6 +329,43 @@ export default class VoiceInputPlugin extends Plugin {
 	 */
     private getObsidianLocale(): string {
         return getObsidianLocale(this.app);
+    }
+
+    /**
+     * プラグイン言語を自動検出（ja/zh/ko/en）
+     */
+    private detectPluginLanguage(): 'ja' | 'zh' | 'ko' | 'en' {
+        const obsidianLocale = this.getObsidianLocale().toLowerCase();
+
+        if (obsidianLocale.startsWith('ja')) {
+            return 'ja';
+        } else if (obsidianLocale.startsWith('zh')) {
+            return 'zh';
+        } else if (obsidianLocale.startsWith('ko')) {
+            return 'ko';
+        } else {
+            return 'en';
+        }
+    }
+
+    /**
+     * 解決済み言語を取得（transcriptionLanguage が 'auto' の場合は自動検出）
+     */
+    getResolvedLanguage(): 'ja' | 'zh' | 'ko' | 'en' {
+        // 現在の実装では pluginLanguage を transcriptionLanguage として使用
+        // 'auto' の概念は今後の拡張のために準備
+        const transcriptionLanguage = this.settings.pluginLanguage;
+
+        if (transcriptionLanguage === 'auto' as string) {
+            return this.detectPluginLanguage();
+        }
+
+        // pluginLanguage が ja/zh/ko/en 以外の場合は自動検出にフォールバック
+        if (!['ja', 'zh', 'ko', 'en'].includes(transcriptionLanguage)) {
+            return this.detectPluginLanguage();
+        }
+
+        return transcriptionLanguage as 'ja' | 'zh' | 'ko' | 'en';
     }
 
     async saveSettings() {
