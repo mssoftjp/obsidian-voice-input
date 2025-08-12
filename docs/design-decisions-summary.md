@@ -26,12 +26,18 @@ interface MultiLanguageDictionary {
 
 ### 2. Fallback Order
 
-**Priority**: `currentDetectedLanguage → 'en' → global`
+**Priority**: `currentDetectedLanguage → global`
 
 **Rationale**:
 - Current language gets highest priority (most relevant)
-- English as universal fallback (international common language)
-- Global dictionary as final fallback (language-agnostic rules)
+- Global dictionary as fallback (language-agnostic rules)
+- No English fallback by default to avoid inappropriate corrections across languages
+- Optional English fallback can be enabled via setting (disabled by default) for users who prefer it
+
+**Language Source**: Language detection is routed via `getResolvedLanguage()` which:
+- Uses `transcriptionLanguage` setting when explicitly set
+- Maps 'auto' setting to one of: ja/zh/ko/en based on plugin language detection
+- Does NOT use UI/plugin interface language
 
 ### 3. Backward Compatibility Strategy
 
@@ -42,9 +48,24 @@ interface MultiLanguageDictionary {
 - One-time conversion on first load with new format
 - Always save in new format going forward
 
-### 4. Security and Performance Limits
+### 4. Dictionary Format and Security
 
-**Limits Established**:
+**Dictionary Entry Format**: Literal string-to-string mappings only
+```typescript
+interface CorrectionEntry {
+  patterns: string[];  // Literal strings, NOT regex patterns
+  replacement: string; // Literal replacement text
+  enabled: boolean;
+}
+```
+
+**Important Safety Considerations**:
+- Dictionary entries must be literal strings for safety and performance
+- Regex patterns belong only to separate custom rules (not dictionary entries)
+- Dictionary patterns are escaped when compiled to prevent injection
+- Input validation prevents malicious patterns
+
+**Performance Limits**:
 ```typescript
 const LIMITS = {
   MAX_ENTRIES_PER_LANGUAGE: 1000,
@@ -76,10 +97,11 @@ const LIMITS = {
 
 1. **Type Safety**: Full TypeScript support with compile-time checks
 2. **Backward Compatibility**: No breaking changes for existing users
-3. **Performance**: Efficient fallback logic with caching support
-4. **Security**: Input validation and size limits prevent abuse
-5. **Usability**: Intuitive language-based organization
+3. **Performance**: Efficient fallback logic with literal string matching and caching support
+4. **Security**: Input validation, literal-only dictionary entries, and size limits prevent abuse
+5. **Usability**: Intuitive language-based organization aligned with transcription language
 6. **Extensibility**: Easy to add new languages in the future
+7. **Safety**: Explicit separation of dictionary entries (literal) from custom rules (regex)
 
 ## Migration Impact
 
@@ -91,9 +113,10 @@ const LIMITS = {
 ## Success Metrics
 
 1. Zero data loss during migration
-2. <100ms correction processing time maintained
+2. <100ms correction processing time maintained with literal string matching
 3. Memory usage stays under 1MB for typical dictionaries
 4. User adoption of language-specific features >50% within 3 months
 5. No increase in user-reported issues post-implementation
+6. Security: Zero regex injection vulnerabilities with literal-only dictionary entries
 
-This design successfully balances the competing requirements of type safety, performance, backward compatibility, and user experience while providing a solid foundation for multi-language dictionary correction.
+This design successfully balances the competing requirements of type safety, performance, backward compatibility, and user experience while providing a solid foundation for multi-language dictionary correction. The literal string approach ensures both safety and performance, while the simplified fallback strategy prevents inappropriate cross-language corrections.
