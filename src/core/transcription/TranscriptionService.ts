@@ -213,42 +213,11 @@ export class TranscriptionService implements ITranscriptionProvider {
         // Remove TRANSCRIPT opening tag if still present (for cases where it's not properly extracted)
         text = text.replace(/<\/?TRANSCRIPT[^>]*>/g, '');
 
-<<<<<<< HEAD
-        // Language-specific cleaning patterns
-        if (language === 'ja') {
-            // Japanese-specific meta instruction patterns
-            const jaMetaPatterns = [
-                /^以下の音声内容.*?$/gm,
-                /^この指示文.*?$/gm,
-                /^話者の発言内容だけを正確に記録してください.*?$/gm,
-                /^話者の発言.*?$/gm,
-                /^出力形式.*?$/gm,
-                /（話者の発言のみ）/g,  // Remove this specific phrase anywhere in the text
-            ];
-
-            // Apply Japanese-specific cleaning patterns
-            for (const pattern of jaMetaPatterns) {
-                text = text.replace(pattern, '');
-            }
-        }
-
-        // Generic patterns (colon-based instructions) for all languages
-        const genericPatterns = [
-            /^Output\s*format\s*:.*/i,
-            /^Format\s*:.*/i,
-        ];
-
-        // Apply generic cleaning patterns
-        for (const pattern of genericPatterns) {
-            text = text.replace(pattern, '');
-        }
-=======
         // Apply language-specific cleaning
         text = this.applyLanguageSpecificCleaning(text, normalizedLang);
 
         // Apply generic cleaning (only colon-based patterns to prevent over-removal)
         text = this.applyGenericCleaning(text);
->>>>>>> origin/feat/multilingual-improvements
         
         // Clean up extra whitespace and empty lines
         text = text.trim();
