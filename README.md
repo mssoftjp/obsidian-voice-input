@@ -50,24 +50,34 @@ Tip: A settings gear in the view header opens the plugin’s settings.
 
 - OpenAI API Key: stored locally (encrypted at rest)
 - Transcription Model: `gpt-4o-transcribe` or `gpt-4o-mini-transcribe`
-- Voice Recognition Language: Auto/Japanese/English/Chinese/Korean (auto-detection recommended)
-- AI Post‑processing: enable dictionary‑based cleanup (applied to Japanese and Chinese)
+- **Transcription Language**: Auto/Japanese/English/Chinese/Korean (auto-detection recommended)
+- AI Post‑processing: enable dictionary‑based cleanup (applied to Japanese only)
 - Maximum Recording Duration: slider (default 5 min)
-- Plugin Language: English/Japanese/Chinese/Korean (controls UI display, auto‑detected from Obsidian)
+- **Plugin Language**: English/Japanese/Chinese/Korean (controls UI display, auto‑detected from Obsidian)
 
 ### Language Settings Explained
 
-The plugin separates UI language from voice recognition language for optimal user experience:
+The plugin provides **complete separation** between UI language and voice recognition language for optimal user experience:
 
 - **Plugin Language**: Controls the interface language (menus, buttons, messages). Auto-detected from your Obsidian language setting.
-- **Voice Recognition Language**: Determines the language for speech recognition and transcription. "Auto" is recommended for best results.
+- **Transcription Language**: Determines the language for speech recognition and transcription. "Auto" is recommended - it automatically selects the optimal language based on your Obsidian interface language.
 
-### Language-specific Behavior
+### Auto-Detection Behavior
 
-- **Japanese (ja)**: Enhanced prompts for optimal transcription accuracy + dictionary correction
-- **Chinese (zh)**: Clean transcription + dictionary correction  
+When **Transcription Language** is set to "Auto":
+- **Japanese locale** (ja-*) → Japanese transcription
+- **Chinese locale** (zh-*) → Chinese transcription  
+- **Korean locale** (ko-*) → Korean transcription
+- **All other locales** → English transcription
+
+### Language-specific Processing
+
+The plugin applies different processing strategies based on the selected transcription language:
+
+- **Japanese (ja)**: Enhanced prompts for optimal transcription accuracy + dictionary correction for technical terms
+- **Chinese (zh)**: Clean transcription without language-specific processing
 - **English/Korean (en/ko)**: Clean transcription without prompts or correction to avoid interference
-- **Auto Mode**: Automatically detects language based on your Obsidian locale setting
+- **Auto Mode**: Dynamically selects the optimal language and processing strategy based on your Obsidian interface language
 
 ## Security & Privacy
 
@@ -146,24 +156,34 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 
 - OpenAI APIキー: ローカルに暗号化して保存
 - 文字起こしモデル: `gpt-4o-transcribe` または `gpt-4o-mini-transcribe`
-- 音声認識言語: 自動/日本語/英語/中国語/韓国語（自動検出を推奨）
-- AI後処理: 辞書ベースの補正（日本語と中国語に適用）
+- **音声認識言語**: 自動/日本語/英語/中国語/韓国語（自動検出を推奨）
+- AI後処理: 辞書ベースの補正（日本語のみ適用）
 - 最大録音時間: スライダー（初期値5分）
-- プラグイン言語: 英語/日本語/中国語/韓国語（UI表示言語、Obsidian設定から自動検出）
+- **プラグイン言語**: 英語/日本語/中国語/韓国語（UI表示言語、Obsidian設定から自動検出）
 
 ### 言語設定について
 
-プラグインは最適なユーザー体験のため、UI言語と音声認識言語を分離しています：
+プラグインは最適なユーザー体験のため、UI言語と音声認識言語を**完全に分離**しています：
 
 - **プラグイン言語**: インターフェースの言語（メニュー、ボタン、メッセージ）。Obsidianの言語設定から自動検出されます。
-- **音声認識言語**: 音声認識と文字起こしの言語。最良の結果のため「自動」を推奨します。
+- **音声認識言語**: 音声認識と文字起こしの言語。「自動」を推奨 - Obsidianのインターフェース言語に基づいて最適な言語を自動選択します。
 
-### 言語別の動作
+### 自動検出の動作
 
-- **日本語 (ja)**: 高精度化のための専用プロンプト + 辞書補正
-- **中国語 (zh)**: クリーンな文字起こし + 辞書補正
+**音声認識言語**が「自動」に設定されている場合：
+- **日本語ロケール** (ja-*) → 日本語での文字起こし
+- **中国語ロケール** (zh-*) → 中国語での文字起こし
+- **韓国語ロケール** (ko-*) → 韓国語での文字起こし
+- **その他のロケール** → 英語での文字起こし
+
+### 言語別の処理
+
+プラグインは選択された音声認識言語に基づいて異なる処理戦略を適用します：
+
+- **日本語 (ja)**: 高精度化のための専用プロンプト + 専門用語の辞書補正
+- **中国語 (zh)**: 言語固有処理なしのクリーンな文字起こし
 - **英語/韓国語 (en/ko)**: 干渉を避けるため、プロンプトや補正なしのクリーンな文字起こし
-- **自動モード**: Obsidianのロケール設定に基づいて言語を自動検出
+- **自動モード**: Obsidianのインターフェース言語に基づいて最適な言語と処理戦略を動的に選択
 
 ## セキュリティ / プライバシー
 

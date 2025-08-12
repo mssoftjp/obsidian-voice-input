@@ -175,6 +175,8 @@ export type TranslationResource = {
       maxRecordingDurationDesc: string;
       language: string;
       languageDesc: string;
+      transcriptionLanguage: string;
+      transcriptionLanguageDesc: string;
       pluginLanguage: string;
       pluginLanguageDesc: string;
       customDictionary: string;
