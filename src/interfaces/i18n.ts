@@ -173,6 +173,10 @@ export type TranslationResource = {
       transcriptionModelDesc: string;
       maxRecordingDuration: string;
       maxRecordingDurationDesc: string;
+      language: string;
+      languageDesc: string;
+      transcriptionLanguage: string;
+      transcriptionLanguageDesc: string;
       pluginLanguage: string;
       pluginLanguageDesc: string;
       customDictionary: string;
@@ -184,6 +188,11 @@ export type TranslationResource = {
     options: {
       modelMini: string;
       modelFull: string;
+      languageAuto: string;
+      languageJa: string;
+      languageEn: string;
+      languageZh: string;
+      languageKo: string;
     };
     tooltips: {
       copy: string;

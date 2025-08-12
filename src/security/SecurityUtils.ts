@@ -1,4 +1,5 @@
 import { ObsidianHttpClient } from '../utils/ObsidianHttpClient';
+import { getI18n } from '../services';
 
 export class SecurityUtils {
     /**
@@ -64,6 +65,8 @@ export class SecurityUtils {
      * Test OpenAI API key by making a simple API call
      */
     static async testOpenAIAPIKey(apiKey: string): Promise<{ valid: boolean; error?: string }> {
+        const i18n = getI18n();
+
         try {
             const { status } = await ObsidianHttpClient.request({
                 url: 'https://api.openai.com/v1/models',
@@ -74,14 +77,14 @@ export class SecurityUtils {
             if (status >= 200 && status < 300) {
                 return { valid: true };
             } else if (status === 401) {
-                return { valid: false, error: 'APIキーが無効です' };
+                return { valid: false, error: i18n.t('error.api.unauthorized') };
             } else if (status === 429) {
-                return { valid: false, error: 'レート制限に達しています' };
+                return { valid: false, error: i18n.t('error.api.rateLimited') };
             } else {
-                return { valid: false, error: `エラー: HTTP ${status}` };
+                return { valid: false, error: `${i18n.t('error.general.error')}: HTTP ${status}` };
             }
         } catch (_error) {
-            return { valid: false, error: 'ネットワークエラー' };
+            return { valid: false, error: i18n.t('error.general.network') };
         }
     }
 }
