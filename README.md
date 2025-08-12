@@ -49,7 +49,7 @@ Tip: A settings gear in the view header opens the plugin’s settings.
 - Transcription Model: `gpt-4o-transcribe` or `gpt-4o-mini-transcribe`
 - AI Post‑processing: enable dictionary‑based cleanup (Japanese)
 - Maximum Recording Duration: slider (default 5 min)
-- Plugin Language: English/Japanese (auto‑detected from Obsidian, adjustable)
+- Plugin Language: English/Japanese (controls UI display only, auto‑detected from Obsidian, adjustable)
 
 ## Security & Privacy
 
@@ -127,7 +127,7 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 - 文字起こしモデル: `gpt-4o-transcribe` または `gpt-4o-mini-transcribe`
 - AI後処理: 辞書ベースの補正（日本語向け）
 - 最大録音時間: スライダー（初期値5分）
-- プラグイン言語: 英語/日本語（Obsidian設定から自動検出、変更可）
+- プラグイン言語: 英語/日本語（UI表示のみ制御、Obsidian設定から自動検出、変更可）
 
 ## セキュリティ / プライバシー
 

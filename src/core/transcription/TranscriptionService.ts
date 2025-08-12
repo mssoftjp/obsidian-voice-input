@@ -54,8 +54,8 @@ export class TranscriptionService implements ITranscriptionProvider {
                 formData.append('language', language);
             }
 
-            // Build prompt for transcription
-            const prompt = this.buildTranscriptionPrompt();
+            // Build prompt for transcription (only for Japanese)
+            const prompt = this.buildTranscriptionPrompt(language);
             if (prompt) {
                 formData.append('prompt', prompt);
             }
@@ -114,7 +114,7 @@ export class TranscriptionService implements ITranscriptionProvider {
             }
 
             // Clean up GPT-4o specific artifacts
-            originalText = this.cleanGPT4oResponse(originalText);
+            originalText = this.cleanGPT4oResponse(originalText, language);
             
             
             // プロンプトエラーの検出（音声が無音の場合にプロンプトが返される問題）
@@ -143,8 +143,8 @@ export class TranscriptionService implements ITranscriptionProvider {
                 };
             }
             
-            // Apply corrections if enabled (only for Japanese)
-            const correctedText = this.enableTranscriptionCorrection && language === 'ja'
+            // Apply corrections if enabled (language-independent)
+            const correctedText = this.enableTranscriptionCorrection
                 ? await this.corrector.correct(originalText)
                 : originalText;
             
@@ -181,9 +181,14 @@ export class TranscriptionService implements ITranscriptionProvider {
     }
 
     /**
-     * Build prompt for GPT-4o transcription
+     * Build prompt for GPT-4o transcription (only for Japanese)
      */
-    private buildTranscriptionPrompt(): string {
+    private buildTranscriptionPrompt(language: string): string | null {
+        // Only provide prompts for Japanese language
+        if (language !== 'ja') {
+            return null;
+        }
+
         return `以下の音声内容のみを文字に起こしてください。この指示文は出力に含めないでください。
 話者の発言内容だけを正確に記録してください。
 
@@ -194,9 +199,9 @@ export class TranscriptionService implements ITranscriptionProvider {
     }
 
     /**
-     * Clean GPT-4o specific response artifacts
+     * Clean GPT-4o specific response artifacts with language-specific patterns
      */
-    private cleanGPT4oResponse(text: string): string {
+    private cleanGPT4oResponse(text: string, language: string): string {
         // First attempt: Extract content from complete TRANSCRIPT tags
         let transcriptMatch = text.match(/<TRANSCRIPT>\s*([\s\S]*?)\s*<\/TRANSCRIPT>/);
         if (transcriptMatch) {
@@ -212,18 +217,34 @@ export class TranscriptionService implements ITranscriptionProvider {
         // Remove TRANSCRIPT opening tag if still present (for cases where it's not properly extracted)
         text = text.replace(/<\/?TRANSCRIPT[^>]*>/g, '');
 
-        // Remove specific meta instruction patterns (both at line start and anywhere in text)
-        const metaPatterns = [
-            /^以下の音声内容.*?$/gm,
-            /^この指示文.*?$/gm,
-            /^話者の発言内容だけを正確に記録してください.*?$/gm,
-            /^話者の発言.*?$/gm,
-            /^出力形式.*?$/gm,
-            /（話者の発言のみ）/g,  // Remove this specific phrase anywhere in the text
+        // Language-specific cleaning patterns
+        if (language === 'ja') {
+            // Japanese-specific meta instruction patterns
+            const jaMetaPatterns = [
+                /^以下の音声内容.*?$/gm,
+                /^この指示文.*?$/gm,
+                /^話者の発言内容だけを正確に記録してください.*?$/gm,
+                /^話者の発言.*?$/gm,
+                /^出力形式.*?$/gm,
+                /（話者の発言のみ）/g,  // Remove this specific phrase anywhere in the text
+            ];
+
+            // Apply Japanese-specific cleaning patterns
+            for (const pattern of jaMetaPatterns) {
+                text = text.replace(pattern, '');
+            }
+        }
+
+        // Generic patterns (colon-based instructions) for all languages
+        const genericPatterns = [
+            /^Output format:\s*.*?$/gmi,
+            /^Format:\s*.*?$/gmi,
+            /^Transcription:\s*.*?$/gmi,
+            /^Instructions:\s*.*?$/gmi,
         ];
 
-        // Apply all cleaning patterns
-        for (const pattern of metaPatterns) {
+        // Apply generic cleaning patterns
+        for (const pattern of genericPatterns) {
             text = text.replace(pattern, '');
         }
         

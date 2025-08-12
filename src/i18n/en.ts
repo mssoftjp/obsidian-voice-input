@@ -140,7 +140,7 @@ export const en: TranslationResource = {
         },
         titles: {
             main: 'Voice Input',
-            settings: 'Voice Input Settings',
+            settings: 'Voice Input Settings'
         },
         settings: {
             apiKey: 'OpenAI API Key',
@@ -154,7 +154,7 @@ export const en: TranslationResource = {
             maxRecordingDuration: 'Max Recording Duration',
             maxRecordingDurationDesc: 'Maximum recording time in seconds ({min}s - {max}min)',
             pluginLanguage: 'Plugin Language',
-            pluginLanguageDesc: 'Set language for UI, voice processing, and correction dictionary',
+            pluginLanguageDesc: 'Set language for UI display (voice recognition language is auto-detected separately)',
             customDictionary: 'Custom Dictionary',
             customDictionaryDesc: 'Manage corrections used for post-processing',
             dictionaryDefinite: 'Definite Corrections (max {max})',
@@ -182,6 +182,6 @@ export const en: TranslationResource = {
             fromMultiple: 'From (comma-separated)',
             to: 'To',
             context: 'Context Keywords'
-        },
+        }
     }
 };

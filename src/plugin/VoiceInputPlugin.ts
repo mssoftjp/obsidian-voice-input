@@ -303,12 +303,20 @@ export default class VoiceInputPlugin extends Plugin {
                 needsSave = true;
                 this.logger?.info(`Auto-detected language: ${this.settings.pluginLanguage} (from Obsidian: ${obsidianLocale})`);
             }
+
+            // transcriptionLanguageが設定されていない場合
+            if (!hasSettingsKey(data, 'transcriptionLanguage')) {
+                this.settings.transcriptionLanguage = 'auto'; // 新規フィールドはデフォルトで自動検出
+                needsSave = true;
+                this.logger?.info('transcriptionLanguage not found, using default: auto');
+            }
         } else {
             // 保存データが存在しない場合（初回起動）
             const obsidianLocale = this.getObsidianLocale();
             this.settings.pluginLanguage = obsidianLocale.startsWith('ja') ? 'ja' : 'en';
+            this.settings.transcriptionLanguage = 'auto'; // 初回起動時は自動検出
             needsSave = true;
-            this.logger?.info(`First run - auto-detected language: ${this.settings.pluginLanguage}`);
+            this.logger?.info(`First run - auto-detected language: ${this.settings.pluginLanguage}, transcriptionLanguage: auto`);
         }
 
         // 必要に応じて設定を保存
@@ -331,6 +339,34 @@ export default class VoiceInputPlugin extends Plugin {
 	 */
     private getObsidianLocale(): string {
         return getObsidianLocale(this.app);
+    }
+
+    /**
+     * 音声認識用の言語を解決する
+     * transcriptionLanguage が 'auto' の場合は Obsidian のロケールから自動判定
+     */
+    getResolvedLanguage(): 'ja' | 'en' | 'zh' | 'ko' {
+        if (this.settings.transcriptionLanguage === 'auto') {
+            return this.detectPluginLanguage();
+        }
+        return this.settings.transcriptionLanguage as 'ja' | 'en' | 'zh' | 'ko';
+    }
+
+    /**
+     * Obsidian のロケールから対応言語を検出
+     */
+    detectPluginLanguage(): 'ja' | 'en' | 'zh' | 'ko' {
+        const obsidianLocale = this.getObsidianLocale();
+
+        if (obsidianLocale.startsWith('ja')) {
+            return 'ja';
+        } else if (obsidianLocale.startsWith('zh')) {
+            return 'zh';
+        } else if (obsidianLocale.startsWith('ko')) {
+            return 'ko';
+        } else {
+            return 'en'; // デフォルト
+        }
     }
 
     async saveSettings() {
