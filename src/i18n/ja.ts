@@ -140,7 +140,7 @@ export const ja: TranslationResource = {
         },
         titles: {
             main: 'Voice Input',
-            settings: 'Voice Input 設定',
+            settings: 'Voice Input 設定'
         },
         settings: {
             apiKey: 'OpenAI API キー',
@@ -182,6 +182,6 @@ export const ja: TranslationResource = {
             fromMultiple: '入力語（カンマ区切り）',
             to: '修正語',
             context: '文脈キーワード'
-        },
+        }
     }
 };

@@ -140,7 +140,7 @@ export const zh: TranslationResource = {
         },
         titles: {
             main: 'Voice Input',
-            settings: 'Voice Input 设置',
+            settings: 'Voice Input 设置'
         },
         settings: {
             apiKey: 'OpenAI API 密钥',
@@ -182,6 +182,6 @@ export const zh: TranslationResource = {
             fromMultiple: '输入词（逗号分隔）',
             to: '校正词',
             context: '语境关键词'
-        },
+        }
     }
 };
