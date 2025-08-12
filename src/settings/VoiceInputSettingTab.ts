@@ -83,9 +83,8 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 .addOption('en', this.i18n.t('ui.options.languageEn'))
                 .addOption('zh', this.i18n.t('ui.options.languageZh'))
                 .addOption('ko', this.i18n.t('ui.options.languageKo'))
-                .addOption('es', this.i18n.t('ui.options.languageEs'))
                 .setValue(this.plugin.settings.transcriptionLanguage)
-                .onChange(async (value: string) => {
+                .onChange(async (value: 'auto' | 'ja' | 'en' | 'zh' | 'ko') => {
                     this.plugin.settings.transcriptionLanguage = value;
                     await this.plugin.saveSettings();
                 }));

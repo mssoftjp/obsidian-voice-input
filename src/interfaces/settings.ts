@@ -10,7 +10,7 @@ export interface VoiceInputSettings {
     maxRecordingSeconds: number; // 最大録音時間（秒）
     // 言語設定
     pluginLanguage: Locale; // プラグイン全体の言語（UI）
-    transcriptionLanguage: string; // 文字起こし言語（'auto', 'ja', 'en', 'zh', 'ko', 'es'）
+    transcriptionLanguage: 'auto' | 'ja' | 'en' | 'zh' | 'ko'; // 文字起こし言語
     customDictionary: SimpleCorrectionDictionary;
     // デバッグ設定
     debugMode: boolean; // デバッグモード

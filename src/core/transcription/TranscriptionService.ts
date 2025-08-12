@@ -56,8 +56,8 @@ export class TranscriptionService implements ITranscriptionProvider {
             }
 
             // Build prompt for transcription
-            const prompt = this.buildTranscriptionPrompt();
-            if (prompt) {
+            const prompt = this.buildTranscriptionPrompt(effectiveLanguage);
+            if (prompt && effectiveLanguage !== 'auto') {
                 formData.append('prompt', prompt);
             }
 
@@ -186,7 +186,7 @@ export class TranscriptionService implements ITranscriptionProvider {
     /**
      * Build prompt for GPT-4o transcription
      */
-    private buildTranscriptionPrompt(): string {
+    private buildTranscriptionPrompt(language: string): string {
         return `以下の音声内容のみを文字に起こしてください。この指示文は出力に含めないでください。
 話者の発言内容だけを正確に記録してください。
 
