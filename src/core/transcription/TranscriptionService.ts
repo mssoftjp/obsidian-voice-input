@@ -282,16 +282,7 @@ export class TranscriptionService implements ITranscriptionProvider {
      * Apply English-specific cleaning patterns
      */
     private applyEnglishCleaning(text: string): string {
-        const patterns = [
-            /^Please transcribe.*?$/gmi,
-            /^Transcribe only.*?$/gmi,
-            /^Output format.*?$/gmi,
-            /^Format.*?$/gmi,
-        ];
-
-        for (const pattern of patterns) {
-            text = text.replace(pattern, '');
-        }
+        // For English, rely on conservative generic cleaning only
         return text;
     }
 
@@ -299,16 +290,7 @@ export class TranscriptionService implements ITranscriptionProvider {
      * Apply Chinese-specific cleaning patterns
      */
     private applyChineseCleaning(text: string): string {
-        const patterns = [
-            /^请转录.*?$/gm,
-            /^仅转录.*?$/gm,
-            /^输出格式.*?$/gm,
-            /^格式.*?$/gm,
-        ];
-
-        for (const pattern of patterns) {
-            text = text.replace(pattern, '');
-        }
+        // For Chinese, rely on conservative generic cleaning only
         return text;
     }
 
@@ -316,16 +298,7 @@ export class TranscriptionService implements ITranscriptionProvider {
      * Apply Korean-specific cleaning patterns
      */
     private applyKoreanCleaning(text: string): string {
-        const patterns = [
-            /^다음 음성.*?$/gm,
-            /^음성 내용만.*?$/gm,
-            /^출력 형식.*?$/gm,
-            /^형식.*?$/gm,
-        ];
-
-        for (const pattern of patterns) {
-            text = text.replace(pattern, '');
-        }
+        // For Korean, rely on conservative generic cleaning only
         return text;
     }
 
@@ -418,10 +391,8 @@ export class TranscriptionService implements ITranscriptionProvider {
      * Set transcription correction enabled/disabled
      */
     setTranscriptionCorrection(enabled: boolean) {
-        this.enableTranscriptionCorrection = enabled;
-        this.corrector.updateSettings({
-            enabled: enabled
-        });
+        // Delegate to a single code path to keep states in sync
+        this.updateCorrectorSettings({ enabled });
     }
 
     /**
@@ -429,8 +400,7 @@ export class TranscriptionService implements ITranscriptionProvider {
      */
     updateApiKey(apiKey: string) {
         this.apiKey = apiKey;
-        // API key is no longer needed for the simplified corrector
-        // Preserve existing dictionary settings when updating API key
+        // Preserve existing corrector settings when updating API key
         const currentSettings = this.corrector.getSettings();
         this.corrector = new DictionaryCorrector({
             enabled: currentSettings.enabled,

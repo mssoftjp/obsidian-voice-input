@@ -321,6 +321,12 @@ export default class VoiceInputPlugin extends Plugin {
                 needsSave = true;
                 this.logger?.info(`Auto-detected language: ${this.settings.pluginLanguage} (from Obsidian: ${this.getObsidianLocale()})`);
             }
+        } else {
+            // 保存データが存在しない場合（初回起動）
+            this.settings.pluginLanguage = this.detectPluginLanguage();
+            this.settings.transcriptionLanguage = 'auto';
+            needsSave = true;
+            this.logger?.info(`First run - auto-detected language: ${this.settings.pluginLanguage}, transcriptionLanguage: auto`);
         }
 
         // 必要に応じて設定を保存
@@ -339,14 +345,14 @@ export default class VoiceInputPlugin extends Plugin {
     }
 
     /**
-     * Get Obsidian locale setting
-     */
+	 * Obsidianの言語設定を取得
+	 */
     private getObsidianLocale(): string {
         return getObsidianLocale(this.app);
     }
 
     /**
-     * Auto-detect plugin language (ja/zh/ko/en)
+     * プラグイン言語を自動検出（ja/zh/ko/en）
      */
     private detectPluginLanguage(): 'ja' | 'zh' | 'ko' | 'en' {
         const obsidianLocale = this.getObsidianLocale().toLowerCase();
