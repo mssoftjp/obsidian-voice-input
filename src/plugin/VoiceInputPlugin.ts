@@ -320,6 +320,11 @@ export default class VoiceInputPlugin extends Plugin {
                 this.settings.pluginLanguage = this.detectPluginLanguage();
                 needsSave = true;
                 this.logger?.info(`Auto-detected language: ${this.settings.pluginLanguage} (from Obsidian: ${this.getObsidianLocale()})`);
+            }
+        } else {
+            // 保存データが存在しない場合（初回起動）
+            this.settings.pluginLanguage = this.detectPluginLanguage();
+            this.settings.transcriptionLanguage = 'auto';
             needsSave = true;
             this.logger?.info(`First run - auto-detected language: ${this.settings.pluginLanguage}, transcriptionLanguage: auto`);
         }

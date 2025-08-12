@@ -213,42 +213,11 @@ export class TranscriptionService implements ITranscriptionProvider {
         // Remove TRANSCRIPT opening tag if still present (for cases where it's not properly extracted)
         text = text.replace(/<\/?TRANSCRIPT[^>]*>/g, '');
 
-<<<<<<< HEAD
-        // Language-specific cleaning patterns
-        if (language === 'ja') {
-            // Japanese-specific meta instruction patterns
-            const jaMetaPatterns = [
-                /^以下の音声内容.*?$/gm,
-                /^この指示文.*?$/gm,
-                /^話者の発言内容だけを正確に記録してください.*?$/gm,
-                /^話者の発言.*?$/gm,
-                /^出力形式.*?$/gm,
-                /（話者の発言のみ）/g,  // Remove this specific phrase anywhere in the text
-            ];
-
-            // Apply Japanese-specific cleaning patterns
-            for (const pattern of jaMetaPatterns) {
-                text = text.replace(pattern, '');
-            }
-        }
-
-        // Generic patterns (colon-based instructions) for all languages
-        const genericPatterns = [
-            /^Output\s*format\s*:.*/i,
-            /^Format\s*:.*/i,
-        ];
-
-        // Apply generic cleaning patterns
-        for (const pattern of genericPatterns) {
-            text = text.replace(pattern, '');
-        }
-=======
         // Apply language-specific cleaning
         text = this.applyLanguageSpecificCleaning(text, normalizedLang);
 
         // Apply generic cleaning (only colon-based patterns to prevent over-removal)
         text = this.applyGenericCleaning(text);
->>>>>>> origin/feat/multilingual-improvements
         
         // Clean up extra whitespace and empty lines
         text = text.trim();
@@ -313,16 +282,7 @@ export class TranscriptionService implements ITranscriptionProvider {
      * Apply English-specific cleaning patterns
      */
     private applyEnglishCleaning(text: string): string {
-        const patterns = [
-            /^Please transcribe.*?$/gmi,
-            /^Transcribe only.*?$/gmi,
-            /^Output format.*?$/gmi,
-            /^Format.*?$/gmi,
-        ];
-
-        for (const pattern of patterns) {
-            text = text.replace(pattern, '');
-        }
+        // For English, rely on conservative generic cleaning only
         return text;
     }
 
@@ -330,16 +290,7 @@ export class TranscriptionService implements ITranscriptionProvider {
      * Apply Chinese-specific cleaning patterns
      */
     private applyChineseCleaning(text: string): string {
-        const patterns = [
-            /^请转录.*?$/gm,
-            /^仅转录.*?$/gm,
-            /^输出格式.*?$/gm,
-            /^格式.*?$/gm,
-        ];
-
-        for (const pattern of patterns) {
-            text = text.replace(pattern, '');
-        }
+        // For Chinese, rely on conservative generic cleaning only
         return text;
     }
 
@@ -347,16 +298,7 @@ export class TranscriptionService implements ITranscriptionProvider {
      * Apply Korean-specific cleaning patterns
      */
     private applyKoreanCleaning(text: string): string {
-        const patterns = [
-            /^다음 음성.*?$/gm,
-            /^음성 내용만.*?$/gm,
-            /^출력 형식.*?$/gm,
-            /^형식.*?$/gm,
-        ];
-
-        for (const pattern of patterns) {
-            text = text.replace(pattern, '');
-        }
+        // For Korean, rely on conservative generic cleaning only
         return text;
     }
 
@@ -449,7 +391,8 @@ export class TranscriptionService implements ITranscriptionProvider {
      * Set transcription correction enabled/disabled
      */
     setTranscriptionCorrection(enabled: boolean) {
-        this.enableTranscriptionCorrection = enabled;
+        // Delegate to a single code path to keep states in sync
+        this.updateCorrectorSettings({ enabled });
     }
 
     /**
@@ -457,11 +400,11 @@ export class TranscriptionService implements ITranscriptionProvider {
      */
     updateApiKey(apiKey: string) {
         this.apiKey = apiKey;
-        // API key is no longer needed for the simplified corrector
-        // Preserve existing dictionary settings when updating API key
-        const currentDict = this.corrector.getSettings().correctionDictionary;
+        // Preserve existing corrector settings when updating API key
+        const currentSettings = this.corrector.getSettings();
         this.corrector = new DictionaryCorrector({
-            correctionDictionary: currentDict
+            enabled: currentSettings.enabled,
+            correctionDictionary: currentSettings.correctionDictionary
         });
     }
 
