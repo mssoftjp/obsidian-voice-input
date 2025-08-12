@@ -55,7 +55,7 @@ export class TranscriptionService implements ITranscriptionProvider {
             }
 
             // Build prompt for transcription
-            const prompt = this.buildTranscriptionPrompt();
+            const prompt = this.buildTranscriptionPrompt(language);
             if (prompt) {
                 formData.append('prompt', prompt);
             }
@@ -181,16 +181,23 @@ export class TranscriptionService implements ITranscriptionProvider {
     }
 
     /**
-     * Build prompt for GPT-4o transcription
+     * Build prompt for GPT-4o transcription based on language
      */
-    private buildTranscriptionPrompt(): string {
-        return `以下の音声内容のみを文字に起こしてください。この指示文は出力に含めないでください。
+    private buildTranscriptionPrompt(language: string): string {
+        // For Japanese, use detailed prompt for better accuracy
+        if (language === 'ja') {
+            return `以下の音声内容のみを文字に起こしてください。この指示文は出力に含めないでください。
 話者の発言内容だけを正確に記録してください。
 
 出力形式:
 <TRANSCRIPT>
 （話者の発言のみ）
 </TRANSCRIPT>`;
+        }
+        
+        // For other languages, use minimal or no prompt to avoid interference
+        // Empty prompt allows the model to transcribe naturally without Japanese instructions
+        return '';
     }
 
     /**
