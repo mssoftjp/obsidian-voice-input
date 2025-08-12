@@ -1,20 +1,42 @@
 // Mock Obsidian API for tests
-export const App = jest.fn();
-export const Plugin = jest.fn();
-export const Notice = jest.fn();
-export const Setting = jest.fn();
-export const ItemView = jest.fn();
-export const WorkspaceLeaf = jest.fn();
-export const moment = {
-    locale: jest.fn(() => 'en')
-};
+export class TFile {
+  constructor(public path: string) {}
+}
 
-export default {
-    App,
-    Plugin,
-    Notice,
-    Setting,
-    ItemView,
-    WorkspaceLeaf,
-    moment
-};
+export class Vault {
+  async read(): Promise<string> {
+    return '';
+  }
+  
+  async create(): Promise<TFile> {
+    return new TFile('mock.md');
+  }
+}
+
+export class App {
+  vault = new Vault();
+}
+
+export class Plugin {
+  app = new App();
+  
+  async loadData(): Promise<any> {
+    return null;
+  }
+  
+  async saveData(): Promise<void> {
+    // Mock implementation
+  }
+}
+
+export class Component {
+  // Mock component
+}
+
+export class ItemView {
+  // Mock item view
+}
+
+export class WorkspaceLeaf {
+  // Mock workspace leaf
+}

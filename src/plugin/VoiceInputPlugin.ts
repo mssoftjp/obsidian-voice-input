@@ -221,16 +221,35 @@ export default class VoiceInputPlugin extends Plugin {
                 this.logger?.info('Migrating interfaceLanguage to pluginLanguage');
             }
 
-            // languageからpluginLanguageへの移行
-            if ('language' in data && !('pluginLanguage' in data)) {
-                // 言語コードを正規化（ja → ja、en → en、その他 → en）
-                const langCode = data.language as string;
-                migratedData.pluginLanguage = (langCode === 'ja' || langCode === 'en') ? langCode : 'en';
+            // languageからtranscriptionLanguageへの移行
+            if ('language' in data && !('transcriptionLanguage' in data)) {
+                // 既存のlanguageフィールドをtranscriptionLanguageに移行
+                const langValue = data.language;
+                if (langValue === 'auto' || langValue === 'ja' || langValue === 'en' || langValue === 'zh' || langValue === 'ko') {
+                    migratedData.transcriptionLanguage = langValue;
+                } else {
+                    migratedData.transcriptionLanguage = 'auto';
+                }
                 delete migratedData.language;
                 needsSave = true;
+                this.logger?.info(`Migrating language (${data.language}) to transcriptionLanguage (${migratedData.transcriptionLanguage})`);
+            }
+
+            // languageからpluginLanguageへの移行（古いバージョンとの互換性のため）
+            if ('language' in data && !('pluginLanguage' in data)) {
+                // 言語コードを正規化（ja → ja、en → en、zh → zh、ko → ko、その他 → en）
+                const langCode = data.language as string;
+                if (langCode === 'ja' || langCode === 'en' || langCode === 'zh' || langCode === 'ko') {
+                    migratedData.pluginLanguage = langCode;
+                } else {
+                    migratedData.pluginLanguage = 'en';
+                }
+                needsSave = true;
                 this.logger?.info(`Migrating language (${data.language}) to pluginLanguage (${migratedData.pluginLanguage})`);
-            } else if ('language' in data) {
-                // pluginLanguageが既に存在する場合は、languageフィールドを削除
+            }
+
+            // 不要になったlanguageフィールドの削除
+            if ('language' in data) {
                 delete migratedData.language;
                 needsSave = true;
                 this.logger?.info('Removing redundant language field');
@@ -301,12 +320,8 @@ export default class VoiceInputPlugin extends Plugin {
                 this.settings.pluginLanguage = this.detectPluginLanguage();
                 needsSave = true;
                 this.logger?.info(`Auto-detected language: ${this.settings.pluginLanguage} (from Obsidian: ${this.getObsidianLocale()})`);
-            }
-        } else {
-            // 保存データが存在しない場合（初回起動）
-            this.settings.pluginLanguage = this.detectPluginLanguage();
             needsSave = true;
-            this.logger?.info(`First run - auto-detected language: ${this.settings.pluginLanguage}`);
+            this.logger?.info(`First run - auto-detected language: ${this.settings.pluginLanguage}, transcriptionLanguage: auto`);
         }
 
         // 必要に応じて設定を保存
@@ -336,7 +351,6 @@ export default class VoiceInputPlugin extends Plugin {
      */
     private detectPluginLanguage(): 'ja' | 'zh' | 'ko' | 'en' {
         const obsidianLocale = this.getObsidianLocale().toLowerCase();
-
         if (obsidianLocale.startsWith('ja')) {
             return 'ja';
         } else if (obsidianLocale.startsWith('zh')) {
@@ -352,20 +366,10 @@ export default class VoiceInputPlugin extends Plugin {
      * 解決済み言語を取得（transcriptionLanguage が 'auto' の場合は自動検出）
      */
     getResolvedLanguage(): 'ja' | 'zh' | 'ko' | 'en' {
-        // 現在の実装では pluginLanguage を transcriptionLanguage として使用
-        // 'auto' の概念は今後の拡張のために準備
-        const transcriptionLanguage = this.settings.pluginLanguage;
-
-        if (transcriptionLanguage === 'auto' as string) {
+        if (this.settings.transcriptionLanguage === 'auto') {
             return this.detectPluginLanguage();
         }
-
-        // pluginLanguage が ja/zh/ko/en 以外の場合は自動検出にフォールバック
-        if (!['ja', 'zh', 'ko', 'en'].includes(transcriptionLanguage)) {
-            return this.detectPluginLanguage();
-        }
-
-        return transcriptionLanguage as 'ja' | 'zh' | 'ko' | 'en';
+        return this.settings.transcriptionLanguage as 'ja' | 'zh' | 'ko' | 'en';
     }
 
     async saveSettings() {

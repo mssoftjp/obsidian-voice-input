@@ -7,9 +7,12 @@ High-accuracy voice input for Obsidian. Uses OpenAI GPT-4o Audio Transcriptions 
 - One‑click recording: start/stop from a microphone ribbon icon
 - Push‑to‑talk: long‑press to record, release to stop
 - Model selection: GPT‑4o Transcribe or GPT‑4o mini Transcribe
-- AI post‑processing: optional dictionary-based cleanup (JA)
+- Language separation: independent UI language and voice recognition language settings
+- Auto language detection: automatic voice recognition language based on Obsidian locale
+- AI post‑processing: optional dictionary-based cleanup (Japanese only)
 - Quick controls in view: copy/clear/insert at cursor/append to end
 - Auto‑save drafts: periodic and on blur, automatic restore
+- Multilingual support: Japanese, English, Chinese, Korean interface languages
 
 ## Requirements
 
@@ -47,9 +50,10 @@ Tip: A settings gear in the view header opens the plugin’s settings.
 
 - OpenAI API Key: stored locally (encrypted at rest)
 - Transcription Model: `gpt-4o-transcribe` or `gpt-4o-mini-transcribe`
-- AI Post‑processing: enable dictionary‑based cleanup (Japanese)
+- **Transcription Language**: Auto/Japanese/English/Chinese/Korean (auto-detection recommended)
+- AI Post‑processing: enable dictionary‑based cleanup (applied to Japanese only)
 - Maximum Recording Duration: slider (default 5 min)
-- Plugin Language: English/Japanese (auto‑detected from Obsidian, adjustable)
+- Plugin Language: English/Japanese (controls UI display only, auto‑detected from Obsidian, adjustable)
 
 ## Security & Privacy
 
@@ -85,9 +89,12 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 - ワンクリック録音（リボンのマイクアイコン）
 - プッシュトゥトーク（長押しで録音開始、離して停止）
 - モデル選択（GPT‑4o Transcribe / GPT‑4o mini Transcribe）
-- AI後処理（辞書ベースの補正、JA向け）
+- 言語設定の分離（UI言語と音声認識言語を独立設定）
+- 自動言語検出（Obsidianロケールに基づく音声認識言語の自動検出）
+- AI後処理（辞書ベースの補正、日本語のみ適用）
 - ビュー内のクイック操作（コピー/クリア/カーソル位置へ挿入/末尾へ追記）
 - 自動保存（定期保存とフォーカス外れ時）。再オープン時に自動復元
+- 多言語サポート（日本語、英語、中国語、韓国語のインターフェース）
 
 ## 必要条件
 
@@ -125,9 +132,38 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 
 - OpenAI APIキー: ローカルに暗号化して保存
 - 文字起こしモデル: `gpt-4o-transcribe` または `gpt-4o-mini-transcribe`
-- AI後処理: 辞書ベースの補正（日本語向け）
+- **音声認識言語**: 自動/日本語/英語/中国語/韓国語（自動検出を推奨）
+- AI後処理: 辞書ベースの補正（日本語のみ適用）
 - 最大録音時間: スライダー（初期値5分）
-- プラグイン言語: 英語/日本語（Obsidian設定から自動検出、変更可）
+<<<<<<< HEAD
+- プラグイン言語: 英語/日本語（UI表示のみ制御、Obsidian設定から自動検出、変更可）
+=======
+- **プラグイン言語**: 英語/日本語/中国語/韓国語（UI表示言語、Obsidian設定から自動検出）
+
+### 言語設定について
+
+プラグインは最適なユーザー体験のため、UI言語と音声認識言語を**完全に分離**しています：
+
+- **プラグイン言語**: インターフェースの言語（メニュー、ボタン、メッセージ）。Obsidianの言語設定から自動検出されます。
+- **音声認識言語**: 音声認識と文字起こしの言語。「自動」を推奨 - Obsidianのインターフェース言語に基づいて最適な言語を自動選択します。
+
+### 自動検出の動作
+
+**音声認識言語**が「自動」に設定されている場合：
+- **日本語ロケール** (ja-*) → 日本語での文字起こし
+- **中国語ロケール** (zh-*) → 中国語での文字起こし
+- **韓国語ロケール** (ko-*) → 韓国語での文字起こし
+- **その他のロケール** → 英語での文字起こし
+
+### 言語別の処理
+
+プラグインは選択された音声認識言語に基づいて異なる処理戦略を適用します：
+
+- **日本語 (ja)**: 高精度化のための専用プロンプト + 専門用語の辞書補正
+- **中国語 (zh)**: 言語固有処理なしのクリーンな文字起こし
+- **英語/韓国語 (en/ko)**: 干渉を避けるため、プロンプトや補正なしのクリーンな文字起こし
+- **自動モード**: Obsidianのインターフェース言語に基づいて最適な言語と処理戦略を動的に選択
+>>>>>>> origin/feat/multilingual-improvements
 
 ## セキュリティ / プライバシー
 

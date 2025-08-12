@@ -15,7 +15,6 @@ export class TranscriptionService implements ITranscriptionProvider {
     // コスト重視なら mini、わずかな精度向上が必要なら通常版を選択
     private model: 'gpt-4o-transcribe' | 'gpt-4o-mini-transcribe' = DEFAULT_TRANSCRIPTION_SETTINGS.model;
     private enableTranscriptionCorrection: boolean = DEFAULT_TRANSCRIPTION_SETTINGS.enableTranscriptionCorrection;
-    private language: string = 'ja';
 
     constructor(apiKey: string, dictionary?: SimpleCorrectionDictionary) {
         this.apiKey = apiKey;
@@ -25,11 +24,11 @@ export class TranscriptionService implements ITranscriptionProvider {
         });
     }
 
-    async transcribe(audioBlob: Blob, language: string = 'ja'): Promise<TranscriptionResult> {
+    async transcribe(audioBlob: Blob, language: string): Promise<TranscriptionResult> {
         return this.transcribeAudio(audioBlob, language);
     }
 
-    async transcribeAudio(audioBlob: Blob, language: string = 'ja'): Promise<TranscriptionResult> {
+    async transcribeAudio(audioBlob: Blob, language: string): Promise<TranscriptionResult> {
         const startTime = Date.now();
         const perfStartTime = performance.now();
         
@@ -54,9 +53,8 @@ export class TranscriptionService implements ITranscriptionProvider {
                 formData.append('language', language);
             }
 
-            // Build prompt for transcription
-            const prompt = this.buildTranscriptionPrompt();
-            if (prompt) {
+            const prompt = this.buildTranscriptionPrompt(language);
+            if (language !== 'auto' && prompt) {
                 formData.append('prompt', prompt);
             }
 
@@ -114,14 +112,11 @@ export class TranscriptionService implements ITranscriptionProvider {
             }
 
             // Clean up GPT-4o specific artifacts
-            originalText = this.cleanGPT4oResponse(originalText);
+            originalText = this.cleanGPT4oResponse(originalText, language);
             
             
             // プロンプトエラーの検出（音声が無音の場合にプロンプトが返される問題）
-            if (originalText.includes('この指示文は出力に含めないでください') || 
-                originalText.includes('話者の発言内容だけを正確に記録してください') ||
-                originalText === '（話者の発言のみ）' ||
-                originalText.trim() === '話者の発言のみ') {
+            if (this.isPromptErrorDetected(originalText, language)) {
                 // 音声がない場合は空文字を返す
                 originalText = '';
             }
@@ -143,8 +138,8 @@ export class TranscriptionService implements ITranscriptionProvider {
                 };
             }
             
-            // Apply corrections if enabled (only for Japanese)
-            const correctedText = this.enableTranscriptionCorrection && language === 'ja'
+            // Apply corrections if enabled
+            const correctedText = this.enableTranscriptionCorrection
                 ? await this.corrector.correct(originalText)
                 : originalText;
             
@@ -181,9 +176,13 @@ export class TranscriptionService implements ITranscriptionProvider {
     }
 
     /**
-     * Build prompt for GPT-4o transcription
+     * Build prompt for GPT-4o transcription (only for Japanese)
      */
-    private buildTranscriptionPrompt(): string {
+    private buildTranscriptionPrompt(language: string): string {
+        // Only provide prompt for Japanese language
+        if (language !== 'ja') {
+            return '';
+        }
         return `以下の音声内容のみを文字に起こしてください。この指示文は出力に含めないでください。
 話者の発言内容だけを正確に記録してください。
 
@@ -194,9 +193,11 @@ export class TranscriptionService implements ITranscriptionProvider {
     }
 
     /**
-     * Clean GPT-4o specific response artifacts
+     * Clean GPT-4o specific response artifacts with language-specific processing
      */
-    private cleanGPT4oResponse(text: string): string {
+    private cleanGPT4oResponse(text: string, language: string): string {
+        // Normalize language for processing
+        const normalizedLang = this.normalizeLanguage(language);
         // First attempt: Extract content from complete TRANSCRIPT tags
         let transcriptMatch = text.match(/<TRANSCRIPT>\s*([\s\S]*?)\s*<\/TRANSCRIPT>/);
         if (transcriptMatch) {
@@ -212,20 +213,42 @@ export class TranscriptionService implements ITranscriptionProvider {
         // Remove TRANSCRIPT opening tag if still present (for cases where it's not properly extracted)
         text = text.replace(/<\/?TRANSCRIPT[^>]*>/g, '');
 
-        // Remove specific meta instruction patterns (both at line start and anywhere in text)
-        const metaPatterns = [
-            /^以下の音声内容.*?$/gm,
-            /^この指示文.*?$/gm,
-            /^話者の発言内容だけを正確に記録してください.*?$/gm,
-            /^話者の発言.*?$/gm,
-            /^出力形式.*?$/gm,
-            /（話者の発言のみ）/g,  // Remove this specific phrase anywhere in the text
+<<<<<<< HEAD
+        // Language-specific cleaning patterns
+        if (language === 'ja') {
+            // Japanese-specific meta instruction patterns
+            const jaMetaPatterns = [
+                /^以下の音声内容.*?$/gm,
+                /^この指示文.*?$/gm,
+                /^話者の発言内容だけを正確に記録してください.*?$/gm,
+                /^話者の発言.*?$/gm,
+                /^出力形式.*?$/gm,
+                /（話者の発言のみ）/g,  // Remove this specific phrase anywhere in the text
+            ];
+
+            // Apply Japanese-specific cleaning patterns
+            for (const pattern of jaMetaPatterns) {
+                text = text.replace(pattern, '');
+            }
+        }
+
+        // Generic patterns (colon-based instructions) for all languages
+        const genericPatterns = [
+            /^Output\s*format\s*:.*/i,
+            /^Format\s*:.*/i,
         ];
 
-        // Apply all cleaning patterns
-        for (const pattern of metaPatterns) {
+        // Apply generic cleaning patterns
+        for (const pattern of genericPatterns) {
             text = text.replace(pattern, '');
         }
+=======
+        // Apply language-specific cleaning
+        text = this.applyLanguageSpecificCleaning(text, normalizedLang);
+
+        // Apply generic cleaning (only colon-based patterns to prevent over-removal)
+        text = this.applyGenericCleaning(text);
+>>>>>>> origin/feat/multilingual-improvements
         
         // Clean up extra whitespace and empty lines
         text = text.trim();
@@ -234,6 +257,156 @@ export class TranscriptionService implements ITranscriptionProvider {
         text = text.trim();
         
         return text;
+    }
+
+    /**
+     * Normalize language code for consistent processing
+     */
+    private normalizeLanguage(language: string): string {
+        if (language === 'auto') return 'auto';
+        const lang = language.toLowerCase();
+        if (lang.startsWith('ja')) return 'ja';
+        if (lang.startsWith('zh')) return 'zh';
+        if (lang.startsWith('ko')) return 'ko';
+        if (lang.startsWith('en')) return 'en';
+        return lang;
+    }
+
+    /**
+     * Apply language-specific cleaning patterns
+     */
+    private applyLanguageSpecificCleaning(text: string, language: string): string {
+        switch (language) {
+            case 'ja':
+                return this.applyJapaneseCleaning(text);
+            case 'en':
+                return this.applyEnglishCleaning(text);
+            case 'zh':
+                return this.applyChineseCleaning(text);
+            case 'ko':
+                return this.applyKoreanCleaning(text);
+            default:
+                return text;
+        }
+    }
+
+    /**
+     * Apply Japanese-specific cleaning patterns
+     */
+    private applyJapaneseCleaning(text: string): string {
+        const patterns = [
+            /^以下の音声内容.*?$/gm,
+            /^この指示文.*?$/gm,
+            /^話者の発言内容だけを正確に記録してください.*?$/gm,
+            /^話者の発言.*?$/gm,
+            /^出力形式.*?$/gm,
+            /（話者の発言のみ）/g,
+        ];
+
+        for (const pattern of patterns) {
+            text = text.replace(pattern, '');
+        }
+        return text;
+    }
+
+    /**
+     * Apply English-specific cleaning patterns
+     */
+    private applyEnglishCleaning(text: string): string {
+        const patterns = [
+            /^Please transcribe.*?$/gmi,
+            /^Transcribe only.*?$/gmi,
+            /^Output format.*?$/gmi,
+            /^Format.*?$/gmi,
+        ];
+
+        for (const pattern of patterns) {
+            text = text.replace(pattern, '');
+        }
+        return text;
+    }
+
+    /**
+     * Apply Chinese-specific cleaning patterns
+     */
+    private applyChineseCleaning(text: string): string {
+        const patterns = [
+            /^请转录.*?$/gm,
+            /^仅转录.*?$/gm,
+            /^输出格式.*?$/gm,
+            /^格式.*?$/gm,
+        ];
+
+        for (const pattern of patterns) {
+            text = text.replace(pattern, '');
+        }
+        return text;
+    }
+
+    /**
+     * Apply Korean-specific cleaning patterns
+     */
+    private applyKoreanCleaning(text: string): string {
+        const patterns = [
+            /^다음 음성.*?$/gm,
+            /^음성 내용만.*?$/gm,
+            /^출력 형식.*?$/gm,
+            /^형식.*?$/gm,
+        ];
+
+        for (const pattern of patterns) {
+            text = text.replace(pattern, '');
+        }
+        return text;
+    }
+
+    /**
+     * Apply generic cleaning patterns (conservative approach)
+     */
+    private applyGenericCleaning(text: string): string {
+        // Only remove clear format instruction patterns with colons to prevent over-removal
+        const patterns = [
+            /^Output\s*format\s*:.*/gmi,
+            /^Format\s*:.*/gmi,
+        ];
+
+        for (const pattern of patterns) {
+            text = text.replace(pattern, '');
+        }
+        return text;
+    }
+
+    /**
+     * Detect prompt error patterns by language
+     */
+    private isPromptErrorDetected(text: string, language: string): boolean {
+        const normalizedLang = this.normalizeLanguage(language);
+        
+        switch (normalizedLang) {
+            case 'ja':
+                return text.includes('この指示文は出力に含めないでください') || 
+                       text.includes('話者の発言内容だけを正確に記録してください') ||
+                       text === '（話者の発言のみ）' ||
+                       text.trim() === '話者の発言のみ';
+            case 'en':
+                return text.includes('Please transcribe only the speaker') ||
+                       text.includes('Do not include this instruction') ||
+                       text.trim() === '(Speaker content only)';
+            case 'zh':
+                return text.includes('请仅转录说话者') ||
+                       text.includes('不要包含此指令') ||
+                       text.trim() === '（仅说话者内容）';
+            case 'ko':
+                return text.includes('화자의 발언만 전사해주세요') ||
+                       text.includes('이 지시사항을 포함하지 마세요') ||
+                       text.trim() === '（화자 발언만）';
+            default:
+                // For auto and other languages, use Japanese patterns as fallback
+                return text.includes('この指示文は出力に含めないでください') || 
+                       text.includes('話者の発言内容だけを正確に記録してください') ||
+                       text === '（話者の発言のみ）' ||
+                       text.trim() === '話者の発言のみ';
+        }
     }
 
     /**
