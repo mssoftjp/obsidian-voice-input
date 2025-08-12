@@ -70,9 +70,12 @@ export const DEFAULT_TRANSCRIPTION_SETTINGS = {
     /** デフォルトの文字起こしモデル */
     model: 'gpt-4o-transcribe' as const,
 
+<<<<<<< HEAD
     /** 言語設定 */
     language: 'auto',
 
+=======
+>>>>>>> origin/feat/multilingual-improvements
     /** 文字起こし補正の有効化 */
     enableTranscriptionCorrection: true
 } as const;

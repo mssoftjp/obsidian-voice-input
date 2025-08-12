@@ -61,7 +61,7 @@ export const zh: TranslationResource = {
             transcribing: '状态：语音转文字中...',
             correcting: '状态：文本处理中...',
             completed: '状态：完成',
-            waiting: '{count} 等待中'
+            waiting: '等待中'
         },
         transcription: {
             vadAutoStopped: '状态：检测到静音自动停止',
@@ -154,6 +154,10 @@ export const zh: TranslationResource = {
             transcriptionModelDesc: '选择用于语音识别的模型',
             maxRecordingDuration: '最大录音时长',
             maxRecordingDurationDesc: '最大录音时间（秒）（{min}秒～{max}分钟）',
+            language: '语音识别语言',
+            languageDesc: '语音识别和转录的语言。建议使用自动检测以获得最佳结果。',
+            transcriptionLanguage: '语音识别语言',
+            transcriptionLanguageDesc: '语音识别和转录的语言。建议使用自动检测以获得最佳结果。',
             pluginLanguage: '插件语言',
             pluginLanguageDesc: '设置UI显示的语言',
             transcriptionLanguage: '语音转文字语言',
@@ -167,7 +171,11 @@ export const zh: TranslationResource = {
         options: {
             modelMini: 'GPT-4o mini Transcribe',
             modelFull: 'GPT-4o Transcribe',
+<<<<<<< HEAD
             languageAuto: '自动检测',
+=======
+            languageAuto: '自动（推荐）',
+>>>>>>> origin/feat/multilingual-improvements
             languageJa: '日语',
             languageEn: '英语',
             languageZh: '中文',

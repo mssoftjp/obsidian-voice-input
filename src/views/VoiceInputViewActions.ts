@@ -398,7 +398,7 @@ export class VoiceInputViewActions {
             // When processing, the first item is being processed, others are waiting
             const waitingCount = queueLength > 0 ? queueLength - 1 : 0;
             if (waitingCount > 0) {
-                statusText += ` (${this.i18n.t('status.processing.waiting', { count: waitingCount })})`;
+                statusText += ` (${waitingCount} ${this.i18n.t('status.processing.waiting')})`;
             }
             this.view.ui.statusEl.setText(statusText);
             this.view.ui.statusEl.addClass('processing');
@@ -455,7 +455,11 @@ export class VoiceInputViewActions {
             if (!this.transcriptionService) {
                 throw new Error('Transcription service not available');
             }
+<<<<<<< HEAD
             const result = await this.transcriptionService.transcribeAudio(audioBlob, this.plugin.settings.transcriptionLanguage);
+=======
+            const result = await this.transcriptionService.transcribeAudio(audioBlob, this.plugin.getResolvedLanguage());
+>>>>>>> origin/feat/multilingual-improvements
 
             // Check if result is empty
             if (!result.text || result.text.trim() === '') {

@@ -73,7 +73,11 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                     this.display();
                 }));
 
+<<<<<<< HEAD
         // Transcription Language Setting
+=======
+        // Voice Recognition Language Setting
+>>>>>>> origin/feat/multilingual-improvements
         new Setting(containerEl)
             .setName(this.i18n.t('ui.settings.transcriptionLanguage'))
             .setDesc(this.i18n.t('ui.settings.transcriptionLanguageDesc'))

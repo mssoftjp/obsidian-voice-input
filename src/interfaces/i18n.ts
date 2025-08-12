@@ -173,6 +173,10 @@ export type TranslationResource = {
       transcriptionModelDesc: string;
       maxRecordingDuration: string;
       maxRecordingDurationDesc: string;
+      language: string;
+      languageDesc: string;
+      transcriptionLanguage: string;
+      transcriptionLanguageDesc: string;
       pluginLanguage: string;
       pluginLanguageDesc: string;
       transcriptionLanguage: string;

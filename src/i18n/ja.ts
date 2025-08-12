@@ -61,7 +61,7 @@ export const ja: TranslationResource = {
             transcribing: 'ステータス: 文字起こし中...',
             correcting: 'ステータス: 清書中...',
             completed: 'ステータス: 完了',
-            waiting: '{count} 待機中'
+            waiting: '待機中'
         },
         transcription: {
             vadAutoStopped: 'ステータス: 無音検出により自動停止しました',
@@ -154,6 +154,10 @@ export const ja: TranslationResource = {
             transcriptionModelDesc: '音声認識に使用するモデルを選択',
             maxRecordingDuration: '最大録音時間',
             maxRecordingDurationDesc: '最大録音時間（秒）（{min}秒〜{max}分）',
+            language: '音声認識言語',
+            languageDesc: '音声認識と文字起こしの言語。最適な結果のため自動検出を推奨します。',
+            transcriptionLanguage: '音声認識言語',
+            transcriptionLanguageDesc: '音声認識と文字起こしの言語。最適な結果のため自動検出を推奨します。',
             pluginLanguage: 'プラグイン言語',
             pluginLanguageDesc: 'UI表示の言語を設定',
             transcriptionLanguage: '文字起こし言語',
@@ -167,7 +171,11 @@ export const ja: TranslationResource = {
         options: {
             modelMini: 'GPT-4o mini Transcribe',
             modelFull: 'GPT-4o Transcribe',
+<<<<<<< HEAD
             languageAuto: '自動検出',
+=======
+            languageAuto: '自動（推奨）',
+>>>>>>> origin/feat/multilingual-improvements
             languageJa: '日本語',
             languageEn: '英語',
             languageZh: '中国語',
