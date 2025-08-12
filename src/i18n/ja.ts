@@ -60,7 +60,8 @@ export const ja: TranslationResource = {
         processing: {
             transcribing: 'ステータス: 文字起こし中...',
             correcting: 'ステータス: 清書中...',
-            completed: 'ステータス: 完了'
+            completed: 'ステータス: 完了',
+            waiting: '{count} 待機中'
         },
         transcription: {
             vadAutoStopped: 'ステータス: 無音検出により自動停止しました',
@@ -140,7 +141,7 @@ export const ja: TranslationResource = {
         },
         titles: {
             main: 'Voice Input',
-            settings: 'Voice Input 設定',
+            settings: 'Voice Input 設定'
         },
         settings: {
             apiKey: 'OpenAI API キー',
@@ -182,6 +183,6 @@ export const ja: TranslationResource = {
             fromMultiple: '入力語（カンマ区切り）',
             to: '修正語',
             context: '文脈キーワード'
-        },
+        }
     }
 };

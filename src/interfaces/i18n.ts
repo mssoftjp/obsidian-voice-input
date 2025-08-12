@@ -80,6 +80,7 @@ export type TranslationResource = {
       transcribing: string;
       correcting: string;
       completed: string;
+      waiting: string;
     };
     transcription: {
       vadAutoStopped: string;

@@ -60,7 +60,8 @@ export const en: TranslationResource = {
         processing: {
             transcribing: 'Status: Transcribing...',
             correcting: 'Status: Correcting...',
-            completed: 'Status: Completed'
+            completed: 'Status: Completed',
+            waiting: '{count} waiting'
         },
         transcription: {
             vadAutoStopped: 'Status: Auto-stopped due to silence',
@@ -140,7 +141,7 @@ export const en: TranslationResource = {
         },
         titles: {
             main: 'Voice Input',
-            settings: 'Voice Input Settings',
+            settings: 'Voice Input Settings'
         },
         settings: {
             apiKey: 'OpenAI API Key',
@@ -182,6 +183,6 @@ export const en: TranslationResource = {
             fromMultiple: 'From (comma-separated)',
             to: 'To',
             context: 'Context Keywords'
-        },
+        }
     }
 };
