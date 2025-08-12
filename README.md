@@ -7,9 +7,10 @@ High-accuracy voice input for Obsidian. Uses OpenAI GPT-4o Audio Transcriptions 
 - One‑click recording: start/stop from a microphone ribbon icon
 - Push‑to‑talk: long‑press to record, release to stop
 - Model selection: GPT‑4o Transcribe or GPT‑4o mini Transcribe
-- AI post‑processing: optional dictionary-based cleanup (JA)
+- AI post‑processing: optional dictionary-based cleanup (multilingual support)
 - Quick controls in view: copy/clear/insert at cursor/append to end
 - Auto‑save drafts: periodic and on blur, automatic restore
+- Multilingual support: Japanese, English, Chinese, Korean interface languages
 
 ## Requirements
 
@@ -47,9 +48,15 @@ Tip: A settings gear in the view header opens the plugin’s settings.
 
 - OpenAI API Key: stored locally (encrypted at rest)
 - Transcription Model: `gpt-4o-transcribe` or `gpt-4o-mini-transcribe`
-- AI Post‑processing: enable dictionary‑based cleanup (Japanese)
+- AI Post‑processing: enable dictionary‑based cleanup (supports all languages when enabled)
 - Maximum Recording Duration: slider (default 5 min)
-- Plugin Language: English/Japanese (auto‑detected from Obsidian, adjustable)
+- Plugin Language: English/Japanese/Chinese/Korean (auto‑detected from Obsidian, adjustable)
+
+### Language-specific Behavior
+
+- **Japanese (ja)**: Enhanced prompts and meta-pattern cleaning for optimal transcription accuracy
+- **English/Chinese/Korean (en/zh/ko)**: Clean transcription without language-specific prompts to avoid interference
+- **Dictionary Correction**: Applied to all languages when enabled (not limited to Japanese)
 
 ## Security & Privacy
 
@@ -85,9 +92,10 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 - ワンクリック録音（リボンのマイクアイコン）
 - プッシュトゥトーク（長押しで録音開始、離して停止）
 - モデル選択（GPT‑4o Transcribe / GPT‑4o mini Transcribe）
-- AI後処理（辞書ベースの補正、JA向け）
+- AI後処理（辞書ベースの補正、多言語対応）
 - ビュー内のクイック操作（コピー/クリア/カーソル位置へ挿入/末尾へ追記）
 - 自動保存（定期保存とフォーカス外れ時）。再オープン時に自動復元
+- 多言語サポート（日本語、英語、中国語、韓国語のインターフェース）
 
 ## 必要条件
 
@@ -125,9 +133,15 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 
 - OpenAI APIキー: ローカルに暗号化して保存
 - 文字起こしモデル: `gpt-4o-transcribe` または `gpt-4o-mini-transcribe`
-- AI後処理: 辞書ベースの補正（日本語向け）
+- AI後処理: 辞書ベースの補正（有効時は全言語で適用）
 - 最大録音時間: スライダー（初期値5分）
-- プラグイン言語: 英語/日本語（Obsidian設定から自動検出、変更可）
+- プラグイン言語: 英語/日本語/中国語/韓国語（Obsidian設定から自動検出、変更可）
+
+### 言語別の動作
+
+- **日本語 (ja)**: 高精度化のための専用プロンプトとメタパターン除去
+- **英語/中国語/韓国語 (en/zh/ko)**: 干渉を避けるため言語固有プロンプトを使用しないクリーンな文字起こし
+- **辞書補正**: 有効時は全言語に適用（日本語限定ではありません）
 
 ## セキュリティ / プライバシー
 

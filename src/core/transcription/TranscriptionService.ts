@@ -55,8 +55,8 @@ export class TranscriptionService implements ITranscriptionProvider {
             }
 
             // Build prompt for transcription
-            const prompt = this.buildTranscriptionPrompt();
-            if (prompt) {
+            const prompt = this.buildTranscriptionPrompt(language);
+            if (language !== 'auto' && prompt) {
                 formData.append('prompt', prompt);
             }
 
@@ -143,8 +143,8 @@ export class TranscriptionService implements ITranscriptionProvider {
                 };
             }
             
-            // Apply corrections if enabled (only for Japanese)
-            const correctedText = this.enableTranscriptionCorrection && language === 'ja'
+            // Apply corrections if enabled
+            const correctedText = this.enableTranscriptionCorrection
                 ? await this.corrector.correct(originalText)
                 : originalText;
             
@@ -183,7 +183,12 @@ export class TranscriptionService implements ITranscriptionProvider {
     /**
      * Build prompt for GPT-4o transcription
      */
-    private buildTranscriptionPrompt(): string {
+    private buildTranscriptionPrompt(language: string): string {
+        // Only provide prompt for Japanese language
+        if (language !== 'ja') {
+            return '';
+        }
+        
         return `以下の音声内容のみを文字に起こしてください。この指示文は出力に含めないでください。
 話者の発言内容だけを正確に記録してください。
 
