@@ -154,7 +154,9 @@ export const zh: TranslationResource = {
             maxRecordingDuration: '最大录音时长',
             maxRecordingDurationDesc: '最大录音时间（秒）（{min}秒～{max}分钟）',
             pluginLanguage: '插件语言',
-            pluginLanguageDesc: '设置UI显示、语音处理和校正词典的语言',
+            pluginLanguageDesc: '设置UI显示的语言',
+            transcriptionLanguage: '语音转文字语言',
+            transcriptionLanguageDesc: '语音识别的语言（推荐自动检测）',
             customDictionary: '自定义词典',
             customDictionaryDesc: '管理用于后处理的校正词典',
             dictionaryDefinite: '固定校正（最多{max}个）',
@@ -163,7 +165,13 @@ export const zh: TranslationResource = {
         },
         options: {
             modelMini: 'GPT-4o mini Transcribe',
-            modelFull: 'GPT-4o Transcribe'
+            modelFull: 'GPT-4o Transcribe',
+            languageAuto: '自动检测',
+            languageJa: '日语',
+            languageEn: '英语',
+            languageZh: '中文',
+            languageKo: '韩语',
+            languageEs: '西班牙语'
         },
         tooltips: {
             copy: '复制到剪贴板',

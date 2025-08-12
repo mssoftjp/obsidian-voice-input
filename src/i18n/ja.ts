@@ -154,7 +154,9 @@ export const ja: TranslationResource = {
             maxRecordingDuration: '最大録音時間',
             maxRecordingDurationDesc: '最大録音時間（秒）（{min}秒〜{max}分）',
             pluginLanguage: 'プラグイン言語',
-            pluginLanguageDesc: 'UI表示、音声認識処理、補正辞書の言語を設定',
+            pluginLanguageDesc: 'UI表示の言語を設定',
+            transcriptionLanguage: '文字起こし言語',
+            transcriptionLanguageDesc: '音声認識の言語（自動検出を推奨）',
             customDictionary: 'カスタム辞書',
             customDictionaryDesc: '補正辞書を管理',
             dictionaryDefinite: '固定補正（最大{max}個）',
@@ -163,7 +165,13 @@ export const ja: TranslationResource = {
         },
         options: {
             modelMini: 'GPT-4o mini Transcribe',
-            modelFull: 'GPT-4o Transcribe'
+            modelFull: 'GPT-4o Transcribe',
+            languageAuto: '自動検出',
+            languageJa: '日本語',
+            languageEn: '英語',
+            languageZh: '中国語',
+            languageKo: '韓国語',
+            languageEs: 'スペイン語'
         },
         tooltips: {
             copy: 'クリップボードにコピー',

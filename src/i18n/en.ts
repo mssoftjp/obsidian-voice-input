@@ -154,7 +154,9 @@ export const en: TranslationResource = {
             maxRecordingDuration: 'Max Recording Duration',
             maxRecordingDurationDesc: 'Maximum recording time in seconds ({min}s - {max}min)',
             pluginLanguage: 'Plugin Language',
-            pluginLanguageDesc: 'Set language for UI, voice processing, and correction dictionary',
+            pluginLanguageDesc: 'Set language for UI display',
+            transcriptionLanguage: 'Transcription Language',
+            transcriptionLanguageDesc: 'Language for voice transcription (auto-detect recommended)',
             customDictionary: 'Custom Dictionary',
             customDictionaryDesc: 'Manage corrections used for post-processing',
             dictionaryDefinite: 'Definite Corrections (max {max})',
@@ -163,7 +165,13 @@ export const en: TranslationResource = {
         },
         options: {
             modelMini: 'GPT-4o mini Transcribe',
-            modelFull: 'GPT-4o Transcribe'
+            modelFull: 'GPT-4o Transcribe',
+            languageAuto: 'Auto-detect',
+            languageJa: 'Japanese',
+            languageEn: 'English',
+            languageZh: 'Chinese',
+            languageKo: 'Korean',
+            languageEs: 'Spanish'
         },
         tooltips: {
             copy: 'Copy to clipboard',

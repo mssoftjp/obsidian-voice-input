@@ -455,7 +455,7 @@ export class VoiceInputViewActions {
             if (!this.transcriptionService) {
                 throw new Error('Transcription service not available');
             }
-            const result = await this.transcriptionService.transcribeAudio(audioBlob);
+            const result = await this.transcriptionService.transcribeAudio(audioBlob, this.plugin.settings.transcriptionLanguage);
 
             // Check if result is empty
             if (!result.text || result.text.trim() === '') {

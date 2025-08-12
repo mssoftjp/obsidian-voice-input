@@ -73,6 +73,23 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                     this.display();
                 }));
 
+        // Transcription Language Setting
+        new Setting(containerEl)
+            .setName(this.i18n.t('ui.settings.transcriptionLanguage'))
+            .setDesc(this.i18n.t('ui.settings.transcriptionLanguageDesc'))
+            .addDropdown(dropdown => dropdown
+                .addOption('auto', this.i18n.t('ui.options.languageAuto'))
+                .addOption('ja', this.i18n.t('ui.options.languageJa'))
+                .addOption('en', this.i18n.t('ui.options.languageEn'))
+                .addOption('zh', this.i18n.t('ui.options.languageZh'))
+                .addOption('ko', this.i18n.t('ui.options.languageKo'))
+                .addOption('es', this.i18n.t('ui.options.languageEs'))
+                .setValue(this.plugin.settings.transcriptionLanguage)
+                .onChange(async (value: string) => {
+                    this.plugin.settings.transcriptionLanguage = value;
+                    await this.plugin.saveSettings();
+                }));
+
         // OpenAI API Key
         const apiKeySetting = new Setting(containerEl)
             .setName(this.i18n.t('ui.settings.apiKey'))

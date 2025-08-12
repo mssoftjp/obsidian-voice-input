@@ -154,7 +154,9 @@ export const ko: TranslationResource = {
             maxRecordingDuration: '최대 녹음 시간',
             maxRecordingDurationDesc: '최대 녹음 시간(초) ({min}초~{max}분)',
             pluginLanguage: '플러그인 언어',
-            pluginLanguageDesc: 'UI 표시, 음성 처리 및 교정 사전의 언어 설정',
+            pluginLanguageDesc: 'UI 표시 언어 설정',
+            transcriptionLanguage: '음성 인식 언어',
+            transcriptionLanguageDesc: '음성 인식의 언어 (자동 감지 권장)',
             customDictionary: '사용자 정의 사전',
             customDictionaryDesc: '후처리에 사용되는 교정 사전 관리',
             dictionaryDefinite: '고정 교정 (최대 {max}개)',
@@ -163,7 +165,13 @@ export const ko: TranslationResource = {
         },
         options: {
             modelMini: 'GPT-4o mini Transcribe',
-            modelFull: 'GPT-4o Transcribe'
+            modelFull: 'GPT-4o Transcribe',
+            languageAuto: '자동 감지',
+            languageJa: '일본어',
+            languageEn: '영어',
+            languageZh: '중국어',
+            languageKo: '한국어',
+            languageEs: '스페인어'
         },
         tooltips: {
             copy: '클립보드에 복사',
