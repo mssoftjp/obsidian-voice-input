@@ -53,7 +53,7 @@ Tip: A settings gear in the view header opens the plugin’s settings.
 - **Transcription Language**: Auto/Japanese/English/Chinese/Korean (auto-detection recommended)
 - AI Post‑processing: enable dictionary‑based cleanup (applied to Japanese only)
 - Maximum Recording Duration: slider (default 5 min)
-- **Plugin Language**: English/Japanese/Chinese/Korean (controls UI display, auto‑detected from Obsidian)
+- **Plugin Language**: English/Japanese/Chinese/Korean (controls UI display only; auto‑detected from Obsidian)
 
 ### Language Settings Explained
 
