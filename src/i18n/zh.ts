@@ -160,6 +160,11 @@ export const zh: TranslationResource = {
             transcriptionLanguageDesc: '语音识别和转录的语言。建议使用自动检测以获得最佳结果。',
             pluginLanguage: '插件语言',
             pluginLanguageDesc: '设置UI显示、语音处理和校正词典的语言',
+            // 高级设置
+            languageLinking: '关联UI语言与识别语言',
+            languageLinkingDesc: '启用时，识别语言跟随UI语言。禁用时，可独立设置识别语言。',
+            advancedTranscriptionLanguage: '识别语言（高级设置）',
+            advancedTranscriptionLanguageDesc: '独立设置语音识别的语言。建议使用自动检测以获得最佳结果。',
             customDictionary: '自定义词典',
             customDictionaryDesc: '管理用于后处理的校正词典',
             dictionaryDefinite: '固定校正（最多{max}个）',

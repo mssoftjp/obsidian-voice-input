@@ -160,6 +160,11 @@ export const en: TranslationResource = {
             transcriptionLanguageDesc: 'Language for voice recognition and transcription. Auto-detection is recommended for best results.',
             pluginLanguage: 'Plugin Language',
             pluginLanguageDesc: 'Set language for UI display (voice recognition language is auto-detected separately)',
+            // Advanced settings
+            languageLinking: 'Link UI and recognition languages',
+            languageLinkingDesc: 'When enabled, recognition language follows UI language. When disabled, you can set recognition language independently.',
+            advancedTranscriptionLanguage: 'Recognition Language (Advanced)',
+            advancedTranscriptionLanguageDesc: 'Set the language for voice recognition independently. Auto-detection is recommended for best results.',
             customDictionary: 'Custom Dictionary',
             customDictionaryDesc: 'Manage corrections used for post-processing',
             dictionaryDefinite: 'Definite Corrections (max {max})',

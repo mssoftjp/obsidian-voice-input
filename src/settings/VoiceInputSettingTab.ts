@@ -73,21 +73,51 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                     this.display();
                 }));
 
-        // Voice Recognition Language Setting
+        // Advanced Language Settings
         new Setting(containerEl)
-            .setName(this.i18n.t('ui.settings.transcriptionLanguage'))
-            .setDesc(this.i18n.t('ui.settings.transcriptionLanguageDesc'))
-            .addDropdown(dropdown => dropdown
-                .addOption('auto', this.i18n.t('ui.options.languageAuto'))
-                .addOption('ja', this.i18n.t('ui.options.languageJa'))
-                .addOption('en', this.i18n.t('ui.options.languageEn'))
-                .addOption('zh', this.i18n.t('ui.options.languageZh'))
-                .addOption('ko', this.i18n.t('ui.options.languageKo'))
-                .setValue(this.plugin.settings.transcriptionLanguage)
-                .onChange(async (value: 'auto' | 'ja' | 'en' | 'zh' | 'ko') => {
-                    this.plugin.settings.transcriptionLanguage = value;
+            .setName(this.i18n.t('ui.settings.languageLinking'))
+            .setDesc(this.i18n.t('ui.settings.languageLinkingDesc'))
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.advanced?.languageLinkingEnabled !== false)
+                .onChange(async (value) => {
+                    // Initialize advanced object if it doesn't exist
+                    if (!this.plugin.settings.advanced) {
+                        this.plugin.settings.advanced = {
+                            languageLinkingEnabled: value,
+                            transcriptionLanguage: 'auto'
+                        };
+                    } else {
+                        this.plugin.settings.advanced.languageLinkingEnabled = value;
+                    }
                     await this.plugin.saveSettings();
+                    // Refresh the UI to show/hide the advanced transcription language setting
+                    this.display();
                 }));
+
+        // Advanced Transcription Language Setting (only shown when linking is disabled)
+        if (this.plugin.settings.advanced?.languageLinkingEnabled === false) {
+            new Setting(containerEl)
+                .setName(this.i18n.t('ui.settings.advancedTranscriptionLanguage'))
+                .setDesc(this.i18n.t('ui.settings.advancedTranscriptionLanguageDesc'))
+                .addDropdown(dropdown => dropdown
+                    .addOption('auto', this.i18n.t('ui.options.languageAuto'))
+                    .addOption('ja', this.i18n.t('ui.options.languageJa'))
+                    .addOption('en', this.i18n.t('ui.options.languageEn'))
+                    .addOption('zh', this.i18n.t('ui.options.languageZh'))
+                    .addOption('ko', this.i18n.t('ui.options.languageKo'))
+                    .setValue(this.plugin.settings.advanced.transcriptionLanguage ?? 'auto')
+                    .onChange(async (value: 'auto' | 'ja' | 'en' | 'zh' | 'ko') => {
+                        if (!this.plugin.settings.advanced) {
+                            this.plugin.settings.advanced = {
+                                languageLinkingEnabled: false,
+                                transcriptionLanguage: value
+                            };
+                        } else {
+                            this.plugin.settings.advanced.transcriptionLanguage = value;
+                        }
+                        await this.plugin.saveSettings();
+                    }));
+        }
 
         // OpenAI API Key
         const apiKeySetting = new Setting(containerEl)

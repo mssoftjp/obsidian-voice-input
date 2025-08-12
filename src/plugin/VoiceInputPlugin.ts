@@ -321,12 +321,32 @@ export default class VoiceInputPlugin extends Plugin {
                 needsSave = true;
                 this.logger?.info(`Auto-detected language: ${this.settings.pluginLanguage} (from Obsidian: ${getObsidianLocale(this.app)})`);
             }
+
+            // 高度設定のマイグレーション
+            if (!hasSettingsKey(data, 'advanced')) {
+                // 既存ユーザーには言語連動をデフォルトで有効化（現行動作維持）
+                this.settings.advanced = {
+                    languageLinkingEnabled: true,
+                    transcriptionLanguage: 'auto'
+                };
+                needsSave = true;
+                this.logger?.info('Initialized advanced settings with language linking enabled for backward compatibility');
+            } else if (data.advanced && !hasSettingsKey(data.advanced, 'languageLinkingEnabled')) {
+                // advancedオブジェクトは存在するが、languageLinkingEnabledが無い場合
+                this.settings.advanced.languageLinkingEnabled = true;
+                needsSave = true;
+                this.logger?.info('Added languageLinkingEnabled to existing advanced settings');
+            }
         } else {
             // 保存データが存在しない場合（初回起動）
             this.settings.pluginLanguage = this.detectPluginLanguage();
             this.settings.transcriptionLanguage = 'auto';
+            this.settings.advanced = {
+                languageLinkingEnabled: true,
+                transcriptionLanguage: 'auto'
+            };
             needsSave = true;
-            this.logger?.info(`First run - auto-detected language: ${this.settings.pluginLanguage}, transcriptionLanguage: auto`);
+            this.logger?.info(`First run - auto-detected language: ${this.settings.pluginLanguage}, transcriptionLanguage: auto, advanced settings initialized`);
         }
 
         // 必要に応じて設定を保存
@@ -361,13 +381,24 @@ export default class VoiceInputPlugin extends Plugin {
     }
 
     /**
-     * 解決済み言語を取得（transcriptionLanguage が 'auto' の場合は自動検出）
+     * 解決済み言語を取得（高度設定の連動設定に基づく）
      */
     getResolvedLanguage(): 'ja' | 'zh' | 'ko' | 'en' {
-        if (this.settings.transcriptionLanguage === 'auto') {
-            return this.detectPluginLanguage();
+        // 高度設定で言語連動が有効な場合（デフォルト）
+        if (this.settings.advanced?.languageLinkingEnabled !== false) {
+            // 従来のロジック: transcriptionLanguage が 'auto' の場合は pluginLanguage に基づく自動検出
+            if (this.settings.transcriptionLanguage === 'auto') {
+                return this.detectPluginLanguage();
+            }
+            return this.settings.transcriptionLanguage as 'ja' | 'zh' | 'ko' | 'en';
+        } else {
+            // 言語連動が無効な場合: advanced.transcriptionLanguage を使用
+            const advancedLang = this.settings.advanced.transcriptionLanguage ?? 'auto';
+            if (advancedLang === 'auto') {
+                return this.detectPluginLanguage();
+            }
+            return advancedLang as 'ja' | 'zh' | 'ko' | 'en';
         }
-        return this.settings.transcriptionLanguage as 'ja' | 'zh' | 'ko' | 'en';
     }
 
     async saveSettings() {
