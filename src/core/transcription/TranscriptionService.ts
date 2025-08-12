@@ -237,10 +237,8 @@ export class TranscriptionService implements ITranscriptionProvider {
 
         // Generic patterns (colon-based instructions) for all languages
         const genericPatterns = [
-            /^Output format:\s*.*?$/gmi,
-            /^Format:\s*.*?$/gmi,
-            /^Transcription:\s*.*?$/gmi,
-            /^Instructions:\s*.*?$/gmi,
+            /^Output\s*format\s*:.*/i,
+            /^Format\s*:.*/i,
         ];
 
         // Apply generic cleaning patterns
