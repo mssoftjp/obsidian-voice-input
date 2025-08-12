@@ -71,7 +71,7 @@ export const DEFAULT_TRANSCRIPTION_SETTINGS = {
     model: 'gpt-4o-transcribe' as const,
 
     /** 言語設定 */
-    language: 'ja',
+    language: 'auto',
 
     /** 文字起こし補正の有効化 */
     enableTranscriptionCorrection: true
