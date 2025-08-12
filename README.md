@@ -9,7 +9,7 @@ High-accuracy voice input for Obsidian. Uses OpenAI GPT-4o Audio Transcriptions 
 - Model selection: GPT‑4o Transcribe or GPT‑4o mini Transcribe
 - Language separation: independent UI language and voice recognition language settings
 - Auto language detection: automatic voice recognition language based on Obsidian locale
-- AI post‑processing: optional dictionary-based cleanup (optimized for Japanese and Chinese)
+- AI post‑processing: optional dictionary-based cleanup (Japanese only)
 - Quick controls in view: copy/clear/insert at cursor/append to end
 - Auto‑save drafts: periodic and on blur, automatic restore
 - Multilingual support: Japanese, English, Chinese, Korean interface languages
