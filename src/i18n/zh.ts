@@ -170,8 +170,7 @@ export const zh: TranslationResource = {
             languageJa: '日语',
             languageEn: '英语',
             languageZh: '中文',
-            languageKo: '韩语',
-            languageEs: '西班牙语'
+            languageKo: '韩语'
         },
         tooltips: {
             copy: '复制到剪贴板',

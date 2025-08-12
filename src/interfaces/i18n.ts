@@ -190,7 +190,6 @@ export type TranslationResource = {
       languageEn: string;
       languageZh: string;
       languageKo: string;
-      languageEs: string;
     };
     tooltips: {
       copy: string;

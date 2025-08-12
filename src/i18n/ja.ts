@@ -170,8 +170,7 @@ export const ja: TranslationResource = {
             languageJa: '日本語',
             languageEn: '英語',
             languageZh: '中国語',
-            languageKo: '韓国語',
-            languageEs: 'スペイン語'
+            languageKo: '韓国語'
         },
         tooltips: {
             copy: 'クリップボードにコピー',

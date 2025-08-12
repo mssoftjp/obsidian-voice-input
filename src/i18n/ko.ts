@@ -170,8 +170,7 @@ export const ko: TranslationResource = {
             languageJa: '일본어',
             languageEn: '영어',
             languageZh: '중국어',
-            languageKo: '한국어',
-            languageEs: '스페인어'
+            languageKo: '한국어'
         },
         tooltips: {
             copy: '클립보드에 복사',

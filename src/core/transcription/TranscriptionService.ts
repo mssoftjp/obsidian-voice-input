@@ -57,7 +57,7 @@ export class TranscriptionService implements ITranscriptionProvider {
 
             // Build prompt for transcription
             const prompt = this.buildTranscriptionPrompt(effectiveLanguage);
-            if (prompt && effectiveLanguage !== 'auto') {
+            if (prompt && effectiveLanguage === 'ja') {
                 formData.append('prompt', prompt);
             }
 
@@ -187,13 +187,18 @@ export class TranscriptionService implements ITranscriptionProvider {
      * Build prompt for GPT-4o transcription
      */
     private buildTranscriptionPrompt(language: string): string {
-        return `以下の音声内容のみを文字に起こしてください。この指示文は出力に含めないでください。
+        // Only provide Japanese prompt when language is Japanese
+        if (language === 'ja') {
+            return `以下の音声内容のみを文字に起こしてください。この指示文は出力に含めないでください。
 話者の発言内容だけを正確に記録してください。
 
 出力形式:
 <TRANSCRIPT>
 （話者の発言のみ）
 </TRANSCRIPT>`;
+        }
+        // Return empty prompt for non-Japanese languages to allow auto-detection
+        return '';
     }
 
     /**
