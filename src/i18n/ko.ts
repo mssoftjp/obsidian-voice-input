@@ -156,6 +156,8 @@ export const ko: TranslationResource = {
             maxRecordingDurationDesc: '최대 녹음 시간(초) ({min}초~{max}분)',
             language: '음성 인식 언어',
             languageDesc: '음성 인식 및 전사를 위한 언어입니다. 최상의 결과를 위해 자동 감지를 권장합니다.',
+            transcriptionLanguage: '음성 인식 언어',
+            transcriptionLanguageDesc: '음성 인식 및 전사를 위한 언어입니다. 최상의 결과를 위해 자동 감지를 권장합니다.',
             pluginLanguage: '플러그인 언어',
             pluginLanguageDesc: 'UI 표시, 음성 처리 및 교정 사전의 언어 설정',
             customDictionary: '사용자 정의 사전',

@@ -156,6 +156,8 @@ export const ja: TranslationResource = {
             maxRecordingDurationDesc: '最大録音時間（秒）（{min}秒〜{max}分）',
             language: '音声認識言語',
             languageDesc: '音声認識と文字起こしの言語。最適な結果のため自動検出を推奨します。',
+            transcriptionLanguage: '音声認識言語',
+            transcriptionLanguageDesc: '音声認識と文字起こしの言語。最適な結果のため自動検出を推奨します。',
             pluginLanguage: 'プラグイン言語',
             pluginLanguageDesc: 'UI表示、音声認識処理、補正辞書の言語を設定',
             customDictionary: 'カスタム辞書',

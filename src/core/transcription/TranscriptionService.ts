@@ -143,9 +143,9 @@ export class TranscriptionService implements ITranscriptionProvider {
             }
             
             // Apply corrections if enabled and for supported languages
-            // Dictionary correction is most effective for Japanese and Chinese
-            const supportsCorrectionForLanguage = ['ja', 'zh'].includes(language);
-            const correctedText = this.enableTranscriptionCorrection && supportsCorrectionForLanguage
+            // Use effective language from response or fallback to input language
+            const effectiveLang = responseData.language || language;
+            const correctedText = this.enableTranscriptionCorrection && effectiveLang === 'ja'
                 ? await this.corrector.correct(originalText)
                 : originalText;
             

@@ -156,6 +156,8 @@ export const zh: TranslationResource = {
             maxRecordingDurationDesc: '最大录音时间（秒）（{min}秒～{max}分钟）',
             language: '语音识别语言',
             languageDesc: '语音识别和转录的语言。建议使用自动检测以获得最佳结果。',
+            transcriptionLanguage: '语音识别语言',
+            transcriptionLanguageDesc: '语音识别和转录的语言。建议使用自动检测以获得最佳结果。',
             pluginLanguage: '插件语言',
             pluginLanguageDesc: '设置UI显示、语音处理和校正词典的语言',
             customDictionary: '自定义词典',

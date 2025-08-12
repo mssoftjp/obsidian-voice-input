@@ -156,6 +156,8 @@ export const en: TranslationResource = {
             maxRecordingDurationDesc: 'Maximum recording time in seconds ({min}s - {max}min)',
             language: 'Voice Recognition Language',
             languageDesc: 'Language for voice recognition and transcription. Auto-detection is recommended for best results.',
+            transcriptionLanguage: 'Transcription Language',
+            transcriptionLanguageDesc: 'Language for voice recognition and transcription. Auto-detection is recommended for best results.',
             pluginLanguage: 'Plugin Language',
             pluginLanguageDesc: 'Set language for UI, voice processing, and correction dictionary',
             customDictionary: 'Custom Dictionary',

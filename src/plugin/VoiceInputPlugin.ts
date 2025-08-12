@@ -221,7 +221,21 @@ export default class VoiceInputPlugin extends Plugin {
                 this.logger?.info('Migrating interfaceLanguage to pluginLanguage');
             }
 
-            // languageからpluginLanguageへの移行
+            // languageからtranscriptionLanguageへの移行
+            if ('language' in data && !('transcriptionLanguage' in data)) {
+                // 既存のlanguageフィールドをtranscriptionLanguageに移行
+                const langValue = data.language;
+                if (langValue === 'auto' || langValue === 'ja' || langValue === 'en' || langValue === 'zh' || langValue === 'ko') {
+                    migratedData.transcriptionLanguage = langValue;
+                } else {
+                    migratedData.transcriptionLanguage = 'auto';
+                }
+                delete migratedData.language;
+                needsSave = true;
+                this.logger?.info(`Migrating language (${data.language}) to transcriptionLanguage (${migratedData.transcriptionLanguage})`);
+            }
+
+            // languageからpluginLanguageへの移行（古いバージョンとの互換性のため）
             if ('language' in data && !('pluginLanguage' in data)) {
                 // 言語コードを正規化（ja → ja、en → en、zh → zh、ko → ko、その他 → en）
                 const langCode = data.language as string;
@@ -230,11 +244,12 @@ export default class VoiceInputPlugin extends Plugin {
                 } else {
                     migratedData.pluginLanguage = 'en';
                 }
-                delete migratedData.language;
                 needsSave = true;
                 this.logger?.info(`Migrating language (${data.language}) to pluginLanguage (${migratedData.pluginLanguage})`);
-            } else if ('language' in data) {
-                // pluginLanguageが既に存在する場合は、languageフィールドを削除
+            }
+
+            // 不要になったlanguageフィールドの削除
+            if ('language' in data) {
                 delete migratedData.language;
                 needsSave = true;
                 this.logger?.info('Removing redundant language field');
@@ -351,10 +366,10 @@ export default class VoiceInputPlugin extends Plugin {
      * Auto-detects from Obsidian locale when 'auto' is selected
      */
     public getResolvedLanguage(): 'ja' | 'en' | 'zh' | 'ko' {
-        if (this.settings.language === 'auto') {
+        if (this.settings.transcriptionLanguage === 'auto') {
             return this.detectPluginLanguage();
         }
-        return this.settings.language;
+        return this.settings.transcriptionLanguage;
     }
 
     async saveSettings() {
