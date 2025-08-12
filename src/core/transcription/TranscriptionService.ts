@@ -15,8 +15,6 @@ export class TranscriptionService implements ITranscriptionProvider {
     // コスト重視なら mini、わずかな精度向上が必要なら通常版を選択
     private model: 'gpt-4o-transcribe' | 'gpt-4o-mini-transcribe' = DEFAULT_TRANSCRIPTION_SETTINGS.model;
     private enableTranscriptionCorrection: boolean = DEFAULT_TRANSCRIPTION_SETTINGS.enableTranscriptionCorrection;
-    private language: string = 'ja';
-
     constructor(apiKey: string, dictionary?: SimpleCorrectionDictionary) {
         this.apiKey = apiKey;
         this.logger = createServiceLogger('TranscriptionService');
@@ -25,18 +23,21 @@ export class TranscriptionService implements ITranscriptionProvider {
         });
     }
 
-    async transcribe(audioBlob: Blob, language: string = 'ja'): Promise<TranscriptionResult> {
+    async transcribe(audioBlob: Blob, language?: string): Promise<TranscriptionResult> {
         return this.transcribeAudio(audioBlob, language);
     }
 
-    async transcribeAudio(audioBlob: Blob, language: string = 'ja'): Promise<TranscriptionResult> {
+    async transcribeAudio(audioBlob: Blob, language?: string): Promise<TranscriptionResult> {
         const startTime = Date.now();
         const perfStartTime = performance.now();
+        
+        // Use default language if none provided
+        const effectiveLanguage = language || DEFAULT_TRANSCRIPTION_SETTINGS.language;
         
         this.logger.info('Starting transcription', {
             audioBlobSize: audioBlob.size,
             audioType: audioBlob.type,
-            language,
+            language: effectiveLanguage,
             model: this.model,
             enableTranscriptionCorrection: this.enableTranscriptionCorrection
         });
@@ -50,8 +51,8 @@ export class TranscriptionService implements ITranscriptionProvider {
             formData.append('temperature', String(API_CONSTANTS.PARAMETERS.TRANSCRIPTION_TEMPERATURE)); // Deterministic output
             
             // Language setting
-            if (language !== 'auto') {
-                formData.append('language', language);
+            if (effectiveLanguage !== 'auto') {
+                formData.append('language', effectiveLanguage);
             }
 
             // Build prompt for transcription
@@ -139,12 +140,14 @@ export class TranscriptionService implements ITranscriptionProvider {
                     originalText: '',
                     duration,
                     model: this.model,
-                    language: responseData.language || language
+                    language: responseData.language || effectiveLanguage
                 };
             }
             
             // Apply corrections if enabled (only for Japanese)
-            const correctedText = this.enableTranscriptionCorrection && language === 'ja'
+            // Use the detected language from the response if available, otherwise fall back to input language
+            const detectedLanguage = responseData.language || effectiveLanguage;
+            const correctedText = this.enableTranscriptionCorrection && detectedLanguage === 'ja'
                 ? await this.corrector.correct(originalText)
                 : originalText;
             
@@ -167,7 +170,7 @@ export class TranscriptionService implements ITranscriptionProvider {
                 originalText,
                 duration,
                 model: this.model,
-                language: responseData.language || language
+                language: responseData.language || effectiveLanguage
             };
         } catch (error) {
             this.logger.error('Transcription error', error);

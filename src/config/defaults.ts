@@ -83,7 +83,6 @@ export const DEFAULT_TRANSCRIPTION_SETTINGS = {
 export const DEFAULT_USER_SETTINGS = {
     /** 基本設定 */
     openaiApiKey: '',
-    language: DEFAULT_TRANSCRIPTION_SETTINGS.language,
     enableTranscriptionCorrection: DEFAULT_TRANSCRIPTION_SETTINGS.enableTranscriptionCorrection,
 
     /** 音声設定 */
