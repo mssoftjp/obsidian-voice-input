@@ -179,6 +179,11 @@ export type TranslationResource = {
       transcriptionLanguageDesc: string;
       pluginLanguage: string;
       pluginLanguageDesc: string;
+      // Advanced settings
+      languageLinking: string;
+      languageLinkingDesc: string;
+      advancedTranscriptionLanguage: string;
+      advancedTranscriptionLanguageDesc: string;
       customDictionary: string;
       customDictionaryDesc: string;
       dictionaryDefinite: string;

@@ -160,6 +160,11 @@ export const ko: TranslationResource = {
             transcriptionLanguageDesc: '음성 인식 및 전사를 위한 언어입니다. 최상의 결과를 위해 자동 감지를 권장합니다.',
             pluginLanguage: '플러그인 언어',
             pluginLanguageDesc: 'UI 표시, 음성 처리 및 교정 사전의 언어 설정',
+            // 고급 설정
+            languageLinking: 'UI 언어와 인식 언어 연동',
+            languageLinkingDesc: '활성화하면 인식 언어가 UI 언어를 따릅니다. 비활성화하면 인식 언어를 독립적으로 설정할 수 있습니다.',
+            advancedTranscriptionLanguage: '인식 언어 (고급 설정)',
+            advancedTranscriptionLanguageDesc: '음성 인식 언어를 독립적으로 설정합니다. 최상의 결과를 위해 자동 감지를 권장합니다.',
             customDictionary: '사용자 정의 사전',
             customDictionaryDesc: '후처리에 사용되는 교정 사전 관리',
             dictionaryDefinite: '고정 교정 (최대 {max}개)',

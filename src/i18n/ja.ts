@@ -160,6 +160,11 @@ export const ja: TranslationResource = {
             transcriptionLanguageDesc: '音声認識と文字起こしの言語。最適な結果のため自動検出を推奨します。',
             pluginLanguage: 'プラグイン言語',
             pluginLanguageDesc: 'UI表示、音声認識処理、補正辞書の言語を設定',
+            // 高度設定
+            languageLinking: 'UI言語と認識言語を連動する',
+            languageLinkingDesc: 'オンの場合、認識言語がUI言語に従います。オフの場合、認識言語を個別に設定できます。',
+            advancedTranscriptionLanguage: '認識言語（高度設定）',
+            advancedTranscriptionLanguageDesc: '音声認識の言語を個別に設定します。最適な結果のため自動検出を推奨します。',
             customDictionary: 'カスタム辞書',
             customDictionaryDesc: '補正辞書を管理',
             dictionaryDefinite: '固定補正（最大{max}個）',
