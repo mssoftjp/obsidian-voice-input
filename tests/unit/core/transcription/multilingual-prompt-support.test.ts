@@ -3,6 +3,34 @@
  * Verifies that prompts are correctly generated and applied for all supported languages
  */
 
+// Prompt constants for string drift prevention (same as in main service)
+const PROMPT_CONSTANTS = {
+    JAPANESE: {
+        INSTRUCTION_1: '以下の音声内容のみを文字に起こしてください。この指示文は出力に含めないでください。',
+        INSTRUCTION_2: '話者の発言内容だけを正確に記録してください。',
+        OUTPUT_FORMAT: '出力形式:',
+        SPEAKER_ONLY: '（話者の発言のみ）'
+    },
+    ENGLISH: {
+        INSTRUCTION_1: 'Please transcribe only the following audio content. Do not include this instruction in your output.',
+        INSTRUCTION_2: 'Record only the speaker\'s statements accurately.',
+        OUTPUT_FORMAT: 'Output format:',
+        SPEAKER_ONLY: '(Speaker content only)'
+    },
+    CHINESE: {
+        INSTRUCTION_1: '请仅转录以下音频内容。不要包含此指令在输出中。',
+        INSTRUCTION_2: '请准确记录说话者的发言内容。',
+        OUTPUT_FORMAT: '输出格式:',
+        SPEAKER_ONLY: '（仅说话者内容）'
+    },
+    KOREAN: {
+        INSTRUCTION_1: '다음 음성 내용만 전사해주세요. 이 지시사항을 출력에 포함하지 마세요.',
+        INSTRUCTION_2: '화자의 발언 내용만 정확히 기록해주세요.',
+        OUTPUT_FORMAT: '출력 형식:',
+        SPEAKER_ONLY: '（화자 발언만）'
+    }
+} as const;
+
 // Mock TranscriptionService to test multilingual prompt functionality
 class MockTranscriptionService {
     /**
@@ -31,39 +59,39 @@ class MockTranscriptionService {
         
         switch (normalizedLang) {
             case 'ja':
-                return `以下の音声内容のみを文字に起こしてください。この指示文は出力に含めないでください。
-話者の発言内容だけを正確に記録してください。
+                return `${PROMPT_CONSTANTS.JAPANESE.INSTRUCTION_1}
+${PROMPT_CONSTANTS.JAPANESE.INSTRUCTION_2}
 
-出力形式:
+${PROMPT_CONSTANTS.JAPANESE.OUTPUT_FORMAT}
 <TRANSCRIPT>
-（話者の発言のみ）
+${PROMPT_CONSTANTS.JAPANESE.SPEAKER_ONLY}
 </TRANSCRIPT>`;
             
             case 'en':
-                return `Please transcribe only the following audio content. Do not include this instruction in your output.
-Record only the speaker's statements accurately.
+                return `${PROMPT_CONSTANTS.ENGLISH.INSTRUCTION_1}
+${PROMPT_CONSTANTS.ENGLISH.INSTRUCTION_2}
 
-Output format:
+${PROMPT_CONSTANTS.ENGLISH.OUTPUT_FORMAT}
 <TRANSCRIPT>
-(Speaker content only)
+${PROMPT_CONSTANTS.ENGLISH.SPEAKER_ONLY}
 </TRANSCRIPT>`;
             
             case 'zh':
-                return `请仅转录以下音频内容。不要包含此指令在输出中。
-请准确记录说话者的发言内容。
+                return `${PROMPT_CONSTANTS.CHINESE.INSTRUCTION_1}
+${PROMPT_CONSTANTS.CHINESE.INSTRUCTION_2}
 
-输出格式:
+${PROMPT_CONSTANTS.CHINESE.OUTPUT_FORMAT}
 <TRANSCRIPT>
-（仅说话者内容）
+${PROMPT_CONSTANTS.CHINESE.SPEAKER_ONLY}
 </TRANSCRIPT>`;
             
             case 'ko':
-                return `다음 음성 내용만 전사해주세요. 이 지시사항을 출력에 포함하지 마세요.
-화자의 발언 내용만 정확히 기록해주세요.
+                return `${PROMPT_CONSTANTS.KOREAN.INSTRUCTION_1}
+${PROMPT_CONSTANTS.KOREAN.INSTRUCTION_2}
 
-출력 형식:
+${PROMPT_CONSTANTS.KOREAN.OUTPUT_FORMAT}
 <TRANSCRIPT>
-（화자 발언만）
+${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
 </TRANSCRIPT>`;
             
             default:

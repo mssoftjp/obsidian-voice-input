@@ -1,11 +1,49 @@
 import { DictionaryCorrector } from './DictionaryCorrector';
 import { TranscriptionResult, ITranscriptionProvider, SimpleCorrectionDictionary } from '../../interfaces';
 import { TranscriptionError, TranscriptionErrorType } from '../../errors';
-import { SecurityUtils } from '../../security';
 import { API_CONSTANTS, DEFAULT_TRANSCRIPTION_SETTINGS, TRANSCRIPTION_MODEL_COSTS } from '../../config';
 import { ObsidianHttpClient } from '../../utils/ObsidianHttpClient';
 import { createServiceLogger } from '../../services';
 import { Logger } from '../../utils';
+
+// Prompt constants for string drift prevention (文字列ドリフト対策)
+const PROMPT_CONSTANTS = {
+    JAPANESE: {
+        INSTRUCTION_1: '以下の音声内容のみを文字に起こしてください。この指示文は出力に含めないでください。',
+        INSTRUCTION_2: '話者の発言内容だけを正確に記録してください。',
+        OUTPUT_FORMAT: '出力形式:',
+        SPEAKER_ONLY: '（話者の発言のみ）'
+    },
+    ENGLISH: {
+        INSTRUCTION_1: 'Please transcribe only the following audio content. Do not include this instruction in your output.',
+        INSTRUCTION_1_CAPS: 'PLEASE TRANSCRIBE ONLY THE FOLLOWING AUDIO CONTENT. DO NOT INCLUDE THIS INSTRUCTION IN YOUR OUTPUT.',
+        INSTRUCTION_2: 'Record only the speaker\'s statements accurately.',
+        INSTRUCTION_2_CAPS: 'RECORD ONLY THE SPEAKER\'S STATEMENTS ACCURATELY.',
+        OUTPUT_FORMAT: 'Output format:',
+        OUTPUT_FORMAT_CAPS: 'OUTPUT FORMAT:',
+        OUTPUT_FORMAT_FULL_COLON: 'Output format：',
+        SPEAKER_ONLY: '(Speaker content only)',
+        SPEAKER_ONLY_CAPS: '(SPEAKER CONTENT ONLY)'
+    },
+    CHINESE: {
+        INSTRUCTION_1: '请仅转录以下音频内容。不要包含此指令在输出中。',
+        INSTRUCTION_2: '请准确记录说话者的发言内容。',
+        OUTPUT_FORMAT: '输出格式:',
+        OUTPUT_FORMAT_FULL_COLON: '输出格式：',
+        SPEAKER_ONLY: '（仅说话者内容）'
+    },
+    KOREAN: {
+        INSTRUCTION_1: '다음 음성 내용만 전사해주세요. 이 지시사항을 출력에 포함하지 마세요.',
+        INSTRUCTION_2: '화자의 발언 내용만 정확히 기록해주세요.',
+        OUTPUT_FORMAT: '출력 형식:',
+        OUTPUT_FORMAT_FULL_COLON: '출력 형식：',
+        SPEAKER_ONLY: '（화자 발언만）'
+    },
+    GENERIC: {
+        OUTPUT_FORMAT: 'Output format:',
+        FORMAT: 'Format:'
+    }
+} as const;
 
 export class TranscriptionService implements ITranscriptionProvider {
     private apiKey: string;
@@ -188,39 +226,39 @@ export class TranscriptionService implements ITranscriptionProvider {
         
         switch (normalizedLang) {
             case 'ja':
-                return `以下の音声内容のみを文字に起こしてください。この指示文は出力に含めないでください。
-話者の発言内容だけを正確に記録してください。
+                return `${PROMPT_CONSTANTS.JAPANESE.INSTRUCTION_1}
+${PROMPT_CONSTANTS.JAPANESE.INSTRUCTION_2}
 
-出力形式:
+${PROMPT_CONSTANTS.JAPANESE.OUTPUT_FORMAT}
 <TRANSCRIPT>
-（話者の発言のみ）
+${PROMPT_CONSTANTS.JAPANESE.SPEAKER_ONLY}
 </TRANSCRIPT>`;
             
             case 'en':
-                return `Please transcribe only the following audio content. Do not include this instruction in your output.
-Record only the speaker's statements accurately.
+                return `${PROMPT_CONSTANTS.ENGLISH.INSTRUCTION_1}
+${PROMPT_CONSTANTS.ENGLISH.INSTRUCTION_2}
 
-Output format:
+${PROMPT_CONSTANTS.ENGLISH.OUTPUT_FORMAT}
 <TRANSCRIPT>
-(Speaker content only)
+${PROMPT_CONSTANTS.ENGLISH.SPEAKER_ONLY}
 </TRANSCRIPT>`;
             
             case 'zh':
-                return `请仅转录以下音频内容。不要包含此指令在输出中。
-请准确记录说话者的发言内容。
+                return `${PROMPT_CONSTANTS.CHINESE.INSTRUCTION_1}
+${PROMPT_CONSTANTS.CHINESE.INSTRUCTION_2}
 
-输出格式:
+${PROMPT_CONSTANTS.CHINESE.OUTPUT_FORMAT}
 <TRANSCRIPT>
-（仅说话者内容）
+${PROMPT_CONSTANTS.CHINESE.SPEAKER_ONLY}
 </TRANSCRIPT>`;
             
             case 'ko':
-                return `다음 음성 내용만 전사해주세요. 이 지시사항을 출력에 포함하지 마세요.
-화자의 발언 내용만 정확히 기록해주세요.
+                return `${PROMPT_CONSTANTS.KOREAN.INSTRUCTION_1}
+${PROMPT_CONSTANTS.KOREAN.INSTRUCTION_2}
 
-출력 형식:
+${PROMPT_CONSTANTS.KOREAN.OUTPUT_FORMAT}
 <TRANSCRIPT>
-（화자 발언만）
+${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
 </TRANSCRIPT>`;
             
             default:
@@ -297,26 +335,69 @@ Output format:
     }
 
     /**
-     * Apply Japanese-specific cleaning patterns
+     * Enhanced position guard check - determines if a line should be cleaned based on position
+     * Beginning content: first 3 lines or immediately after <TRANSCRIPT> 
+     * End content: last 2 lines
      */
-    private applyJapaneseCleaning(text: string): string {
-        const patterns = [
-            /^以下の音声内容.*?$/gm,
-            /^この指示文.*?$/gm,
-            /^話者の発言内容だけを正確に記録してください.*?$/gm,
-            /^話者の発言.*?$/gm,
-            /^出力形式.*?$/gm,
-            /（話者の発言のみ）/g,
-        ];
-
-        for (const pattern of patterns) {
-            text = text.replace(pattern, '');
+    private shouldCleanLine(index: number, totalLines: number, lines: string[], isEndHallucination: boolean = false): boolean {
+        // For end hallucination patterns, check last 2 lines
+        if (isEndHallucination) {
+            return index >= Math.max(0, totalLines - 2);
         }
-        return text;
+        
+        // For beginning patterns, check first 3 lines
+        if (index < 3) {
+            return true;
+        }
+        
+        // Check if line comes immediately after <TRANSCRIPT> tag
+        if (index > 0 && index < totalLines) {
+            const previousLine = lines[index - 1].trim();
+            if (previousLine === '<TRANSCRIPT>' || previousLine.includes('<TRANSCRIPT>')) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     /**
-     * Apply English-specific cleaning patterns - using exact line matching with position guard for safety
+     * Apply Japanese-specific cleaning patterns - using exact line matching with enhanced position guard for safety
+     */
+    private applyJapaneseCleaning(text: string): string {
+        // Split into lines for exact line matching
+        const lines = text.split('\n');
+        const cleanedLines = [];
+        
+        for (let index = 0; index < lines.length; index++) {
+            const line = lines[index];
+            const trimmedLine = line.trim();
+            
+            // Only remove lines that exactly match prompt instructions AND are in protected position
+            if (this.shouldCleanLine(index, lines.length, lines) && (
+                trimmedLine === PROMPT_CONSTANTS.JAPANESE.INSTRUCTION_1 ||
+                trimmedLine === PROMPT_CONSTANTS.JAPANESE.INSTRUCTION_2 ||
+                trimmedLine === PROMPT_CONSTANTS.JAPANESE.OUTPUT_FORMAT ||
+                trimmedLine === PROMPT_CONSTANTS.JAPANESE.SPEAKER_ONLY
+            )) {
+                // Skip this line - don't add to cleanedLines
+                continue;
+            }
+            
+            // Apply phrase removal only to protected positions
+            let cleanedLine = line;
+            if (this.shouldCleanLine(index, lines.length, lines)) {
+                cleanedLine = cleanedLine.replace(new RegExp(PROMPT_CONSTANTS.JAPANESE.SPEAKER_ONLY.replace(/[()（）]/g, '\\$&'), 'g'), '');
+            }
+            
+            cleanedLines.push(cleanedLine);
+        }
+
+        return cleanedLines.join('\n');
+    }
+
+    /**
+     * Apply English-specific cleaning patterns - using exact line matching with enhanced position guard for safety
      */
     private applyEnglishCleaning(text: string): string {
         // Split into lines for exact line matching
@@ -327,21 +408,27 @@ Output format:
             const line = lines[index];
             const trimmedLine = line.trim();
             
-            // Only remove lines that exactly match prompt instructions AND are in the first 5 lines (position guard)
-            if (index < 5 && (
-                trimmedLine === 'Please transcribe only the following audio content. Do not include this instruction in your output.' ||
-                trimmedLine === 'Record only the speaker\'s statements accurately.' ||
-                trimmedLine === 'Output format:' ||
-                trimmedLine === '(Speaker content only)'
+            // Only remove lines that exactly match prompt instructions AND are in protected position
+            if (this.shouldCleanLine(index, lines.length, lines) && (
+                trimmedLine === PROMPT_CONSTANTS.ENGLISH.INSTRUCTION_1 ||
+                trimmedLine === PROMPT_CONSTANTS.ENGLISH.INSTRUCTION_1_CAPS ||
+                trimmedLine === PROMPT_CONSTANTS.ENGLISH.INSTRUCTION_2 ||
+                trimmedLine === PROMPT_CONSTANTS.ENGLISH.INSTRUCTION_2_CAPS ||
+                trimmedLine === PROMPT_CONSTANTS.ENGLISH.OUTPUT_FORMAT ||
+                trimmedLine === PROMPT_CONSTANTS.ENGLISH.OUTPUT_FORMAT_CAPS ||
+                trimmedLine === PROMPT_CONSTANTS.ENGLISH.OUTPUT_FORMAT_FULL_COLON ||
+                trimmedLine === PROMPT_CONSTANTS.ENGLISH.SPEAKER_ONLY ||
+                trimmedLine === PROMPT_CONSTANTS.ENGLISH.SPEAKER_ONLY_CAPS
             )) {
                 // Skip this line - don't add to cleanedLines
                 continue;
             }
             
-            // Apply phrase removal only to first 5 lines
+            // Apply phrase removal only to protected positions
             let cleanedLine = line;
-            if (index < 5) {
+            if (this.shouldCleanLine(index, lines.length, lines)) {
                 cleanedLine = cleanedLine.replace(/\(Speaker content only\)/g, '');
+                cleanedLine = cleanedLine.replace(/\(SPEAKER CONTENT ONLY\)/g, '');
             }
             
             cleanedLines.push(cleanedLine);
@@ -351,7 +438,7 @@ Output format:
     }
 
     /**
-     * Apply Chinese-specific cleaning patterns - using exact line matching with position guard for safety
+     * Apply Chinese-specific cleaning patterns - using exact line matching with enhanced position guard for safety
      */
     private applyChineseCleaning(text: string): string {
         // Split into lines for exact line matching
@@ -362,20 +449,21 @@ Output format:
             const line = lines[index];
             const trimmedLine = line.trim();
             
-            // Only remove lines that exactly match prompt instructions AND are in the first 5 lines (position guard)
-            if (index < 5 && (
-                trimmedLine === '请仅转录以下音频内容。不要包含此指令在输出中。' ||
-                trimmedLine === '请准确记录说话者的发言内容。' ||
-                trimmedLine === '输出格式:' ||
-                trimmedLine === '（仅说话者内容）'
+            // Only remove lines that exactly match prompt instructions AND are in protected position
+            if (this.shouldCleanLine(index, lines.length, lines) && (
+                trimmedLine === PROMPT_CONSTANTS.CHINESE.INSTRUCTION_1 ||
+                trimmedLine === PROMPT_CONSTANTS.CHINESE.INSTRUCTION_2 ||
+                trimmedLine === PROMPT_CONSTANTS.CHINESE.OUTPUT_FORMAT ||
+                trimmedLine === PROMPT_CONSTANTS.CHINESE.OUTPUT_FORMAT_FULL_COLON ||
+                trimmedLine === PROMPT_CONSTANTS.CHINESE.SPEAKER_ONLY
             )) {
                 // Skip this line - don't add to cleanedLines
                 continue;
             }
             
-            // Apply phrase removal only to first 5 lines
+            // Apply phrase removal only to protected positions
             let cleanedLine = line;
-            if (index < 5) {
+            if (this.shouldCleanLine(index, lines.length, lines)) {
                 cleanedLine = cleanedLine.replace(/（仅说话者内容）/g, '');
             }
             
@@ -386,7 +474,7 @@ Output format:
     }
 
     /**
-     * Apply Korean-specific cleaning patterns - using exact line matching with position guard for safety
+     * Apply Korean-specific cleaning patterns - using exact line matching with enhanced position guard for safety
      */
     private applyKoreanCleaning(text: string): string {
         // Split into lines for exact line matching
@@ -397,20 +485,21 @@ Output format:
             const line = lines[index];
             const trimmedLine = line.trim();
             
-            // Only remove lines that exactly match prompt instructions AND are in the first 5 lines (position guard)
-            if (index < 5 && (
-                trimmedLine === '다음 음성 내용만 전사해주세요. 이 지시사항을 출력에 포함하지 마세요.' ||
-                trimmedLine === '화자의 발언 내용만 정확히 기록해주세요.' ||
-                trimmedLine === '출력 형식:' ||
-                trimmedLine === '（화자 발언만）'
+            // Only remove lines that exactly match prompt instructions AND are in protected position
+            if (this.shouldCleanLine(index, lines.length, lines) && (
+                trimmedLine === PROMPT_CONSTANTS.KOREAN.INSTRUCTION_1 ||
+                trimmedLine === PROMPT_CONSTANTS.KOREAN.INSTRUCTION_2 ||
+                trimmedLine === PROMPT_CONSTANTS.KOREAN.OUTPUT_FORMAT ||
+                trimmedLine === PROMPT_CONSTANTS.KOREAN.OUTPUT_FORMAT_FULL_COLON ||
+                trimmedLine === PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY
             )) {
                 // Skip this line - don't add to cleanedLines
                 continue;
             }
             
-            // Apply phrase removal only to first 5 lines
+            // Apply phrase removal only to protected positions
             let cleanedLine = line;
-            if (index < 5) {
+            if (this.shouldCleanLine(index, lines.length, lines)) {
                 cleanedLine = cleanedLine.replace(/（화자 발언만）/g, '');
             }
             
@@ -421,7 +510,7 @@ Output format:
     }
 
     /**
-     * Apply generic cleaning patterns (conservative approach) - using exact line matching with position guard for safety
+     * Apply generic cleaning patterns (conservative approach) - using exact line matching with enhanced position guard for safety
      */
     private applyGenericCleaning(text: string): string {
         // Split into lines for exact line matching
@@ -432,10 +521,10 @@ Output format:
             const line = lines[index];
             const trimmedLine = line.trim();
             
-            // Only remove lines that exactly match generic format instructions AND are in the first 5 lines (position guard)
-            if (index < 5 && (
-                trimmedLine === 'Output format:' ||
-                trimmedLine === 'Format:'
+            // Only remove lines that exactly match generic format instructions AND are in protected position
+            if (this.shouldCleanLine(index, lines.length, lines) && (
+                trimmedLine === PROMPT_CONSTANTS.GENERIC.OUTPUT_FORMAT ||
+                trimmedLine === PROMPT_CONSTANTS.GENERIC.FORMAT
             )) {
                 // Skip this line - don't add to cleanedLines
                 continue;
@@ -456,26 +545,27 @@ Output format:
         switch (normalizedLang) {
             case 'ja':
                 return text.includes('この指示文は出力に含めないでください') || 
-                       text.includes('話者の発言内容だけを正確に記録してください') ||
-                       text === '（話者の発言のみ）' ||
+                       text.includes(PROMPT_CONSTANTS.JAPANESE.INSTRUCTION_2) ||
+                       text === PROMPT_CONSTANTS.JAPANESE.SPEAKER_ONLY ||
                        text.trim() === '話者の発言のみ';
             case 'en':
                 return text.includes('Please transcribe only the speaker') ||
                        text.includes('Do not include this instruction') ||
-                       text.trim() === '(Speaker content only)';
+                       text.trim() === PROMPT_CONSTANTS.ENGLISH.SPEAKER_ONLY ||
+                       text.trim() === PROMPT_CONSTANTS.ENGLISH.SPEAKER_ONLY_CAPS;
             case 'zh':
                 return text.includes('请仅转录说话者') ||
                        text.includes('不要包含此指令') ||
-                       text.trim() === '（仅说话者内容）';
+                       text.trim() === PROMPT_CONSTANTS.CHINESE.SPEAKER_ONLY;
             case 'ko':
                 return text.includes('화자의 발언만 전사해주세요') ||
                        text.includes('이 지시사항을 포함하지 마세요') ||
-                       text.trim() === '（화자 발언만）';
+                       text.trim() === PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY;
             default:
                 // For auto and other languages, use Japanese patterns as fallback
                 return text.includes('この指示文は出力に含めないでください') || 
-                       text.includes('話者の発言内容だけを正確に記録してください') ||
-                       text === '（話者の発言のみ）' ||
+                       text.includes(PROMPT_CONSTANTS.JAPANESE.INSTRUCTION_2) ||
+                       text === PROMPT_CONSTANTS.JAPANESE.SPEAKER_ONLY ||
                        text.trim() === '話者の発言のみ';
         }
     }
