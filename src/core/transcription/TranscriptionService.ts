@@ -176,20 +176,57 @@ export class TranscriptionService implements ITranscriptionProvider {
     }
 
     /**
-     * Build prompt for GPT-4o transcription (only for Japanese)
+     * Build prompt for GPT-4o transcription (for all languages except auto)
      */
     private buildTranscriptionPrompt(language: string): string {
-        // Only provide prompt for Japanese language
-        if (language !== 'ja') {
+        // No prompt for auto language mode (as it might interfere with language detection)
+        if (language === 'auto') {
             return '';
         }
-        return `以下の音声内容のみを文字に起こしてください。この指示文は出力に含めないでください。
+        
+        const normalizedLang = this.normalizeLanguage(language);
+        
+        switch (normalizedLang) {
+            case 'ja':
+                return `以下の音声内容のみを文字に起こしてください。この指示文は出力に含めないでください。
 話者の発言内容だけを正確に記録してください。
 
 出力形式:
 <TRANSCRIPT>
 （話者の発言のみ）
 </TRANSCRIPT>`;
+            
+            case 'en':
+                return `Please transcribe only the following audio content. Do not include this instruction in your output.
+Record only the speaker's statements accurately.
+
+Output format:
+<TRANSCRIPT>
+(Speaker content only)
+</TRANSCRIPT>`;
+            
+            case 'zh':
+                return `请仅转录以下音频内容。不要包含此指令在输出中。
+请准确记录说话者的发言内容。
+
+输出格式:
+<TRANSCRIPT>
+（仅说话者内容）
+</TRANSCRIPT>`;
+            
+            case 'ko':
+                return `다음 음성 내용만 전사해주세요. 이 지시사항을 출력에 포함하지 마세요.
+화자의 발언 내용만 정확히 기록해주세요.
+
+출력 형식:
+<TRANSCRIPT>
+（화자 발언만）
+</TRANSCRIPT>`;
+            
+            default:
+                // For any other language, return empty string
+                return '';
+        }
     }
 
     /**
@@ -282,7 +319,20 @@ export class TranscriptionService implements ITranscriptionProvider {
      * Apply English-specific cleaning patterns
      */
     private applyEnglishCleaning(text: string): string {
-        // For English, rely on conservative generic cleaning only
+        const patterns = [
+            /^Please transcribe only the following audio content.*?$/gm,
+            /^Please transcribe.*?$/gm,
+            /^Do not include this instruction.*?$/gm,
+            /^Record only the speaker's statements.*?$/gm,
+            /^Transcribe only.*?$/gm,
+            /^Output format.*?$/gm,
+            /^Format.*?$/gm,
+            /\(Speaker content only\)/g,
+        ];
+
+        for (const pattern of patterns) {
+            text = text.replace(pattern, '');
+        }
         return text;
     }
 
@@ -290,7 +340,20 @@ export class TranscriptionService implements ITranscriptionProvider {
      * Apply Chinese-specific cleaning patterns
      */
     private applyChineseCleaning(text: string): string {
-        // For Chinese, rely on conservative generic cleaning only
+        const patterns = [
+            /^请仅转录以下音频内容.*?$/gm,
+            /^请转录.*?$/gm,
+            /^不要包含此指令.*?$/gm,
+            /^请准确记录说话者的发言内容.*?$/gm,
+            /^仅转录.*?$/gm,
+            /^输出格式.*?$/gm,
+            /^格式.*?$/gm,
+            /（仅说话者内容）/g,
+        ];
+
+        for (const pattern of patterns) {
+            text = text.replace(pattern, '');
+        }
         return text;
     }
 
@@ -298,7 +361,20 @@ export class TranscriptionService implements ITranscriptionProvider {
      * Apply Korean-specific cleaning patterns
      */
     private applyKoreanCleaning(text: string): string {
-        // For Korean, rely on conservative generic cleaning only
+        const patterns = [
+            /^다음 음성 내용만 전사해주세요.*?$/gm,
+            /^다음 음성.*?$/gm,
+            /^이 지시사항을 출력에 포함하지 마세요.*?$/gm,
+            /^화자의 발언 내용만 정확히 기록해주세요.*?$/gm,
+            /^음성 내용만.*?$/gm,
+            /^출력 형식.*?$/gm,
+            /^형식.*?$/gm,
+            /（화자 발언만）/g,
+        ];
+
+        for (const pattern of patterns) {
+            text = text.replace(pattern, '');
+        }
         return text;
     }
 
