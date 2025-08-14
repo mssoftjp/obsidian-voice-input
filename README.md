@@ -76,6 +76,10 @@ See also OpenAI’s Privacy Policy.
 - Deploy locally: `npm run deploy-local` (copies to detected vaults)
 - Analyze unused code (build-time): `npm run analyze:unused`
 
+### Documentation
+
+- Processing flow visualization: see [`docs/PROCESSING_FLOW.md`](docs/PROCESSING_FLOW.md)
+
 Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 
 —
@@ -174,6 +178,10 @@ OpenAIのプライバシーポリシーもご参照ください。
 - 依存インストール: `npm ci`
 - ビルド: `npm run build-plugin`
 - ローカル配布: `npm run deploy-local`
+
+### ドキュメント
+
+- 処理フローの可視化: [`docs/PROCESSING_FLOW.md`](docs/PROCESSING_FLOW.md) を参照
 
 サードパーティライセンスは `THIRD_PARTY_LICENSES.md` を参照してください。
 
