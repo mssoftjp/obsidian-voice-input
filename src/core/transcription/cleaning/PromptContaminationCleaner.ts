@@ -115,36 +115,26 @@ export class PromptContaminationCleaner implements TextCleaner {
     private removeXmlTags(text: string, xmlPatternGroups: typeof CLEANING_CONFIG.contamination.xmlPatternGroups): string {
         let cleaned = text;
         
-        // Process in priority order: complete tags first, then partial cleanup
-        const groups = ['completeXmlTags', 'sentenceBoundedTags', 'lineBoundedTags', 'standaloneTags'] as const;
-        
-        for (const group of groups) {
-            const patterns = xmlPatternGroups[group];
-            for (const pattern of patterns) {
-                try {
-                    // Extract regex pattern and flags from string representation
-                    const lastSlash = pattern.lastIndexOf('/');
-                    if (lastSlash > 0) {
-                        const regexPattern = pattern.slice(1, lastSlash);
-                        const flags = pattern.slice(lastSlash + 1);
-                        const regex = new RegExp(regexPattern, flags);
-                        
-                        if (group === 'completeXmlTags') {
-                            // For complete XML tags, extract content instead of removing
-                            const match = cleaned.match(regex);
-                            if (match && match[1]) {
-                                cleaned = match[1].trim();
-                            }
-                        } else {
-                            // For other patterns, remove entirely
-                            cleaned = cleaned.replace(regex, '');
-                        }
-                    }
-                } catch (error) {
-                    this.logger.warn(`Invalid regex pattern in ${group}`, { pattern, error });
-                }
+        // First: Extract content from complete TRANSCRIPT tags (highest priority)
+        const completeTagMatch = cleaned.match(/<TRANSCRIPT[^>]*>\s*([\s\S]*?)\s*<\/TRANSCRIPT>/);
+        if (completeTagMatch) {
+            cleaned = completeTagMatch[1].trim();
+        } else {
+            // Second: Handle incomplete TRANSCRIPT tags (missing closing tag)
+            const openingMatch = cleaned.match(/<TRANSCRIPT[^>]*>\s*([\s\S]*)/);
+            if (openingMatch) {
+                cleaned = openingMatch[1].trim();
             }
         }
+        
+        // Third: Remove any remaining XML-like tags
+        cleaned = cleaned.replace(/<\/?TRANSCRIPT[^>]*>/g, '');
+        cleaned = cleaned.replace(/<\/?transcript[^>]*>/gi, '');
+        cleaned = cleaned.replace(/<\/?TRANSCRIPTION[^>]*>/gi, '');
+        
+        // Remove standalone tags and empty XML tags
+        cleaned = cleaned.replace(/<[^>]*\/>/g, '');
+        cleaned = cleaned.replace(/<\w+[^>]*>\s*<\/\w+>/g, '');
         
         return cleaned;
     }
@@ -202,19 +192,30 @@ export class PromptContaminationCleaner implements TextCleaner {
     private removeContextPatterns(text: string, contextPatterns: string[]): string {
         let cleaned = text;
         
-        for (const pattern of contextPatterns) {
-            try {
-                // Extract regex pattern and flags from string representation
-                const lastSlash = pattern.lastIndexOf('/');
-                if (lastSlash > 0) {
-                    const regexPattern = pattern.slice(1, lastSlash);
-                    const flags = pattern.slice(lastSlash + 1);
-                    const regex = new RegExp(regexPattern, flags);
-                    cleaned = cleaned.replace(regex, '');
-                }
-            } catch (error) {
-                this.logger.warn('Invalid context pattern regex', { pattern, error });
-            }
+        // Direct pattern matching for speaker-only phrases
+        const speakerPatterns = [
+            /\(Speaker content only\)/gi,
+            /\(SPEAKER CONTENT ONLY\)/gi,
+            /（話者の発言のみ）/g,
+            /（仅说话者内容）/g,
+            /（화자 발언만）/g
+        ];
+        
+        for (const pattern of speakerPatterns) {
+            cleaned = cleaned.replace(pattern, '');
+        }
+        
+        // Remove format-only lines
+        const formatPatterns = [
+            /^Output format:\s*$/gm,
+            /^Format:\s*$/gm,
+            /^出力形式:\s*$/gm,
+            /^输出格式:\s*$/gm,
+            /^출력 형식:\s*$/gm
+        ];
+        
+        for (const pattern of formatPatterns) {
+            cleaned = cleaned.replace(pattern, '');
         }
         
         return cleaned;

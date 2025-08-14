@@ -241,6 +241,6 @@ export class StandardCleaningPipeline implements CleaningPipeline {
      * Get all cleaners in the pipeline
      */
     getCleaners(): readonly TextCleaner[] {
-        return [...this.cleaners];
+        return Object.freeze([...this.cleaners]);
     }
 }

@@ -128,6 +128,7 @@ export class UniversalRepetitionCleaner implements TextCleaner {
         // Define repetition patterns with their limits
         const patterns = [
             { pattern: /([.!?])\1{5,}/g, replacement: '$1$1$1', description: 'punctuation' },
+            { pattern: /([。！？])\1{3,}/g, replacement: '$1', description: 'cjk-punctuation' },
             { pattern: /[…]{3,}/g, replacement: '…', description: 'ellipsis' },
             { pattern: /[-—–]{6,}/g, replacement: '—', description: 'dashes' },
             { pattern: /[•·・]{6,}/g, replacement: '・', description: 'bullets' },
@@ -363,7 +364,7 @@ export class UniversalRepetitionCleaner implements TextCleaner {
     }
     
     private splitIntoSentences(text: string): string[] {
-        // Universal sentence splitting using common punctuation
+        // Universal sentence splitting using common punctuation, preserving the punctuation
         return text.split(/(?<=[。.!?！？])\s*/);
     }
     
