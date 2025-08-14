@@ -316,82 +316,93 @@ Output format:
     }
 
     /**
-     * Apply English-specific cleaning patterns
+     * Apply English-specific cleaning patterns - using exact line matching for safety
      */
     private applyEnglishCleaning(text: string): string {
-        const patterns = [
-            /^Please transcribe only the following audio content.*?$/gm,
-            /^Please transcribe.*?$/gm,
-            /^Do not include this instruction.*?$/gm,
-            /^Record only the speaker's statements.*?$/gm,
-            /^Transcribe only.*?$/gm,
-            /^Output format.*?$/gm,
-            /^Format.*?$/gm,
-            /\(Speaker content only\)/g,
-        ];
+        // Split into lines for exact line matching
+        const lines = text.split('\n');
+        const cleanedLines = lines.filter(line => {
+            const trimmedLine = line.trim();
+            // Only remove lines that exactly match prompt instructions
+            return !(
+                trimmedLine === 'Please transcribe only the following audio content. Do not include this instruction in your output.' ||
+                trimmedLine === 'Record only the speaker\'s statements accurately.' ||
+                trimmedLine === 'Output format:' ||
+                trimmedLine === '(Speaker content only)'
+            );
+        });
 
-        for (const pattern of patterns) {
-            text = text.replace(pattern, '');
-        }
-        return text;
+        // Also remove the phrase anywhere in text (not just full lines)
+        let result = cleanedLines.join('\n');
+        result = result.replace(/\(Speaker content only\)/g, '');
+        
+        return result;
     }
 
     /**
-     * Apply Chinese-specific cleaning patterns
+     * Apply Chinese-specific cleaning patterns - using exact line matching for safety
      */
     private applyChineseCleaning(text: string): string {
-        const patterns = [
-            /^请仅转录以下音频内容.*?$/gm,
-            /^请转录.*?$/gm,
-            /^不要包含此指令.*?$/gm,
-            /^请准确记录说话者的发言内容.*?$/gm,
-            /^仅转录.*?$/gm,
-            /^输出格式.*?$/gm,
-            /^格式.*?$/gm,
-            /（仅说话者内容）/g,
-        ];
+        // Split into lines for exact line matching
+        const lines = text.split('\n');
+        const cleanedLines = lines.filter(line => {
+            const trimmedLine = line.trim();
+            // Only remove lines that exactly match prompt instructions
+            return !(
+                trimmedLine === '请仅转录以下音频内容。不要包含此指令在输出中。' ||
+                trimmedLine === '请准确记录说话者的发言内容。' ||
+                trimmedLine === '输出格式:' ||
+                trimmedLine === '（仅说话者内容）'
+            );
+        });
 
-        for (const pattern of patterns) {
-            text = text.replace(pattern, '');
-        }
-        return text;
+        // Also remove the phrase anywhere in text (not just full lines)
+        let result = cleanedLines.join('\n');
+        result = result.replace(/（仅说话者内容）/g, '');
+        
+        return result;
     }
 
     /**
-     * Apply Korean-specific cleaning patterns
+     * Apply Korean-specific cleaning patterns - using exact line matching for safety
      */
     private applyKoreanCleaning(text: string): string {
-        const patterns = [
-            /^다음 음성 내용만 전사해주세요.*?$/gm,
-            /^다음 음성.*?$/gm,
-            /^이 지시사항을 출력에 포함하지 마세요.*?$/gm,
-            /^화자의 발언 내용만 정확히 기록해주세요.*?$/gm,
-            /^음성 내용만.*?$/gm,
-            /^출력 형식.*?$/gm,
-            /^형식.*?$/gm,
-            /（화자 발언만）/g,
-        ];
+        // Split into lines for exact line matching
+        const lines = text.split('\n');
+        const cleanedLines = lines.filter(line => {
+            const trimmedLine = line.trim();
+            // Only remove lines that exactly match prompt instructions
+            return !(
+                trimmedLine === '다음 음성 내용만 전사해주세요. 이 지시사항을 출력에 포함하지 마세요.' ||
+                trimmedLine === '화자의 발언 내용만 정확히 기록해주세요.' ||
+                trimmedLine === '출력 형식:' ||
+                trimmedLine === '（화자 발언만）'
+            );
+        });
 
-        for (const pattern of patterns) {
-            text = text.replace(pattern, '');
-        }
-        return text;
+        // Also remove the phrase anywhere in text (not just full lines)
+        let result = cleanedLines.join('\n');
+        result = result.replace(/（화자 발언만）/g, '');
+        
+        return result;
     }
 
     /**
-     * Apply generic cleaning patterns (conservative approach)
+     * Apply generic cleaning patterns (conservative approach) - using exact line matching for safety
      */
     private applyGenericCleaning(text: string): string {
-        // Only remove clear format instruction patterns with colons to prevent over-removal
-        const patterns = [
-            /^Output\s*format\s*:.*/gmi,
-            /^Format\s*:.*/gmi,
-        ];
+        // Split into lines for exact line matching
+        const lines = text.split('\n');
+        const cleanedLines = lines.filter(line => {
+            const trimmedLine = line.trim();
+            // Only remove lines that exactly match generic format instructions
+            return !(
+                trimmedLine === 'Output format:' ||
+                trimmedLine === 'Format:'
+            );
+        });
 
-        for (const pattern of patterns) {
-            text = text.replace(pattern, '');
-        }
-        return text;
+        return cleanedLines.join('\n');
     }
 
     /**
