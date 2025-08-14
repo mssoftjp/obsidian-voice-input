@@ -316,91 +316,133 @@ Output format:
     }
 
     /**
-     * Apply English-specific cleaning patterns - using exact line matching for safety
+     * Apply English-specific cleaning patterns - using exact line matching with position guard for safety
      */
     private applyEnglishCleaning(text: string): string {
         // Split into lines for exact line matching
         const lines = text.split('\n');
-        const cleanedLines = lines.filter(line => {
+        const cleanedLines = [];
+        
+        for (let index = 0; index < lines.length; index++) {
+            const line = lines[index];
             const trimmedLine = line.trim();
-            // Only remove lines that exactly match prompt instructions
-            return !(
+            
+            // Only remove lines that exactly match prompt instructions AND are in the first 5 lines (position guard)
+            if (index < 5 && (
                 trimmedLine === 'Please transcribe only the following audio content. Do not include this instruction in your output.' ||
                 trimmedLine === 'Record only the speaker\'s statements accurately.' ||
                 trimmedLine === 'Output format:' ||
                 trimmedLine === '(Speaker content only)'
-            );
-        });
+            )) {
+                // Skip this line - don't add to cleanedLines
+                continue;
+            }
+            
+            // Apply phrase removal only to first 5 lines
+            let cleanedLine = line;
+            if (index < 5) {
+                cleanedLine = cleanedLine.replace(/\(Speaker content only\)/g, '');
+            }
+            
+            cleanedLines.push(cleanedLine);
+        }
 
-        // Also remove the phrase anywhere in text (not just full lines)
-        let result = cleanedLines.join('\n');
-        result = result.replace(/\(Speaker content only\)/g, '');
-        
-        return result;
+        return cleanedLines.join('\n');
     }
 
     /**
-     * Apply Chinese-specific cleaning patterns - using exact line matching for safety
+     * Apply Chinese-specific cleaning patterns - using exact line matching with position guard for safety
      */
     private applyChineseCleaning(text: string): string {
         // Split into lines for exact line matching
         const lines = text.split('\n');
-        const cleanedLines = lines.filter(line => {
+        const cleanedLines = [];
+        
+        for (let index = 0; index < lines.length; index++) {
+            const line = lines[index];
             const trimmedLine = line.trim();
-            // Only remove lines that exactly match prompt instructions
-            return !(
+            
+            // Only remove lines that exactly match prompt instructions AND are in the first 5 lines (position guard)
+            if (index < 5 && (
                 trimmedLine === '请仅转录以下音频内容。不要包含此指令在输出中。' ||
                 trimmedLine === '请准确记录说话者的发言内容。' ||
                 trimmedLine === '输出格式:' ||
                 trimmedLine === '（仅说话者内容）'
-            );
-        });
+            )) {
+                // Skip this line - don't add to cleanedLines
+                continue;
+            }
+            
+            // Apply phrase removal only to first 5 lines
+            let cleanedLine = line;
+            if (index < 5) {
+                cleanedLine = cleanedLine.replace(/（仅说话者内容）/g, '');
+            }
+            
+            cleanedLines.push(cleanedLine);
+        }
 
-        // Also remove the phrase anywhere in text (not just full lines)
-        let result = cleanedLines.join('\n');
-        result = result.replace(/（仅说话者内容）/g, '');
-        
-        return result;
+        return cleanedLines.join('\n');
     }
 
     /**
-     * Apply Korean-specific cleaning patterns - using exact line matching for safety
+     * Apply Korean-specific cleaning patterns - using exact line matching with position guard for safety
      */
     private applyKoreanCleaning(text: string): string {
         // Split into lines for exact line matching
         const lines = text.split('\n');
-        const cleanedLines = lines.filter(line => {
+        const cleanedLines = [];
+        
+        for (let index = 0; index < lines.length; index++) {
+            const line = lines[index];
             const trimmedLine = line.trim();
-            // Only remove lines that exactly match prompt instructions
-            return !(
+            
+            // Only remove lines that exactly match prompt instructions AND are in the first 5 lines (position guard)
+            if (index < 5 && (
                 trimmedLine === '다음 음성 내용만 전사해주세요. 이 지시사항을 출력에 포함하지 마세요.' ||
                 trimmedLine === '화자의 발언 내용만 정확히 기록해주세요.' ||
                 trimmedLine === '출력 형식:' ||
                 trimmedLine === '（화자 발언만）'
-            );
-        });
+            )) {
+                // Skip this line - don't add to cleanedLines
+                continue;
+            }
+            
+            // Apply phrase removal only to first 5 lines
+            let cleanedLine = line;
+            if (index < 5) {
+                cleanedLine = cleanedLine.replace(/（화자 발언만）/g, '');
+            }
+            
+            cleanedLines.push(cleanedLine);
+        }
 
-        // Also remove the phrase anywhere in text (not just full lines)
-        let result = cleanedLines.join('\n');
-        result = result.replace(/（화자 발언만）/g, '');
-        
-        return result;
+        return cleanedLines.join('\n');
     }
 
     /**
-     * Apply generic cleaning patterns (conservative approach) - using exact line matching for safety
+     * Apply generic cleaning patterns (conservative approach) - using exact line matching with position guard for safety
      */
     private applyGenericCleaning(text: string): string {
         // Split into lines for exact line matching
         const lines = text.split('\n');
-        const cleanedLines = lines.filter(line => {
+        const cleanedLines = [];
+        
+        for (let index = 0; index < lines.length; index++) {
+            const line = lines[index];
             const trimmedLine = line.trim();
-            // Only remove lines that exactly match generic format instructions
-            return !(
+            
+            // Only remove lines that exactly match generic format instructions AND are in the first 5 lines (position guard)
+            if (index < 5 && (
                 trimmedLine === 'Output format:' ||
                 trimmedLine === 'Format:'
-            );
-        });
+            )) {
+                // Skip this line - don't add to cleanedLines
+                continue;
+            }
+            
+            cleanedLines.push(line);
+        }
 
         return cleanedLines.join('\n');
     }
