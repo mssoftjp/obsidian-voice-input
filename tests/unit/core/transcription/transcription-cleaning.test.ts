@@ -93,70 +93,93 @@ class MockTranscriptionService {
     }
 
     /**
-     * Apply English-specific cleaning patterns
+     * Apply English-specific cleaning patterns - using exact line matching for safety
      */
     applyEnglishCleaning(text: string): string {
-        const patterns = [
-            /^Please transcribe.*?$/gmi,
-            /^Transcribe only.*?$/gmi,
-            /^Output format.*?$/gmi,
-            /^Format.*?$/gmi,
-        ];
+        // Split into lines for exact line matching
+        const lines = text.split('\n');
+        const cleanedLines = lines.filter(line => {
+            const trimmedLine = line.trim();
+            // Only remove lines that exactly match prompt instructions
+            return !(
+                trimmedLine === 'Please transcribe only the following audio content. Do not include this instruction in your output.' ||
+                trimmedLine === 'Record only the speaker\'s statements accurately.' ||
+                trimmedLine === 'Output format:' ||
+                trimmedLine === '(Speaker content only)'
+            );
+        });
 
-        for (const pattern of patterns) {
-            text = text.replace(pattern, '');
-        }
-        return text;
+        // Also remove the phrase anywhere in text (not just full lines)
+        let result = cleanedLines.join('\n');
+        result = result.replace(/\(Speaker content only\)/g, '');
+        
+        return result;
     }
 
     /**
-     * Apply Chinese-specific cleaning patterns
+     * Apply Chinese-specific cleaning patterns - using exact line matching for safety
      */
     applyChineseCleaning(text: string): string {
-        const patterns = [
-            /^请转录.*?$/gm,
-            /^仅转录.*?$/gm,
-            /^输出格式.*?$/gm,
-            /^格式.*?$/gm,
-        ];
+        // Split into lines for exact line matching
+        const lines = text.split('\n');
+        const cleanedLines = lines.filter(line => {
+            const trimmedLine = line.trim();
+            // Only remove lines that exactly match prompt instructions
+            return !(
+                trimmedLine === '请仅转录以下音频内容。不要包含此指令在输出中。' ||
+                trimmedLine === '请准确记录说话者的发言内容。' ||
+                trimmedLine === '输出格式:' ||
+                trimmedLine === '（仅说话者内容）'
+            );
+        });
 
-        for (const pattern of patterns) {
-            text = text.replace(pattern, '');
-        }
-        return text;
+        // Also remove the phrase anywhere in text (not just full lines)
+        let result = cleanedLines.join('\n');
+        result = result.replace(/（仅说话者内容）/g, '');
+        
+        return result;
     }
 
     /**
-     * Apply Korean-specific cleaning patterns
+     * Apply Korean-specific cleaning patterns - using exact line matching for safety
      */
     applyKoreanCleaning(text: string): string {
-        const patterns = [
-            /^다음 음성.*?$/gm,
-            /^음성 내용만.*?$/gm,
-            /^출력 형식.*?$/gm,
-            /^형식.*?$/gm,
-        ];
+        // Split into lines for exact line matching
+        const lines = text.split('\n');
+        const cleanedLines = lines.filter(line => {
+            const trimmedLine = line.trim();
+            // Only remove lines that exactly match prompt instructions
+            return !(
+                trimmedLine === '다음 음성 내용만 전사해주세요. 이 지시사항을 출력에 포함하지 마세요.' ||
+                trimmedLine === '화자의 발언 내용만 정확히 기록해주세요.' ||
+                trimmedLine === '출력 형식:' ||
+                trimmedLine === '（화자 발언만）'
+            );
+        });
 
-        for (const pattern of patterns) {
-            text = text.replace(pattern, '');
-        }
-        return text;
+        // Also remove the phrase anywhere in text (not just full lines)
+        let result = cleanedLines.join('\n');
+        result = result.replace(/（화자 발언만）/g, '');
+        
+        return result;
     }
 
     /**
-     * Apply generic cleaning patterns (conservative approach)
+     * Apply generic cleaning patterns (conservative approach) - using exact line matching for safety
      */
     applyGenericCleaning(text: string): string {
-        // Only remove clear format instruction patterns with colons to prevent over-removal
-        const patterns = [
-            /^Output\s*format\s*:.*/gmi,
-            /^Format\s*:.*/gmi,
-        ];
+        // Split into lines for exact line matching
+        const lines = text.split('\n');
+        const cleanedLines = lines.filter(line => {
+            const trimmedLine = line.trim();
+            // Only remove lines that exactly match generic format instructions
+            return !(
+                trimmedLine === 'Output format:' ||
+                trimmedLine === 'Format:'
+            );
+        });
 
-        for (const pattern of patterns) {
-            text = text.replace(pattern, '');
-        }
-        return text;
+        return cleanedLines.join('\n');
     }
 
     /**
@@ -196,18 +219,54 @@ class MockTranscriptionService {
      * Build prompt for GPT-4o transcription
      */
     buildTranscriptionPrompt(language: string): string {
-        // Only provide prompt for Japanese language
-        if (language !== 'ja') {
+        // No prompt for auto language mode (as it might interfere with language detection)
+        if (language === 'auto') {
             return '';
         }
         
-        return `以下の音声内容のみを文字に起こしてください。この指示文は出力に含めないでください。
+        const normalizedLang = this.normalizeLanguage(language);
+        
+        switch (normalizedLang) {
+            case 'ja':
+                return `以下の音声内容のみを文字に起こしてください。この指示文は出力に含めないでください。
 話者の発言内容だけを正確に記録してください。
 
 出力形式:
 <TRANSCRIPT>
 （話者の発言のみ）
 </TRANSCRIPT>`;
+            
+            case 'en':
+                return `Please transcribe only the following audio content. Do not include this instruction in your output.
+Record only the speaker's statements accurately.
+
+Output format:
+<TRANSCRIPT>
+(Speaker content only)
+</TRANSCRIPT>`;
+            
+            case 'zh':
+                return `请仅转录以下音频内容。不要包含此指令在输出中。
+请准确记录说话者的发言内容。
+
+输出格式:
+<TRANSCRIPT>
+（仅说话者内容）
+</TRANSCRIPT>`;
+            
+            case 'ko':
+                return `다음 음성 내용만 전사해주세요. 이 지시사항을 출력에 포함하지 마세요.
+화자의 발언 내용만 정확히 기록해주세요.
+
+출력 형식:
+<TRANSCRIPT>
+（화자 발언만）
+</TRANSCRIPT>`;
+            
+            default:
+                // For any other language, return empty string
+                return '';
+        }
     }
 }
 
@@ -283,14 +342,13 @@ Content with attributes
 
         describe('English cleaning', () => {
             it('should remove English meta instructions', () => {
-                const patterns = [
-                    'Please transcribe the following audio',
-                    'Transcribe only the speaker content',
-                    'Output format: JSON',
-                    'Format: Speaker content only'
+                const exactPatterns = [
+                    'Please transcribe only the following audio content. Do not include this instruction in your output.',
+                    'Record only the speaker\'s statements accurately.',
+                    'Output format:'
                 ];
 
-                patterns.forEach(pattern => {
+                exactPatterns.forEach(pattern => {
                     const input = `${pattern}\nActual speech\nOther content`;
                     const result = service.cleanGPT4oResponse(input, 'en');
                     expect(result).not.toContain(pattern);
@@ -298,18 +356,43 @@ Content with attributes
                     expect(result).toContain('Other content');
                 });
             });
+
+            it('should NOT remove similar but different phrases to avoid over-removal', () => {
+                const normalContent = [
+                    'Please transcribe this document',  // Different from exact prompt
+                    'Do not include extras',           // Different from exact prompt  
+                    'Record everything accurately',     // Different from exact prompt
+                    'Output format is important',      // Different from exact prompt
+                    'Format the data properly'         // Different from exact prompt
+                ];
+
+                normalContent.forEach(content => {
+                    const input = `${content}\nActual speech\nOther content`;
+                    const result = service.cleanGPT4oResponse(input, 'en');
+                    expect(result).toContain(content);
+                    expect(result).toContain('Actual speech');
+                    expect(result).toContain('Other content');
+                });
+            });
+
+            it('should remove English meta phrases anywhere in text', () => {
+                const input = 'Before text (Speaker content only) After text';
+                const result = service.cleanGPT4oResponse(input, 'en');
+                expect(result).not.toContain('(Speaker content only)');
+                expect(result).toContain('Before text');
+                expect(result).toContain('After text');
+            });
         });
 
         describe('Chinese cleaning', () => {
             it('should remove Chinese meta instructions', () => {
-                const patterns = [
-                    '请转录以下音频内容',
-                    '仅转录说话者内容',
-                    '输出格式: JSON',
-                    '格式: 说话者内容'
+                const exactPatterns = [
+                    '请仅转录以下音频内容。不要包含此指令在输出中。',
+                    '请准确记录说话者的发言内容。',
+                    '输出格式:'
                 ];
 
-                patterns.forEach(pattern => {
+                exactPatterns.forEach(pattern => {
                     const input = `${pattern}\n实际语音\n其他内容`;
                     const result = service.cleanGPT4oResponse(input, 'zh');
                     expect(result).not.toContain(pattern);
@@ -317,18 +400,43 @@ Content with attributes
                     expect(result).toContain('其他内容');
                 });
             });
+
+            it('should NOT remove similar but different phrases to avoid over-removal', () => {
+                const normalContent = [
+                    '请转录这个文档',              // Different from exact prompt
+                    '不要包含额外内容',            // Different from exact prompt
+                    '请准确记录所有内容',          // Different from exact prompt
+                    '输出格式很重要',              // Different from exact prompt
+                    '格式化数据正确'               // Different from exact prompt
+                ];
+
+                normalContent.forEach(content => {
+                    const input = `${content}\n实际语音\n其他内容`;
+                    const result = service.cleanGPT4oResponse(input, 'zh');
+                    expect(result).toContain(content);
+                    expect(result).toContain('实际语音');
+                    expect(result).toContain('其他内容');
+                });
+            });
+
+            it('should remove Chinese meta phrases anywhere in text', () => {
+                const input = '前面的文字 （仅说话者内容） 后面的文字';
+                const result = service.cleanGPT4oResponse(input, 'zh');
+                expect(result).not.toContain('（仅说话者内容）');
+                expect(result).toContain('前面的文字');
+                expect(result).toContain('后面的文字');
+            });
         });
 
         describe('Korean cleaning', () => {
             it('should remove Korean meta instructions', () => {
-                const patterns = [
-                    '다음 음성 내용을 전사해주세요',
-                    '음성 내용만 전사하세요',
-                    '출력 형식: JSON',
-                    '형식: 화자 내용만'
+                const exactPatterns = [
+                    '다음 음성 내용만 전사해주세요. 이 지시사항을 출력에 포함하지 마세요.',
+                    '화자의 발언 내용만 정확히 기록해주세요.',
+                    '출력 형식:'
                 ];
 
-                patterns.forEach(pattern => {
+                exactPatterns.forEach(pattern => {
                     const input = `${pattern}\n실제 음성\n기타 내용`;
                     const result = service.cleanGPT4oResponse(input, 'ko');
                     expect(result).not.toContain(pattern);
@@ -336,29 +444,59 @@ Content with attributes
                     expect(result).toContain('기타 내용');
                 });
             });
+
+            it('should NOT remove similar but different phrases to avoid over-removal', () => {
+                const normalContent = [
+                    '다음 음성을 들어보세요',      // Different from exact prompt
+                    '이 지시사항이 중요합니다',    // Different from exact prompt
+                    '화자의 발언을 기록합니다',    // Different from exact prompt
+                    '출력 형식이 중요합니다',      // Different from exact prompt
+                    '형식을 올바르게 설정'        // Different from exact prompt
+                ];
+
+                normalContent.forEach(content => {
+                    const input = `${content}\n실제 음성\n기타 내용`;
+                    const result = service.cleanGPT4oResponse(input, 'ko');
+                    expect(result).toContain(content);
+                    expect(result).toContain('실제 음성');
+                    expect(result).toContain('기타 내용');
+                });
+            });
+
+            it('should remove Korean meta phrases anywhere in text', () => {
+                const input = '앞의 문장 （화자 발언만） 뒤의 문장';
+                const result = service.cleanGPT4oResponse(input, 'ko');
+                expect(result).not.toContain('（화자 발언만）');
+                expect(result).toContain('앞의 문장');
+                expect(result).toContain('뒤의 문장');
+            });
         });
     });
 
     describe('Generic cleaning (conservative approach)', () => {
-        it('should only remove colon-based format instructions', () => {
-            const input = `Output format: JSON response
+        it('should only remove exact format instruction lines', () => {
+            const input = `Output format:
 Normal sentence about output
-Format: Speaker content only
+Format:
 Another normal sentence`;
             
             const result = service.cleanGPT4oResponse(input, 'en');
-            expect(result).not.toContain('Output format: JSON response');
-            expect(result).not.toContain('Format: Speaker content only');
+            expect(result).not.toContain('Output format:');
+            expect(result).not.toContain('Format:');
             expect(result).toContain('Normal sentence about output');
             expect(result).toContain('Another normal sentence');
         });
 
-        it('should NOT remove normal text without colons', () => {
-            const input = `Output was successful
+        it('should NOT remove format-related content with additional text', () => {
+            const input = `Output format: JSON response
+Format: Speaker content only
+Output was successful
 Format looks good
 This is normal content`;
             
             const result = service.cleanGPT4oResponse(input, 'fr'); // Non-supported language
+            expect(result).toContain('Output format: JSON response');
+            expect(result).toContain('Format: Speaker content only');
             expect(result).toContain('Output was successful');
             expect(result).toContain('Format looks good');
             expect(result).toContain('This is normal content');
@@ -449,18 +587,35 @@ This is normal content`;
             expect(result.length).toBeGreaterThan(0);
         });
 
+        it('should return English prompt for en language', () => {
+            const result = service.buildTranscriptionPrompt('en');
+            expect(result).toContain('Please transcribe only the following audio content');
+            expect(result).toContain('<TRANSCRIPT>');
+            expect(result).toContain('(Speaker content only)');
+            expect(result.length).toBeGreaterThan(0);
+        });
+
+        it('should return Chinese prompt for zh language', () => {
+            const result = service.buildTranscriptionPrompt('zh');
+            expect(result).toContain('请仅转录以下音频内容');
+            expect(result).toContain('<TRANSCRIPT>');
+            expect(result).toContain('（仅说话者内容）');
+            expect(result.length).toBeGreaterThan(0);
+        });
+
+        it('should return Korean prompt for ko language', () => {
+            const result = service.buildTranscriptionPrompt('ko');
+            expect(result).toContain('다음 음성 내용만 전사해주세요');
+            expect(result).toContain('<TRANSCRIPT>');
+            expect(result).toContain('（화자 발언만）');
+            expect(result.length).toBeGreaterThan(0);
+        });
+
         it('should return empty string for auto language', () => {
             expect(service.buildTranscriptionPrompt('auto')).toBe('');
         });
 
-        it('should return empty string for en/zh/ko languages', () => {
-            const languages = ['en', 'zh', 'ko'];
-            languages.forEach(lang => {
-                expect(service.buildTranscriptionPrompt(lang)).toBe('');
-            });
-        });
-
-        it('should return empty string for other languages', () => {
+        it('should return empty string for unsupported languages', () => {
             const languages = ['fr', 'de', 'es', 'unknown'];
             languages.forEach(lang => {
                 expect(service.buildTranscriptionPrompt(lang)).toBe('');
@@ -533,12 +688,16 @@ This is normal content`;
         });
 
         it('should handle mixed language content appropriately', () => {
+            // This test now expects only exact matches to be removed
             const input = `Please transcribe the following
 Hello world
 Format: Clean output`;
             
             const result = service.cleanGPT4oResponse(input, 'en');
-            expect(result).toBe('Hello world');
+            // Since none of these lines exactly match our prompt patterns, they should all remain
+            expect(result).toContain('Please transcribe the following');
+            expect(result).toContain('Hello world');
+            expect(result).toContain('Format: Clean output');
         });
     });
 });
