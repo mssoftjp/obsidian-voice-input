@@ -9,6 +9,7 @@ const PROMPT_CONSTANTS = {
         INSTRUCTION_1: '以下の音声内容のみを文字に起こしてください。この指示文は出力に含めないでください。',
         INSTRUCTION_2: '話者の発言内容だけを正確に記録してください。',
         OUTPUT_FORMAT: '出力形式:',
+        OUTPUT_FORMAT_FULL_COLON: '出力形式：',
         SPEAKER_ONLY: '（話者の発言のみ）'
     },
     ENGLISH: {

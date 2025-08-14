@@ -12,6 +12,7 @@ const PROMPT_CONSTANTS = {
         INSTRUCTION_1: '以下の音声内容のみを文字に起こしてください。この指示文は出力に含めないでください。',
         INSTRUCTION_2: '話者の発言内容だけを正確に記録してください。',
         OUTPUT_FORMAT: '出力形式:',
+        OUTPUT_FORMAT_FULL_COLON: '出力形式：',
         SPEAKER_ONLY: '（話者の発言のみ）'
     },
     ENGLISH: {
@@ -41,6 +42,7 @@ const PROMPT_CONSTANTS = {
     },
     GENERIC: {
         OUTPUT_FORMAT: 'Output format:',
+        OUTPUT_FORMAT_FULL_COLON: 'Output format：',
         FORMAT: 'Format:'
     }
 } as const;
@@ -378,6 +380,7 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
                 trimmedLine === PROMPT_CONSTANTS.JAPANESE.INSTRUCTION_1 ||
                 trimmedLine === PROMPT_CONSTANTS.JAPANESE.INSTRUCTION_2 ||
                 trimmedLine === PROMPT_CONSTANTS.JAPANESE.OUTPUT_FORMAT ||
+                trimmedLine === PROMPT_CONSTANTS.JAPANESE.OUTPUT_FORMAT_FULL_COLON ||
                 trimmedLine === PROMPT_CONSTANTS.JAPANESE.SPEAKER_ONLY
             )) {
                 // Skip this line - don't add to cleanedLines
@@ -524,6 +527,7 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
             // Only remove lines that exactly match generic format instructions AND are in protected position
             if (this.shouldCleanLine(index, lines.length, lines) && (
                 trimmedLine === PROMPT_CONSTANTS.GENERIC.OUTPUT_FORMAT ||
+                trimmedLine === PROMPT_CONSTANTS.GENERIC.OUTPUT_FORMAT_FULL_COLON ||
                 trimmedLine === PROMPT_CONSTANTS.GENERIC.FORMAT
             )) {
                 // Skip this line - don't add to cleanedLines
