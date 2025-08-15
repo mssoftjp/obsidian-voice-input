@@ -382,23 +382,19 @@ export default class VoiceInputPlugin extends Plugin {
 
     /**
      * 解決済み言語を取得（高度設定の連動設定に基づく）
+     * 仕様変更: 'auto' の場合は API に 'auto' をそのまま渡す
      */
-    getResolvedLanguage(): 'ja' | 'zh' | 'ko' | 'en' {
-        // 高度設定で言語連動が有効な場合（デフォルト）
-        if (this.settings.advanced?.languageLinkingEnabled !== false) {
-            // 従来のロジック: transcriptionLanguage が 'auto' の場合は pluginLanguage に基づく自動検出
-            if (this.settings.transcriptionLanguage === 'auto') {
-                return this.detectPluginLanguage();
-            }
-            return this.settings.transcriptionLanguage as 'ja' | 'zh' | 'ko' | 'en';
-        } else {
-            // 言語連動が無効な場合: advanced.transcriptionLanguage を使用
+    getResolvedLanguage(): 'auto' | 'ja' | 'zh' | 'ko' | 'en' {
+        // 言語連動が無効な場合: advanced.transcriptionLanguage を優先
+        if (this.settings.advanced?.languageLinkingEnabled === false) {
             const advancedLang = this.settings.advanced.transcriptionLanguage ?? 'auto';
-            if (advancedLang === 'auto') {
-                return this.detectPluginLanguage();
-            }
-            return advancedLang as 'ja' | 'zh' | 'ko' | 'en';
+            return advancedLang as 'auto' | 'ja' | 'zh' | 'ko' | 'en';
         }
+
+        // 言語連動が有効（デフォルト）の場合: 通常の transcriptionLanguage を使用
+        // transcriptionLanguage が 'auto' なら 'auto' のまま返す
+        const baseLang = this.settings.transcriptionLanguage ?? 'auto';
+        return baseLang as 'auto' | 'ja' | 'zh' | 'ko' | 'en';
     }
 
     async saveSettings() {
