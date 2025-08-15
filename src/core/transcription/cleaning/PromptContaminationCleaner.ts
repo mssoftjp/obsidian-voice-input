@@ -42,11 +42,11 @@ export class PromptContaminationCleaner implements TextCleaner {
         const issues: string[] = [];
         let patternsMatched = 0;
         
-        const { instructionPatterns, xmlPatternGroups, contextPatterns, promptSnippetLengths } = 
+        const { instructionPatterns, contextPatterns, promptSnippetLengths } = 
             CLEANING_CONFIG.contamination;
         
         // Step 1: Handle XML tags (highest priority)
-        cleaned = this.removeXmlTags(cleaned, xmlPatternGroups);
+        cleaned = this.removeXmlTags(cleaned);
         if (cleaned !== text) {
             patternsMatched++;
             this.logger.debug('XML tags removed');
@@ -110,9 +110,9 @@ export class PromptContaminationCleaner implements TextCleaner {
     }
     
     /**
-     * Remove XML tags in priority order
+     * Remove XML tags using fixed patterns for TRANSCRIPT tags
      */
-    private removeXmlTags(text: string, xmlPatternGroups: typeof CLEANING_CONFIG.contamination.xmlPatternGroups): string {
+    private removeXmlTags(text: string): string {
         let cleaned = text;
         
         // First: Extract content from complete TRANSCRIPT tags (highest priority)

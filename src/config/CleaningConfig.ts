@@ -7,12 +7,6 @@
 export interface SafetyThresholds {
     /** Maximum reduction allowed by a single cleaner (0.0-1.0) */
     singleCleanerMaxReduction: number;
-    /** Maximum reduction allowed for a single pattern match (0.0-1.0) */
-    singlePatternMaxReduction: number;
-    /** Maximum reduction allowed for repetition patterns (0.0-1.0) */
-    repetitionPatternMaxReduction: number;
-    /** Maximum reduction allowed per iteration (0.0-1.0) */
-    iterationReductionLimit: number;
     /** Emergency fallback threshold - rollback if exceeded (0.0-1.0) */
     emergencyFallbackThreshold: number;
     /** Warning threshold for logging (0.0-1.0) */
@@ -36,12 +30,6 @@ export interface RepetitionThresholds {
     minimumSentenceLengthForSimilarity: number;
     /** Maximum consecutive newlines to allow */
     consecutiveNewlineLimit: number;
-    /** N-gram configuration for phrase repetition detection */
-    ngram: {
-        min: number;
-        max: number;
-        thresholds: Array<{ n: number; repeat: number }>;
-    };
     /** Enumeration detection configuration */
     enumerationDetection: {
         enabled: boolean;
@@ -83,9 +71,6 @@ export interface CleaningConfig {
 export const CLEANING_CONFIG: CleaningConfig = {
     safety: {
         singleCleanerMaxReduction: 0.3,
-        singlePatternMaxReduction: 0.15,
-        repetitionPatternMaxReduction: 0.25,
-        iterationReductionLimit: 0.2,
         emergencyFallbackThreshold: 0.5,
         warningThreshold: 0.15
     },
@@ -99,20 +84,6 @@ export const CLEANING_CONFIG: CleaningConfig = {
         similarityThreshold: 0.85,
         minimumSentenceLengthForSimilarity: 10,
         consecutiveNewlineLimit: 3,
-        ngram: {
-            min: 3,
-            max: 10,
-            thresholds: [
-                { n: 3, repeat: 4 },
-                { n: 4, repeat: 3 },
-                { n: 5, repeat: 3 },
-                { n: 6, repeat: 2 },
-                { n: 7, repeat: 2 },
-                { n: 8, repeat: 2 },
-                { n: 9, repeat: 2 },
-                { n: 10, repeat: 2 }
-            ]
-        },
         enumerationDetection: {
             enabled: true,
             minRepeatCount: 3
