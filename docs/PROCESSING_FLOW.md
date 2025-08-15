@@ -15,6 +15,36 @@ This document reflects the latest implementation as of 2025‑08‑16. It covers
 
 ---
 
+## ASCII Overview / ASCII概要
+
+```
+           ┌──────────────────────────┐
+           │  AudioRecorder (連続録音) │
+           └─────────────┬────────────┘
+                         │ audioBlob
+                         ▼
+           ┌──────────────────────────┐
+           │ Processing Queue (直列化) │
+           └─────────────┬────────────┘
+                         │ audioBlob
+                         ▼
+┌──────────────────────────────────────────────────────────────┐
+│            TranscriptionService.transcribeAudio()             │
+├──────────────────────────────────────────────────────────────┤
+│ 1) buildTranscriptionPrompt(lang)  ──► ja/en/zh/ko で付与      │
+│ 2) POST (multipart/form-data)                                  │
+│ 3) text 受領                                                   │
+│ 4) preStripTranscriptWrappers(text)                            │
+│ 5) StandardCleaningPipeline (安全判定付き)                     │
+│    ├─ PromptContaminationCleaner（構造/指示/文脈/スニペット）   │
+│    └─ UniversalRepetitionCleaner（反復・体裁）                 │
+│ 6) isPromptErrorDetected(text, lang)（プロンプトエコー検出）   │
+│ 7) DictionaryCorrector（任意）                                 │
+└──────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## Recording Path Details / 録音パス詳細
 
 実装参照: `src/core/audio/AudioRecorder.ts`, `src/views/VoiceInputViewActions.ts`, `src/views/VoiceInputViewUI.ts`
@@ -100,6 +130,47 @@ This document reflects the latest implementation as of 2025‑08‑16. It covers
 
 ---
 
+## Language‑by‑Language / 言語別の違いと共通点
+
+```
+                 (選択された言語: ja / en / zh / ko)
+                                 │
+                                 ▼
+             ┌──────────────────────────────┐
+             │  構造化プロンプトの内容が言語別 │  ← 違い（プロンプト文面）
+             └──────────────┬───────────────┘
+                            ▼
+┌──────────────────────────────────────────────────────────────┐
+│ preStripTranscriptWrappers（機械的ラッパー除去）              │  ← 共通（言語非依存）
+├──────────────────────────────────────────────────────────────┤
+│ StandardCleaningPipeline                                      │
+│  ├─ PromptContaminationCleaner                                │
+│  │    ・instructionPatterns: 多言語（ja/en/zh/ko）            │  ← 共通（多言語対応）
+│  │    ・snippet検出: EN/ZH/KO 追加語彙 + JA レガシー保護     │  ← ほぼ共通（内部最適化）
+│  └─ UniversalRepetitionCleaner                                │  ← 共通（言語非依存）
+├──────────────────────────────────────────────────────────────┤
+│ isPromptErrorDetected(text, lang)                              │
+│   ・各言語のエコー特有フレーズで検出                          │  ← 違い（検出語句が言語別）
+├──────────────────────────────────────────────────────────────┤
+│ DictionaryCorrector（任意）                                   │  ← 共通（言語非依存）
+└──────────────────────────────────────────────────────────────┘
+```
+
+- 違い（language‑specific）
+  - プロンプト文面（`buildTranscriptionPrompt`）は ja/en/zh/ko で固有。
+  - プロンプトエコー検出（`isPromptErrorDetected`）は各言語の固定句で評価。
+  - スニペット検出は EN/ZH/KO の接尾語語彙を追加し、JA にはレガシーパターンを併用。
+
+- 共通（language‑agnostic）
+  - pre-strip（ラッパー除去）は構造ベースで言語に依存しない。
+  - クリーニング・パイプラインの安全判定（single/ emergency しきい値）は全言語共通。
+  - UniversalRepetitionCleaner と辞書補正は言語非依存ロジック。
+  - API パラメータ（multipart、temperature=0 等）は共通（model は選択式）。
+
+注意: `auto` は廃止。UI/設定で言語を明示し、該当言語のプロンプトと検出ロジックを適用します。
+
+---
+
 ## Dictionary Processing / 辞書処理
 
 - 有効時、言語非依存で置換を適用。
@@ -136,4 +207,3 @@ KO: "AI시스템" → "artificial intelligence시스템"
 - 既定は VAD 無効の連続録音。必要に応じて `maxRecordingSeconds` を調整してください。
 - 連打・素早い操作でも安定するよう、開始の二重実行は内部ガードで抑止しています。
 - 「開始しにくい」挙動を避けるため、UIロックは最小限に留めています。
-
