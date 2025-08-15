@@ -261,32 +261,31 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 }));
 
         // Dictionary (Unified table editor) - Show for all languages
-            new Setting(containerEl)
-                .setName(this.i18n.t('ui.settings.customDictionary'))
-                .setDesc(this.i18n.t('ui.settings.customDictionaryDesc'));
+        new Setting(containerEl)
+            .setName(this.i18n.t('ui.settings.customDictionary'))
+            .setDesc(this.i18n.t('ui.settings.customDictionaryDesc'));
 
-            // Create table container for dictionary tables
-            const tableContainer = containerEl.createDiv('dictionary-table-container');
+        // Create table container for dictionary tables
+        const tableContainer = containerEl.createDiv('dictionary-table-container');
 
-            // Definite Corrections Section
-            tableContainer.createEl('h4', { text: this.i18n.t('ui.settings.dictionaryDefinite', { max: DICTIONARY_CONSTANTS.MAX_DEFINITE_CORRECTIONS }) });
-            this.createCorrectionTable(
-                tableContainer,
-                this.plugin.settings.customDictionary.definiteCorrections,
-                false
-            );
+        // Definite Corrections Section
+        tableContainer.createEl('h4', { text: this.i18n.t('ui.settings.dictionaryDefinite', { max: DICTIONARY_CONSTANTS.MAX_DEFINITE_CORRECTIONS }) });
+        this.createCorrectionTable(
+            tableContainer,
+            this.plugin.settings.customDictionary.definiteCorrections,
+            false
+        );
 
-            // Import/Export buttons
-            new Setting(containerEl)
-                .setName(this.i18n.t('ui.settings.dictionaryImportExport'))
-                .setDesc(this.i18n.t('ui.settings.dictionaryImportExportDesc'))
-                .addButton(button => button
-                    .setButtonText(this.i18n.t('ui.buttons.export'))
-                    .onClick(() => this.exportDictionary()))
-                .addButton(button => button
-                    .setButtonText(this.i18n.t('ui.buttons.import'))
-                    .onClick(() => this.importDictionary()));
-        
+        // Import/Export buttons
+        new Setting(containerEl)
+            .setName(this.i18n.t('ui.settings.dictionaryImportExport'))
+            .setDesc(this.i18n.t('ui.settings.dictionaryImportExportDesc'))
+            .addButton(button => button
+                .setButtonText(this.i18n.t('ui.buttons.export'))
+                .onClick(() => this.exportDictionary()))
+            .addButton(button => button
+                .setButtonText(this.i18n.t('ui.buttons.import'))
+                .onClick(() => this.importDictionary()));
 
         // Debug Settings Section - Removed as per ai-transcriber pattern
         // containerEl.createEl('h3', { text: this.i18n.t('ui.titles.debugSettings') || 'Debug Settings' });
