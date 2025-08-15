@@ -5,6 +5,9 @@ import { API_CONSTANTS, DEFAULT_TRANSCRIPTION_SETTINGS, TRANSCRIPTION_MODEL_COST
 import { ObsidianHttpClient } from '../../utils/ObsidianHttpClient';
 import { createServiceLogger } from '../../services';
 import { Logger } from '../../utils';
+import { StandardCleaningPipeline } from './cleaning/StandardCleaningPipeline';
+import { PromptContaminationCleaner } from './cleaning/PromptContaminationCleaner';
+import { UniversalRepetitionCleaner } from './cleaning/UniversalRepetitionCleaner';
 
 // Prompt constants for string drift prevention (文字列ドリフト対策)
 const PROMPT_CONSTANTS = {
@@ -51,6 +54,7 @@ export class TranscriptionService implements ITranscriptionProvider {
     private apiKey: string;
     private corrector: DictionaryCorrector;
     private logger: Logger;
+    private cleaningPipeline: StandardCleaningPipeline;
     // 注: gpt-4o-mini-transcribe と gpt-4o-transcribe の両方が日本語音声認識で高精度
     // コスト重視なら mini、わずかな精度向上が必要なら通常版を選択
     private model: 'gpt-4o-transcribe' | 'gpt-4o-mini-transcribe' = DEFAULT_TRANSCRIPTION_SETTINGS.model;
@@ -62,6 +66,12 @@ export class TranscriptionService implements ITranscriptionProvider {
         this.corrector = new DictionaryCorrector({
             correctionDictionary: dictionary
         });
+        
+        // Initialize the new cleaning pipeline
+        this.cleaningPipeline = new StandardCleaningPipeline([
+            new PromptContaminationCleaner(),
+            new UniversalRepetitionCleaner()
+        ]);
     }
 
     async transcribe(audioBlob: Blob, language: string): Promise<TranscriptionResult> {
@@ -152,7 +162,7 @@ export class TranscriptionService implements ITranscriptionProvider {
             }
 
             // Clean up GPT-4o specific artifacts
-            originalText = this.cleanGPT4oResponse(originalText, language);
+            originalText = await this.cleanGPT4oResponse(originalText, language);
             
             
             // プロンプトエラーの検出（音声が無音の場合にプロンプトが返される問題）
@@ -270,9 +280,33 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
     }
 
     /**
-     * Clean GPT-4o specific response artifacts with language-specific processing
+     * Clean GPT-4o specific response artifacts using the new cleaning pipeline
+     * Falls back to legacy cleaning if the pipeline fails
      */
-    private cleanGPT4oResponse(text: string, language: string): string {
+    private async cleanGPT4oResponse(text: string, language: string): Promise<string> {
+        const normalizedLang = this.normalizeLanguage(language);
+        
+        try {
+            // Use the new cleaning pipeline
+            const result = await this.cleaningPipeline.execute(text, normalizedLang, {
+                language: normalizedLang,
+                originalLength: text.length,
+                enableDetailedLogging: false
+            });
+            
+            return result.finalText.trim().replace(/\n{3,}/g, '\n\n');
+            
+        } catch (error) {
+            // Fall back to legacy cleaning if pipeline fails
+            this.logger.warn('Cleaning pipeline failed, falling back to legacy cleaning', error);
+            return this.legacyCleanGPT4oResponse(text, language);
+        }
+    }
+
+    /**
+     * Legacy cleaning method (preserved for fallback)
+     */
+    private legacyCleanGPT4oResponse(text: string, language: string): string {
         // Normalize language for processing
         const normalizedLang = this.normalizeLanguage(language);
         // First attempt: Extract content from complete TRANSCRIPT tags
