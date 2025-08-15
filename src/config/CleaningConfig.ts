@@ -45,13 +45,6 @@ export interface RepetitionThresholds {
 export interface ContaminationPatterns {
     /** Instruction patterns to remove from text beginning */
     instructionPatterns: string[];
-    /** XML pattern groups for different contexts */
-    xmlPatternGroups: {
-        completeXmlTags: string[];
-        sentenceBoundedTags: string[];
-        lineBoundedTags: string[];
-        standaloneTags: string[];
-    };
     /** Context patterns for general cleanup */
     contextPatterns: string[];
     /** Prompt snippet lengths for partial matching */
@@ -112,27 +105,6 @@ export const CLEANING_CONFIG: CleaningConfig = {
             '이 지시사항을 출력에 포함하지 마세요',
             '화자의 발언 내용만 정확히 기록해주세요'
         ],
-
-        xmlPatternGroups: {
-            completeXmlTags: [
-                '/<TRANSCRIPT[^>]*>([\\s\\S]*?)<\\/TRANSCRIPT>/g',
-                '/<transcript[^>]*>([\\s\\S]*?)<\\/transcript>/g',
-                '/<TRANSCRIPTION[^>]*>([\\s\\S]*?)<\\/TRANSCRIPTION>/g'
-            ],
-            sentenceBoundedTags: [
-                '/<\\/?TRANSCRIPT[^>]*>/g',
-                '/<\\/?transcript[^>]*>/g',
-                '/<\\/?TRANSCRIPTION[^>]*>/g'
-            ],
-            lineBoundedTags: [
-                '/^\\s*<[^>]*>\\s*$/gm',
-                '/^\\s*<\\/[^>]*>\\s*$/gm'
-            ],
-            standaloneTags: [
-                '/<[^>]*\\/>/g',
-                '/<\\w+[^>]*>\\s*<\\/\\w+>/g'
-            ]
-        },
 
         contextPatterns: [
             // Universal context patterns (structural)
