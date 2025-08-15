@@ -272,7 +272,7 @@ ZH: "AI系统" → "artificial intelligence系统"
 KO: "AI시스템" → "artificial intelligence시스템"
 ```
 
-UI（日本語UI時のみ）で表形式の編集/インポート/エクスポートに対応。
+UIで表形式の編集/インポート/エクスポートに対応（全言語UIで利用可能）。
 
 
 ## Error Handling / エラーハンドリング

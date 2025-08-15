@@ -260,8 +260,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                     this.display(); // Refresh UI
                 }));
 
-        // Dictionary (Unified table editor) - Only show for Japanese
-        if (this.plugin.settings.pluginLanguage === 'ja') {
+        // Dictionary (Unified table editor) - Show for all languages
             new Setting(containerEl)
                 .setName(this.i18n.t('ui.settings.customDictionary'))
                 .setDesc(this.i18n.t('ui.settings.customDictionaryDesc'));
@@ -287,7 +286,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 .addButton(button => button
                     .setButtonText(this.i18n.t('ui.buttons.import'))
                     .onClick(() => this.importDictionary()));
-        }
+        
 
         // Debug Settings Section - Removed as per ai-transcriber pattern
         // containerEl.createEl('h3', { text: this.i18n.t('ui.titles.debugSettings') || 'Debug Settings' });
