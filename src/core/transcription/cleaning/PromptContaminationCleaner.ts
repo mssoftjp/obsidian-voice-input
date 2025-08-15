@@ -164,6 +164,13 @@ export class PromptContaminationCleaner implements TextCleaner {
     private removeSnippetPatterns(text: string, instructionPatterns: string[], snippetLengths: number[]): string {
         let cleaned = text;
         
+        // Multilingual suffix lexicon for enhanced snippet detection
+        const suffixLexicon = [
+            /\b(please|do\s*not\s*include|only|content|output\s*format)\b/gi, // EN
+            /(请|請|不要|仅|只|内容|输出格式|輸出格式)/g,                                // ZH
+            /(해주세요|하지\s*마세요|포함하지\s*마세요|만|내용|출력\s*형식)/g            // KO
+        ];
+        
         for (const pattern of instructionPatterns) {
             for (const length of snippetLengths) {
                 if (pattern.length < length) continue;
@@ -172,14 +179,21 @@ export class PromptContaminationCleaner implements TextCleaner {
                 // Escape special regex characters
                 const escapedSnippet = snippet.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
                 
-                // Create contextual regex for snippet matching
-                // Look for snippet followed by instruction-like endings
-                const contextRegex = new RegExp(
-                    `${escapedSnippet}[^。.!?！？\\n]{0,50}(?:ください|してください|です|ます|please|only|content)\\b`,
+                // Enhanced multilingual contextual matching
+                for (const suffixPattern of suffixLexicon) {
+                    const contextRegex = new RegExp(
+                        `${escapedSnippet}[^。.!?！？\\n]{0,50}(${suffixPattern.source})`,
+                        suffixPattern.flags
+                    );
+                    cleaned = cleaned.replace(contextRegex, '');
+                }
+                
+                // Legacy pattern for Japanese (maintaining backward compatibility)
+                const legacyJapaneseRegex = new RegExp(
+                    `${escapedSnippet}[^。.!?！？\\n]{0,50}(?:ください|してください|です|ます)\\b`,
                     'gi'
                 );
-                
-                cleaned = cleaned.replace(contextRegex, '');
+                cleaned = cleaned.replace(legacyJapaneseRegex, '');
             }
         }
         
