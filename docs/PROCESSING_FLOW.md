@@ -1,12 +1,12 @@
 # Voice Input Processing Flow / 音声入力処理フロー
 
-This document describes the current processing pipeline of the voice input system. As of 2025-08-15, the cleaning stage first strips TRANSCRIPT wrappers mechanically, then runs a safety‑guarded cleaning pipeline, and finally applies optional dictionary correction.
+This document describes the current processing pipeline of the voice input system. As of 2025-08-15, the system supports multilingual prompts for ja/en/zh/ko languages, followed by mechanical TRANSCRIPT wrapper stripping, safety-guarded cleaning pipeline, and optional dictionary correction.
 
-このドキュメントは最新の音声入力処理パイプラインを説明します。2025-08-15 時点では、クリーニング段階でまず機械的に TRANSCRIPT ラッパーを除去し、その後に安全装置付きのクリーニング・パイプラインを実行し、最後に辞書補正（任意）を適用します。
+このドキュメントは最新の音声入力処理パイプラインを説明します。2025-08-15 時点では、日本語/英語/中国語/韓国語の多言語プロンプトをサポートし、その後に機械的な TRANSCRIPT ラッパー除去、安全装置付きのクリーニング・パイプライン、任意の辞書補正を実行します。
 
 ## Updated Overview (Current) / 最新の概要
 
-1) Audio → OpenAI Transcription API（言語ごとにプロンプト付与は日本語のみ）。
+1) Audio → OpenAI Transcription API（**全言語 ja/en/zh/ko にプロンプト付与**）。
 2) APIレスポンス `text` を受領。
 3) 構造除去（事前処理）: `<TRANSCRIPT ...> ... </TRANSCRIPT>` を機械的に抽出・除去（閉じタグ欠落にも対応）。
 4) クリーニング・パイプライン実行（`StandardCleaningPipeline`）
@@ -46,26 +46,29 @@ This document describes the current processing pipeline of the voice input syste
       │                                   │
       │ ┌─────────────────────────────────│──────────────────┐
       │ │                                 │                  │
-      │ │ IF language === 'ja'            │                  │
-      │ │ 日本語の場合:                   │                  │
-      │ │                                 ▼                  │
-      │ │     ┌───────────────────────────────────────────┐   │
-      │ │     │ 以下の音声内容のみを文字に起こしてください │   │
-      │ │     │ この指示文は出力に含めないでください      │   │
-      │ │     │ 話者の発言内容だけを正確に記録してください │   │
-      │ │     │                                           │   │
-      │ │     │ 出力形式:                                │   │
-      │ │     │ <TRANSCRIPT>                              │   │
-      │ │     │ （話者の発言のみ）                       │   │
-      │ │     │ </TRANSCRIPT>                             │   │
-      │ │     └───────────────────────────────────────────┘   │
-      │ │                                 │                  │
-      │ │ ELSE (en/zh/ko/auto)            │                  │
-      │ │ その他の言語:                   │                  │
+      │ │ IF language === 'auto'          │                  │
+      │ │ 自動検出の場合:                 │                  │
       │ │                                 ▼                  │
       │ │     ┌───────────────────────────────────────────┐   │
       │ │     │ No Prompt Added                           │   │
       │ │     │ プロンプト追加なし                       │   │
+      │ │     │ (言語検出に干渉しない)                   │   │
+      │ │     └───────────────────────────────────────────┘   │
+      │ │                                 │                  │
+      │ │ ELSE (ja/en/zh/ko)              │                  │
+      │ │ 対応言語の場合:                 │                  │
+      │ │                                 ▼                  │
+      │ │     ┌───────────────────────────────────────────┐   │
+      │ │     │ Structured Multilingual Prompts          │   │
+      │ │     │ 構造化多言語プロンプト                   │   │
+      │ │     │                                           │   │
+      │ │     │ 日本語: 以下の音声内容のみを文字に...     │   │
+      │ │     │ English: Please transcribe only the...   │   │
+      │ │     │ 中文: 请仅转录以下音频内容...             │   │
+      │ │     │ 한국어: 다음 음성 내용만 전사해주세요...  │   │
+      │ │     │                                           │   │
+      │ │     │ Format: INSTRUCTION×2 + OUTPUT_FORMAT     │   │
+      │ │     │         + <TRANSCRIPT> + SPEAKER_ONLY     │   │
       │ │     └───────────────────────────────────────────┘   │
       │ └─────────────────────────────────────────────────────┘
       │
@@ -80,7 +83,8 @@ This document describes the current processing pipeline of the voice input syste
 │  ├─ response_format: json                                   │
 │  ├─ temperature: 0                                          │
 │  ├─ language: ja/en/zh/ko (if not 'auto')                  │
-│  └─ prompt: [Only for Japanese / 日本語のみ]                │
+│  └─ prompt: [Multilingual prompts for ja/en/zh/ko]         │
+│             [多言語プロンプト（ja/en/zh/ko用）]            │
 │                                                             │
 │  Headers:                                                   │
 │  └─ Authorization: Bearer ${apiKey}                         │
@@ -229,27 +233,19 @@ This document describes the current processing pipeline of the voice input syste
 
 ## Key Differences by Language / 言語による主な違い
 
-### Japanese (ja) Processing / 日本語処理
-1. **Prompt Addition**: Complex Japanese prompt with specific instructions
-   - プロンプト追加: 特定の指示を含む複雑な日本語プロンプト
-2. **Intensive Cleaning**: Multiple Japanese-specific patterns removed
-   - 集約的クリーニング: 複数の日本語特有パターンの除去
-3. **Error Detection**: Japanese prompt leakage patterns
-   - エラー検出: 日本語プロンプト漏洩パターン
-
-### Other Languages (en/zh/ko) Processing / その他の言語処理
-1. **No Prompt**: Direct transcription without additional prompts
-   - プロンプトなし: 追加プロンプトなしの直接文字起こし
-2. **Conservative Cleaning**: Only generic colon-based patterns
-   - 保守的クリーニング: コロンベースの汎用パターンのみ
-3. **Language-specific Error Detection**: Each language has its own patterns
-   - 言語固有のエラー検出: 各言語が独自のパターンを持つ
+### All Supported Languages (ja/en/zh/ko) Processing / 全対応言語処理
+1. **Prompt Addition**: Structured prompts with language-specific instructions
+   - プロンプト追加: 言語固有の指示を含む構造化プロンプト
+2. **Comprehensive Cleaning**: Language-aware pattern removal via PromptContaminationCleaner
+   - 包括的クリーニング: PromptContaminationCleaner による言語認識パターン除去
+3. **Error Detection**: Language-specific prompt leakage patterns
+   - エラー検出: 言語固有のプロンプト漏洩パターン
 
 ### Auto Language Processing / 自動言語処理
 - Uses Japanese patterns as fallback for error detection
 - エラー検出時は日本語パターンをフォールバックとして使用
-- No prompt addition (treated as non-Japanese)
-- プロンプト追加なし（非日本語として扱う）
+- No prompt addition (prevents interference with language detection)
+- プロンプト追加なし（言語検出への干渉を防ぐ）
 
 ## Dictionary Processing / 辞書処理
 
@@ -290,6 +286,6 @@ The system handles various error scenarios:
 3. **Empty Audio**: Graceful handling of silent or empty audio input
    - 空音声: 無音または空の音声入力の適切な処理
 
-This visualization shows the complete flow from audio input to final transcribed and corrected text, highlighting the sophisticated language-specific processing that makes this plugin particularly effective for Japanese users while maintaining compatibility with other languages.
+This visualization shows the complete flow from audio input to final transcribed and corrected text, highlighting the sophisticated multilingual processing that makes this plugin effective for users of Japanese, English, Chinese, and Korean languages while maintaining auto-detection compatibility.
 
-この可視化は、音声入力から最終的な文字起こし・修正テキストまでの完全なフローを示し、このプラグインが日本語ユーザーに特に効果的でありながら他言語との互換性を維持する洗練された言語固有処理を強調しています。
+この可視化は、音声入力から最終的な文字起こし・修正テキストまでの完全なフローを示し、このプラグインが日本語、英語、中国語、韓国語のユーザーに効果的でありながら自動検出との互換性を維持する洗練された多言語処理を強調しています。
