@@ -286,11 +286,15 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
     private async cleanGPT4oResponse(text: string, language: string): Promise<string> {
         const normalizedLang = this.normalizeLanguage(language);
         
+        // 1) 先に機械的にTRANSCRIPTタグ等の構造ラッパーを除去してから
+        //    パイプラインに渡す（安全判定の基準長もラッパー除去後にする）
+        const preStripped = this.preStripTranscriptWrappers(text);
+        
         try {
             // Use the new cleaning pipeline
-            const result = await this.cleaningPipeline.execute(text, normalizedLang, {
+            const result = await this.cleaningPipeline.execute(preStripped, normalizedLang, {
                 language: normalizedLang,
-                originalLength: text.length,
+                originalLength: preStripped.length,
                 enableDetailedLogging: false
             });
             
@@ -309,21 +313,10 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
     private legacyCleanGPT4oResponse(text: string, language: string): string {
         // Normalize language for processing
         const normalizedLang = this.normalizeLanguage(language);
-        // First attempt: Extract content from complete TRANSCRIPT tags
-        let transcriptMatch = text.match(/<TRANSCRIPT>\s*([\s\S]*?)\s*<\/TRANSCRIPT>/);
-        if (transcriptMatch) {
-            text = transcriptMatch[1];
-        } else {
-            // Second attempt: Handle incomplete TRANSCRIPT tags (missing closing tag)
-            const openingMatch = text.match(/<TRANSCRIPT>\s*([\s\S]*)/);
-            if (openingMatch) {
-                text = openingMatch[1];
-            }
-        }
-
-        // Remove TRANSCRIPT opening tag if still present (for cases where it's not properly extracted)
-        text = text.replace(/<\/?TRANSCRIPT[^>]*>/g, '');
-
+        
+        // 先に構造ラッパー（TRANSCRIPTタグ）を機械的に除去
+        text = this.preStripTranscriptWrappers(text);
+        
         // Apply language-specific cleaning
         text = this.applyLanguageSpecificCleaning(text, normalizedLang);
 
@@ -337,6 +330,31 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
         text = text.trim();
         
         return text;
+    }
+
+    /**
+     * TRANSCRIPT系のXMLライクなラッパーを機械的に除去し、中身のテキストを返す
+     * - 完全な <TRANSCRIPT> ... </TRANSCRIPT> を優先的に抽出
+     * - 閉じタグ欠落時は開きタグ以降を抽出
+     * - 残存する TRANSCRIPT 開閉タグは除去
+     */
+    private preStripTranscriptWrappers(text: string): string {
+        let result = text;
+        // 完全なタグにマッチ
+        const completeMatch = result.match(/<TRANSCRIPT[^>]*>\s*([\s\S]*?)\s*<\/TRANSCRIPT>/);
+        if (completeMatch) {
+            result = completeMatch[1];
+        } else {
+            // 開始タグのみ（閉じタグ欠落）に対応
+            const openingMatch = result.match(/<TRANSCRIPT[^>]*>\s*([\s\S]*)/);
+            if (openingMatch) {
+                result = openingMatch[1];
+            }
+        }
+        // 念のため残りの TRANSCRIPT 開閉タグを除去（属性/大小文字変化にもある程度対応）
+        result = result.replace(/<\/?TRANSCRIPT[^>]*>/gi, '');
+        result = result.replace(/<\/?transcription[^>]*>/gi, '');
+        return result;
     }
 
     /**

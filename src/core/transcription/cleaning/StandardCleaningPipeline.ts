@@ -194,22 +194,33 @@ export class StandardCleaningPipeline implements CleaningPipeline {
         }
         
         const reductionRatio = (originalLength - cleanedLength) / originalLength;
+
+        // Relax safety thresholds for structural cleaners that may legitimately
+        // remove large wrappers (e.g., TRANSCRIPT tags or full prompt lines).
+        // This prevents false rollbacks like when input is mostly XML wrappers.
+        const isStructuralCleaner = cleanerName === 'PromptContaminationCleaner';
+        const emergencyThreshold = isStructuralCleaner
+            ? Math.max(0.95, CLEANING_CONFIG.safety.emergencyFallbackThreshold)
+            : CLEANING_CONFIG.safety.emergencyFallbackThreshold;
+        const singleCleanerThreshold = isStructuralCleaner
+            ? Math.max(0.9, CLEANING_CONFIG.safety.singleCleanerMaxReduction)
+            : CLEANING_CONFIG.safety.singleCleanerMaxReduction;
         
         // Check against emergency fallback threshold
-        if (reductionRatio > CLEANING_CONFIG.safety.emergencyFallbackThreshold) {
+        if (reductionRatio > emergencyThreshold) {
             return {
                 isSafe: false,
-                reason: `Reduction ratio ${reductionRatio.toFixed(3)} exceeds emergency threshold ${CLEANING_CONFIG.safety.emergencyFallbackThreshold}`,
+                reason: `Reduction ratio ${reductionRatio.toFixed(3)} exceeds emergency threshold ${emergencyThreshold}`,
                 action: 'rollback',
                 reductionRatio
             };
         }
         
         // Check against single cleaner threshold
-        if (reductionRatio > CLEANING_CONFIG.safety.singleCleanerMaxReduction) {
+        if (reductionRatio > singleCleanerThreshold) {
             return {
                 isSafe: false,
-                reason: `Reduction ratio ${reductionRatio.toFixed(3)} exceeds single cleaner threshold ${CLEANING_CONFIG.safety.singleCleanerMaxReduction}`,
+                reason: `Reduction ratio ${reductionRatio.toFixed(3)} exceeds single cleaner threshold ${singleCleanerThreshold}`,
                 action: 'skip',
                 reductionRatio
             };

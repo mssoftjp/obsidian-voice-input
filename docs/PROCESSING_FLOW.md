@@ -1,8 +1,21 @@
 # Voice Input Processing Flow / 音声入力処理フロー
 
-This document visualizes the complete processing pipeline of the voice input system, showing how audio input flows through prompt addition, API calls, response cleaning, and dictionary processing.
+This document describes the current processing pipeline of the voice input system. As of 2025-08-15, the cleaning stage first strips TRANSCRIPT wrappers mechanically, then runs a safety‑guarded cleaning pipeline, and finally applies optional dictionary correction.
 
-このドキュメントは音声入力システムの完全な処理パイプラインを可視化し、音声入力がプロンプト追加、API呼び出し、レスポンスクリーニング、辞書処理を経てどのように流れるかを示しています。
+このドキュメントは最新の音声入力処理パイプラインを説明します。2025-08-15 時点では、クリーニング段階でまず機械的に TRANSCRIPT ラッパーを除去し、その後に安全装置付きのクリーニング・パイプラインを実行し、最後に辞書補正（任意）を適用します。
+
+## Updated Overview (Current) / 最新の概要
+
+1) Audio → OpenAI Transcription API（言語ごとにプロンプト付与は日本語のみ）。
+2) APIレスポンス `text` を受領。
+3) 構造除去（事前処理）: `<TRANSCRIPT ...> ... </TRANSCRIPT>` を機械的に抽出・除去（閉じタグ欠落にも対応）。
+4) クリーニング・パイプライン実行（`StandardCleaningPipeline`）
+   - `PromptContaminationCleaner`: 指示文・XML/文脈タグ・スニペットなどの混入除去。
+   - `UniversalRepetitionCleaner`: 反復抑制（文字/トークン/文/列挙/段落/末尾）＋最終整形。
+   - セーフティ: クリーナー単体の削減率上限＋緊急ロールバック。構造除去は過剰ロールバックを避けるため緩和あり。
+5) プロンプトエラー検出（無音時にプロンプトが返る等）→ 該当すれば空文字で早期終了。
+6) 辞書補正（任意）: `DictionaryCorrector` による語彙修正。
+7) 最終テキストを返却。
 
 ## Complete Processing Flow / 完全な処理フロー
 
@@ -88,58 +101,27 @@ This document visualizes the complete processing pipeline of the voice input sys
 └─────┬───────────────────────────────────────────────────────┘
       │
       ▼
-┌─────────────────┐
-│ Extract from    │
-│ <TRANSCRIPT>    │
-│ tags            │
-│ TRANSCRIPTタグ  │
-│ からの抽出      │
-└─────┬───────────┘
-      │
-      ▼
 ┌─────────────────────────────────────────────────────────────┐
-│            applyLanguageSpecificCleaning()                  │
-│            言語固有のクリーニング適用                       │
+│      Pre-strip TRANSCRIPT wrappers (mechanical extraction)  │
+│      TRANSCRIPTラッパーの事前除去（完全/不完全に対応）       │
 └─────┬───────────────────────────────────────────────────────┘
       │
-      │ ┌─────────────────────────────────────────────────────┐
-      │ │                                                     │
-      │ │ IF language === 'ja'                                │
-      │ │ 日本語の場合:                                       │
-      │ │     │                                               │
-      │ │     ▼                                               │
-      │ │ ┌───────────────────────────────────────────────┐   │
-      │ │ │ Remove Japanese prompt patterns:              │   │
-      │ │ │ 日本語プロンプトパターンを除去:              │   │
-      │ │ │ • "以下の音声内容..."                        │   │
-      │ │ │ • "この指示文..."                            │   │
-      │ │ │ • "話者の発言内容だけを..."                  │   │
-      │ │ │ • "話者の発言..."                            │   │
-      │ │ │ • "出力形式..."                              │   │
-      │ │ │ • "（話者の発言のみ）"                       │   │
-      │ │ └───────────────────────────────────────────────┘   │
-      │ │                                                     │
-      │ │ ELSE (en/zh/ko)                                     │
-      │ │ その他の言語:                                       │
-      │ │     │                                               │
-      │ │     ▼                                               │
-      │ │ ┌───────────────────────────────────────────────┐   │
-      │ │ │ Conservative cleaning only                    │   │
-      │ │ │ 保守的なクリーニングのみ                     │   │
-      │ │ │ (relies on generic cleaning)                 │   │
-      │ │ │ (汎用クリーニングに依存)                     │   │
-      │ │ └───────────────────────────────────────────────┘   │
-      │ └─────────────────────────────────────────────────────┘
-      │
       ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                  applyGenericCleaning()                     │
-│                  汎用クリーニング適用                       │
+│            StandardCleaningPipeline（安全判定付き）          │
+│            クリーニング・パイプライン                        │
 │                                                             │
-│  Conservative patterns only:                                │
-│  保守的なパターンのみ:                                     │
-│  • "Output format:..."                                     │
-│  • "Format:..."                                            │
+│  1) PromptContaminationCleaner                              │
+│     - TRANSCRIPT/TRANSCRIPTIONタグ残留の除去                 │
+│     - 指示文（完全一致/スニペット/文脈）除去                 │
+│                                                             │
+│  2) UniversalRepetitionCleaner                              │
+│     - 文字/記号/トークン/文/段落/列挙/末尾の反復抑制         │
+│     - 最終整形（改行・空白の正規化など）                    │
+│                                                             │
+│  Safety / 安全装置:                                         │
+│   - クリーナー単体の削減率上限、緊急ロールバック             │
+│   - 構造除去の過剰ロールバック回避（緩和）                   │
 └─────┬───────────────────────────────────────────────────────┘
       │
       ▼
