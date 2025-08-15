@@ -159,7 +159,7 @@ export const en: TranslationResource = {
             transcriptionLanguage: 'Transcription Language',
             transcriptionLanguageDesc: 'Language for voice recognition and transcription.',
             pluginLanguage: 'Plugin Language',
-            pluginLanguageDesc: 'Set language for UI display (voice recognition language is auto-detected separately)',
+            pluginLanguageDesc: 'Set language for UI display',
             // Advanced settings
             languageLinking: 'Link UI and recognition languages',
             languageLinkingDesc: 'When enabled, recognition language follows UI language. When disabled, you can set recognition language independently.',

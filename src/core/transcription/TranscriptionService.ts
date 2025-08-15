@@ -98,13 +98,11 @@ export class TranscriptionService implements ITranscriptionProvider {
             formData.append('response_format', 'json');
             formData.append('temperature', String(API_CONSTANTS.PARAMETERS.TRANSCRIPTION_TEMPERATURE)); // Deterministic output
             
-            // Language setting
-            if (language !== 'auto') {
-                formData.append('language', language);
-            }
+            // Language setting (auto 廃止のため常に明示指定)
+            formData.append('language', language);
 
             const prompt = this.buildTranscriptionPrompt(language);
-            if (language !== 'auto' && prompt) {
+            if (prompt) {
                 formData.append('prompt', prompt);
             }
 
@@ -229,10 +227,7 @@ export class TranscriptionService implements ITranscriptionProvider {
      * Build prompt for GPT-4o transcription (for all languages except auto)
      */
     private buildTranscriptionPrompt(language: string): string {
-        // No prompt for auto language mode (as it might interfere with language detection)
-        if (language === 'auto') {
-            return '';
-        }
+        // auto は廃止済み
         
         const normalizedLang = this.normalizeLanguage(language);
         
@@ -361,7 +356,7 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
      * Normalize language code for consistent processing
      */
     private normalizeLanguage(language: string): string {
-        if (language === 'auto') return 'auto';
+        // auto は廃止済み
         const lang = language.toLowerCase();
         if (lang.startsWith('ja')) return 'ja';
         if (lang.startsWith('zh')) return 'zh';

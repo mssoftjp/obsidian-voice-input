@@ -84,7 +84,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                     if (!this.plugin.settings.advanced) {
                         this.plugin.settings.advanced = {
                             languageLinkingEnabled: value,
-                            transcriptionLanguage: 'auto'
+                            transcriptionLanguage: this.plugin.getResolvedLanguage()
                         };
                     } else {
                         this.plugin.settings.advanced.languageLinkingEnabled = value;
@@ -100,13 +100,12 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 .setName(this.i18n.t('ui.settings.advancedTranscriptionLanguage'))
                 .setDesc(this.i18n.t('ui.settings.advancedTranscriptionLanguageDesc'))
                 .addDropdown(dropdown => dropdown
-                    .addOption('auto', this.i18n.t('ui.options.languageAuto'))
                     .addOption('ja', this.i18n.t('ui.options.languageJa'))
                     .addOption('en', this.i18n.t('ui.options.languageEn'))
                     .addOption('zh', this.i18n.t('ui.options.languageZh'))
                     .addOption('ko', this.i18n.t('ui.options.languageKo'))
-                    .setValue(this.plugin.settings.advanced.transcriptionLanguage ?? 'auto')
-                    .onChange(async (value: 'auto' | 'ja' | 'en' | 'zh' | 'ko') => {
+                    .setValue(this.plugin.settings.advanced.transcriptionLanguage ?? this.plugin.getResolvedLanguage())
+                    .onChange(async (value: 'ja' | 'en' | 'zh' | 'ko') => {
                         if (!this.plugin.settings.advanced) {
                             this.plugin.settings.advanced = {
                                 languageLinkingEnabled: false,

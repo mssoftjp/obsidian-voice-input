@@ -21,19 +21,12 @@ function detectPluginLanguage(getObsidianLocaleFn: () => string): 'ja' | 'zh' | 
 }
 
 function getResolvedLanguage(
-    pluginLanguage: string, 
+    pluginLanguage: string,
     detectFn: () => 'ja' | 'zh' | 'ko' | 'en'
-): 'auto' | 'ja' | 'zh' | 'ko' | 'en' {
-    if (pluginLanguage === 'auto') {
-        // 仕様変更: 'auto' はそのまま返す（API に渡す）
-        return 'auto';
-    }
-
+): 'ja' | 'zh' | 'ko' | 'en' {
     if (!['ja', 'zh', 'ko', 'en'].includes(pluginLanguage)) {
-        // 不正値は従来通り検出へフォールバック
         return detectFn();
     }
-
     return pluginLanguage as 'ja' | 'zh' | 'ko' | 'en';
 }
 
@@ -99,11 +92,7 @@ describe('Language Detection Logic', () => {
             expect(mockDetectFn).toHaveBeenCalledTimes(1);
         });
 
-        test('should handle auto value (pass-through)', () => {
-            const result = getResolvedLanguage('auto', mockDetectFn);
-            expect(result).toBe('auto');
-            expect(mockDetectFn).not.toHaveBeenCalled();
-        });
+        // auto は廃止済みのためテストしない
 
         test('should work with all supported languages', () => {
             expect(getResolvedLanguage('ja', mockDetectFn)).toBe('ja');
@@ -123,24 +112,18 @@ describe('Language Detection Logic', () => {
 
         // Function to simulate the new advanced language resolution logic
         function getResolvedLanguageAdvanced(
-            transcriptionLanguage: string,
+            transcriptionLanguage: string | undefined,
             advanced: { languageLinkingEnabled?: boolean; transcriptionLanguage?: string } | undefined,
             detectFn: () => 'ja' | 'zh' | 'ko' | 'en'
-        ): 'auto' | 'ja' | 'zh' | 'ko' | 'en' {
-            // 高度設定で言語連動が無効な場合: advanced.transcriptionLanguage を優先
+        ): 'ja' | 'zh' | 'ko' | 'en' {
             if (advanced?.languageLinkingEnabled === false) {
-                const advancedLang = advanced.transcriptionLanguage ?? 'auto';
-                return (advancedLang as 'auto' | 'ja' | 'zh' | 'ko' | 'en');
+                const adv = advanced?.transcriptionLanguage;
+                return (['ja', 'zh', 'ko', 'en'].includes(adv as any) ? adv : detectFn()) as 'ja' | 'zh' | 'ko' | 'en';
             }
-
-            // 言語連動が有効な場合（デフォルト）: 通常の transcriptionLanguage を使用
-            if (transcriptionLanguage === 'auto') {
-                return 'auto';
-            }
-            return transcriptionLanguage as 'ja' | 'zh' | 'ko' | 'en';
+            return (['ja', 'zh', 'ko', 'en'].includes(transcriptionLanguage as any) ? transcriptionLanguage : detectFn()) as 'ja' | 'zh' | 'ko' | 'en';
         }
 
-        test('should return auto when linking is enabled and TL is auto', () => {
+        test('should use TL when linking enabled; fallback to detection when missing/invalid', () => {
             // Default case: advanced.languageLinkingEnabled is true
             const advanced = { languageLinkingEnabled: true };
             
@@ -148,9 +131,9 @@ describe('Language Detection Logic', () => {
             expect(getResolvedLanguageAdvanced('ja', advanced, mockDetectFn)).toBe('ja');
             expect(mockDetectFn).not.toHaveBeenCalled();
 
-            // Should pass through 'auto'
-            expect(getResolvedLanguageAdvanced('auto', advanced, mockDetectFn)).toBe('auto');
-            expect(mockDetectFn).not.toHaveBeenCalled();
+            // Missing or invalid TL falls back to detection
+            expect(getResolvedLanguageAdvanced(undefined, advanced, mockDetectFn)).toBe('ko');
+            expect(getResolvedLanguageAdvanced('invalid', advanced, mockDetectFn)).toBe('ko');
         });
 
         test('should treat undefined advanced as linking enabled', () => {
@@ -158,8 +141,8 @@ describe('Language Detection Logic', () => {
             expect(getResolvedLanguageAdvanced('ja', undefined, mockDetectFn)).toBe('ja');
             expect(mockDetectFn).not.toHaveBeenCalled();
 
-            expect(getResolvedLanguageAdvanced('auto', undefined, mockDetectFn)).toBe('auto');
-            expect(mockDetectFn).not.toHaveBeenCalled();
+            expect(getResolvedLanguageAdvanced(undefined, undefined, mockDetectFn)).toBe('ko');
+            expect(mockDetectFn).toHaveBeenCalledTimes(1);
         });
 
         test('should use advanced.transcriptionLanguage when language linking is disabled', () => {
@@ -173,24 +156,24 @@ describe('Language Detection Logic', () => {
             expect(mockDetectFn).not.toHaveBeenCalled();
         });
 
-        test('should pass through auto when linking disabled and advanced TL is auto', () => {
+        test('should use advanced TL when linking disabled; fallback to detection when missing/invalid', () => {
             const advanced = { 
                 languageLinkingEnabled: false, 
-                transcriptionLanguage: 'auto'
+                transcriptionLanguage: undefined as unknown as string
             };
             
-            expect(getResolvedLanguageAdvanced('ja', advanced, mockDetectFn)).toBe('auto');
-            expect(mockDetectFn).not.toHaveBeenCalled();
+            expect(getResolvedLanguageAdvanced('ja', advanced, mockDetectFn)).toBe('ko');
+            expect(mockDetectFn).toHaveBeenCalled();
         });
 
-        test('should pass through auto when linking disabled and advanced TL is undefined', () => {
+        test('should use detection when linking disabled and advanced TL is undefined', () => {
             const advanced = { 
                 languageLinkingEnabled: false
                 // transcriptionLanguage is undefined
             };
             
-            expect(getResolvedLanguageAdvanced('ja', advanced, mockDetectFn)).toBe('auto');
-            expect(mockDetectFn).not.toHaveBeenCalled();
+            expect(getResolvedLanguageAdvanced('ja', advanced, mockDetectFn)).toBe('ko');
+            expect(mockDetectFn).toHaveBeenCalled();
         });
 
         test('should work with all supported languages in advanced mode', () => {
