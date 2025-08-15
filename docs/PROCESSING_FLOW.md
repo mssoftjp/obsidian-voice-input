@@ -1,291 +1,139 @@
 # Voice Input Processing Flow / 音声入力処理フロー
 
-This document describes the current processing pipeline of the voice input system. As of 2025-08-15, the system supports multilingual prompts for ja/en/zh/ko languages, followed by mechanical TRANSCRIPT wrapper stripping, safety-guarded cleaning pipeline, and optional dictionary correction.
+This document reflects the latest implementation as of 2025‑08‑16. It covers the end‑to‑end flow: recording, queuing, transcription, cleaning with safety guards, and optional dictionary correction.
 
-このドキュメントは最新の音声入力処理パイプラインを説明します。2025-08-15 時点では、日本語/英語/中国語/韓国語の多言語プロンプトをサポートし、その後に機械的な TRANSCRIPT ラッパー除去、安全装置付きのクリーニング・パイプライン、任意の辞書補正を実行します。
+本ドキュメントは 2025‑08‑16 時点の実装に基づき、録音からキュー処理、文字起こし、セーフティ付きクリーニング、辞書補正までの一連の流れを記載します。
 
-## Updated Overview (Current) / 最新の概要
+## High‑Level Overview / 全体概要
 
-1) Audio → OpenAI Transcription API（**全言語 ja/en/zh/ko にプロンプト付与**）。
-2) APIレスポンス `text` を受領。
-3) 構造除去（事前処理）: `<TRANSCRIPT ...> ... </TRANSCRIPT>` を機械的に抽出・除去（閉じタグ欠落にも対応）。
-4) クリーニング・パイプライン実行（`StandardCleaningPipeline`）
-   - `PromptContaminationCleaner`: 指示文・XML/文脈タグ・スニペットなどの混入除去。
-   - `UniversalRepetitionCleaner`: 反復抑制（文字/トークン/文/列挙/段落/末尾）＋最終整形。
-   - セーフティ: クリーナー単体の削減率上限＋緊急ロールバック。構造除去は過剰ロールバックを避けるため緩和あり。
-5) プロンプトエラー検出（無音時にプロンプトが返る等）→ 該当すれば空文字で早期終了。
-6) 辞書補正（任意）: `DictionaryCorrector` による語彙修正。
-7) 最終テキストを返却。
+1) 音声取得 → 連続録音（最大録音時間到達または手動停止）。
+2) 録音ごとに audioBlob を非同期キューへ投入（録音は継続可能）。
+3) OpenAI Transcription API 呼び出し（ja/en/zh/ko には構造化プロンプト付与）。
+4) 機械的な TRANSCRIPT ラッパー除去 → クリーニング・パイプライン（安全判定付き）。
+5) プロンプトエラー検出（プロンプトのみが返った場合は空文字へ）。
+6) 任意の辞書補正を適用し、UIへ反映。
 
-## Complete Processing Flow / 完全な処理フロー
+---
 
+## Recording Path Details / 録音パス詳細
+
+実装参照: `src/core/audio/AudioRecorder.ts`, `src/views/VoiceInputViewActions.ts`, `src/views/VoiceInputViewUI.ts`
+
+- AudioContext 初期化
+  - `window.AudioContext`（Safari は `webkitAudioContext`）を使用。
+  - `AudioWorklet` が利用可能ならワークレット、不可なら `ScriptProcessor` へフォールバック。
+  - `suspended` 状態の場合は `startRecording()` で `resume()` を実行。
+- フィルタ/ノード構成
+  - `MediaStreamSource → Gain → HighPass(約80Hz) → LowPass(約7.6kHz) → Analyser`
+  - ビジュアライザは `Analyser` に接続（シンプル/通常の2種）。
+- 連続処理
+  - ワークレット/スクリプトプロセッサで 1ch PCM を取り出し、`AudioRingBuffer` に蓄積。
+  - マイク実データ検知で `onMicrophoneStatusChange('ready')` 通知。
+- 録音制御
+  - 既定は VAD 無効の連続録音。`maxRecordingSeconds` 到達で自動停止。
+  - 二重開始は `AudioRecorder.isStarting` で抑止。UI側のロックはエントリポイントのみで軽量化。
+- UI/操作
+  - 通常クリックで開始/停止。プッシュトゥトークは長押しで開始、離して停止（`UI_CONSTANTS.PUSH_TO_TALK_THRESHOLD`）。
+
+---
+
+## Queue & UI / キューとUI
+
+実装参照: `src/views/VoiceInputViewActions.ts`
+
+- 停止ごとに生成された `audioBlob` を `processingQueue` へ追加し、逐次処理。
+- ステータス表示は「録音中/処理中/待機数」を反映。キャンセルは録音を中断して音声を破棄。
+- 途中で録音を継続しながら、既存キューをバックグラウンドで順次文字起こし可能。
+
+---
+
+## Transcription Path / 文字起こしパス
+
+実装参照: `src/core/transcription/TranscriptionService.ts`
+
+1) リクエスト作成（`multipart/form-data`）
+   - `file: audio.webm(Blob)`, `model: gpt-4o(-mini)-transcribe`, `response_format: json`, `temperature: 0`, `language`。
+   - 言語に応じて構造化プロンプトを付与（ja/en/zh/ko）。
+2) API レスポンスから `text` を取得。
+3) `cleanGPT4oResponse(text, language)` を実行。
+   - 先に機械的に TRANSCRIPT ラッパーを剥離（完全/不完全タグ双方に対応）。
+   - クリーニング・パイプラインを実行（詳細は後述）。
+4) プロンプトエラー検出
+   - 言語別の検出ルールにより、プロンプトや注釈のみが返るケースを検知。
+   - 検出時は空文字に置換して早期終了（無音/極短音声で発生しやすい）。
+5) 辞書補正（有効時）
+   - `DictionaryCorrector` により語彙の統一・置換を実施。
+
+---
+
+## Cleaning Pipeline / クリーニング・パイプライン
+
+実装参照: `src/core/transcription/cleaning/StandardCleaningPipeline.ts`
+
+- 構成
+  1) `PromptContaminationCleaner`
+     - TRANSCRIPT/TRANSCRIPTION タグ残留、指示文（完全一致/スニペット/文脈）、フォーマット行の除去。
+     - 空行/空白の正規化。
+  2) `UniversalRepetitionCleaner`
+     - 文字/文/列挙/段落レベルの反復抑制、末尾ハルシネーション緩和、体裁整形。
+
+- セーフティ（安全判定）
+  - 設定値（`src/config/CleaningConfig.ts`）
+    - `singleCleanerMaxReduction`: 0.3（単一クリーナーの削減率上限）
+    - `emergencyFallbackThreshold`: 0.5（緊急ロールバック閾値）
+    - `warningThreshold`: 0.15（警告ログ）
+  - 構造的クリーナー緩和（`PromptContaminationCleaner` に適用）
+    - `singleCleanerMaxReduction → max(0.9, 0.3) = 0.9`
+    - `emergencyFallbackThreshold → max(0.95, 0.5) = 0.95`
+  - 超過時の動作
+    - 単一上限（single）超過 → `skip`（そのクリーナーの変更を適用しない）
+    - 緊急（emergency）超過 → `rollback`（そのクリーナーの結果を破棄して元のテキストに戻す）
+
+例（ログ）:
 ```
-┌─────────────────┐
-│  Audio Input    │ 🎤
-│  音声入力       │
-└─────┬───────────┘
-      │
-      ▼
-┌─────────────────┐
-│  Audio Blob     │
-│  Creation       │
-│  音声Blob作成   │
-└─────┬───────────┘
-      │
-      ▼
-┌─────────────────────────────────────────────────────────────┐
-│                TranscriptionService.transcribe()            │
-│                文字起こしサービス                           │
-└─────┬───────────────────────────────────────────────────────┘
-      │
-      ▼
-┌─────────────────┐    ┌──────────────────────────────────────┐
-│ Language Check  │────│ buildTranscriptionPrompt(language)  │
-│ 言語チェック    │    │ プロンプト構築                      │
-└─────┬───────────┘    └──────────────────┬───────────────────┘
-      │                                   │
-      │ ┌─────────────────────────────────│──────────────────┐
-      │ │                                 │                  │
-      │ │ IF language === 'auto'          │                  │
-      │ │ 自動検出の場合:                 │                  │
-      │ │                                 ▼                  │
-      │ │     ┌───────────────────────────────────────────┐   │
-      │ │     │ No Prompt Added                           │   │
-      │ │     │ プロンプト追加なし                       │   │
-      │ │     │ (言語検出に干渉しない)                   │   │
-      │ │     └───────────────────────────────────────────┘   │
-      │ │                                 │                  │
-      │ │ ELSE (ja/en/zh/ko)              │                  │
-      │ │ 対応言語の場合:                 │                  │
-      │ │                                 ▼                  │
-      │ │     ┌───────────────────────────────────────────┐   │
-      │ │     │ Structured Multilingual Prompts          │   │
-      │ │     │ 構造化多言語プロンプト                   │   │
-      │ │     │                                           │   │
-      │ │     │ 日本語: 以下の音声内容のみを文字に...     │   │
-      │ │     │ English: Please transcribe only the...   │   │
-      │ │     │ 中文: 请仅转录以下音频内容...             │   │
-      │ │     │ 한국어: 다음 음성 내용만 전사해주세요...  │   │
-      │ │     │                                           │   │
-      │ │     │ Format: INSTRUCTION×2 + OUTPUT_FORMAT     │   │
-      │ │     │         + <TRANSCRIPT> + SPEAKER_ONLY     │   │
-      │ │     └───────────────────────────────────────────┘   │
-      │ └─────────────────────────────────────────────────────┘
-      │
-      ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   OpenAI API Request                        │
-│                   OpenAI API リクエスト                     │
-│                                                             │
-│  FormData:                                                  │
-│  ├─ file: audio.webm (Blob)                                │
-│  ├─ model: gpt-4o-transcribe / gpt-4o-mini-transcribe      │
-│  ├─ response_format: json                                   │
-│  ├─ temperature: 0                                          │
-│  ├─ language: ja/en/zh/ko (if not 'auto')                  │
-│  └─ prompt: [Multilingual prompts for ja/en/zh/ko]         │
-│             [多言語プロンプト（ja/en/zh/ko用）]            │
-│                                                             │
-│  Headers:                                                   │
-│  └─ Authorization: Bearer ${apiKey}                         │
-└─────┬───────────────────────────────────────────────────────┘
-      │
-      ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   OpenAI API Response                       │
-│                   OpenAI API レスポンス                     │
-│                                                             │
-│  { text: "transcribed text...", language: "detected" }     │
-└─────┬───────────────────────────────────────────────────────┘
-      │
-      ▼
-┌─────────────────────────────────────────────────────────────┐
-│                cleanGPT4oResponse(text, language)           │
-│                GPT-4oレスポンスクリーニング                 │
-└─────┬───────────────────────────────────────────────────────┘
-      │
-      ▼
-┌─────────────────────────────────────────────────────────────┐
-│      Pre-strip TRANSCRIPT wrappers (mechanical extraction)  │
-│      TRANSCRIPTラッパーの事前除去（完全/不完全に対応）       │
-└─────┬───────────────────────────────────────────────────────┘
-      │
-      ▼
-┌─────────────────────────────────────────────────────────────┐
-│            StandardCleaningPipeline（安全判定付き）          │
-│            クリーニング・パイプライン                        │
-│                                                             │
-│  1) PromptContaminationCleaner                              │
-│     - TRANSCRIPT/TRANSCRIPTIONタグ残留の除去                 │
-│     - 指示文（完全一致/スニペット/文脈）除去                 │
-│                                                             │
-│  2) UniversalRepetitionCleaner                              │
-│     - 文字/記号/トークン/文/段落/列挙/末尾の反復抑制         │
-│     - 最終整形（改行・空白の正規化など）                    │
-│                                                             │
-│  Safety / 安全装置:                                         │
-│   - クリーナー単体の削減率上限、緊急ロールバック             │
-│   - 構造除去の過剰ロールバック回避（緩和）                   │
-└─────┬───────────────────────────────────────────────────────┘
-      │
-      ▼
-┌─────────────────────────────────────────────────────────────┐
-│              isPromptErrorDetected(text, language)          │
-│              プロンプトエラー検出                           │
-└─────┬───────────────────────────────────────────────────────┘
-      │
-      │ ┌─────────────────────────────────────────────────────┐
-      │ │                                                     │
-      │ │ Check for prompt leakage patterns:                  │
-      │ │ プロンプト漏洩パターンをチェック:                   │
-      │ │                                                     │
-      │ │ Japanese (ja):                                      │
-      │ │ • "この指示文は出力に含めないでください"           │
-      │ │ • "話者の発言内容だけを正確に記録してください"     │
-      │ │ • "（話者の発言のみ）"                            │
-      │ │                                                     │
-      │ │ English (en):                                       │
-      │ │ • "Please transcribe only the speaker"             │
-      │ │ • "Do not include this instruction"                │
-      │ │ • "(Speaker content only)"                         │
-      │ │                                                     │
-      │ │ Chinese (zh):                                       │
-      │ │ • "请仅转录说话者"                                  │
-      │ │ • "不要包含此指令"                                  │
-      │ │ • "（仅说话者内容）"                               │
-      │ │                                                     │
-      │ │ Korean (ko):                                        │
-      │ │ • "화자의 발언만 전사해주세요"                     │
-      │ │ • "이 지시사항을 포함하지 마세요"                  │
-      │ │ • "（화자 발언만）"                               │
-      │ └─────────────────────────────────────────────────────┘
-      │
-      ▼
-┌─────────────────┐    ┌──────────────────────────────────────┐
-│ If prompt error │ NO │ Continue to dictionary processing    │
-│ detected?       │───▶│ 辞書処理へ続行                       │
-│ プロンプトエラー│    └──────────────────┬───────────────────┘
-│ 検出？          │                       │
-└─────┬───────────┘                       │
-      │ YES                               │
-      ▼                                   │
-┌─────────────────┐                       │
-│ Return empty    │                       │
-│ string          │                       │
-│ 空文字を返す    │                       │
-└─────────────────┘                       │
-                                          │
-                                          ▼
-                        ┌─────────────────────────────────────┐
-                        │ enableTranscriptionCorrection?     │
-                        │ 文字起こし修正が有効？             │
-                        └─────┬───────────────────────────────┘
-                              │
-                    ┌─────────┴─────────┐
-                    │ YES               │ NO
-                    ▼                   ▼
-    ┌───────────────────────────────┐   ┌─────────────────┐
-    │ DictionaryCorrector.correct() │   │ Skip correction │
-    │ 辞書修正適用                  │   │ 修正をスキップ  │
-    └─────┬─────────────────────────┘   └─────┬───────────┘
-          │                                   │
-          ▼                                   │
-    ┌───────────────────────────────────────┐ │
-    │ Apply multilingual corrections:       │ │
-    │ 多言語修正を適用:                     │ │
-    │                                       │ │
-    │ 1. Default rules (empty by default)  │ │
-    │    デフォルトルール（既定では空）     │ │
-    │                                       │ │
-    │ 2. Custom rules                       │ │
-    │    カスタムルール                     │ │
-    │                                       │ │
-    │ 3. Dictionary corrections             │ │
-    │    辞書修正:                          │ │
-    │    • Fixed string replacements       │ │
-    │    • Applied to ALL languages        │ │
-    │    • 固定文字列置換                  │ │
-    │    • 全言語に適用                    │ │
-    │                                       │ │
-    │ Examples:                             │ │
-    │ • "AI" → "artificial intelligence"   │ │
-    │ • "こんにちは" → "こんにちは（修正）" │ │
-    │ • "你好" → "您好"                     │ │
-    │ • "안녕" → "안녕하세요"               │ │
-    └─────┬─────────────────────────────────┘ │
-          │                                   │
-          └───────────────┬───────────────────┘
-                          │
-                          ▼
-                ┌─────────────────────────────────────┐
-                │           Final Output              │
-                │           最終出力                  │
-                │                                     │
-                │ TranscriptionResult {               │
-                │   text: correctedText,              │
-                │   originalText: originalText,       │
-                │   duration: processingTime,         │
-                │   model: "gpt-4o(-mini)-transcribe", │
-                │   language: detectedLanguage        │
-                │ }                                   │
-                └─────────────────────────────────────┘
+[Voice Transcription] [StandardCleaningPipeline] Rolling back cleaner PromptContaminationCleaner {
+  reason: 'Reduction ratio 1.000 exceeds emergency threshold 0.95',
+  reductionRatio: 1
+}
 ```
+意味: 構造的クリーナーが 95% 超の削減を行おうとしたため、安全装置によりロールバックされました。上流で「実発話が少ない/無い」状態（無音、極短、プロンプトエコー等）が疑われます。
 
-## Key Differences by Language / 言語による主な違い
-
-### All Supported Languages (ja/en/zh/ko) Processing / 全対応言語処理
-1. **Prompt Addition**: Structured prompts with language-specific instructions
-   - プロンプト追加: 言語固有の指示を含む構造化プロンプト
-2. **Comprehensive Cleaning**: Language-aware pattern removal via PromptContaminationCleaner
-   - 包括的クリーニング: PromptContaminationCleaner による言語認識パターン除去
-3. **Error Detection**: Language-specific prompt leakage patterns
-   - エラー検出: 言語固有のプロンプト漏洩パターン
-
-### Auto Language Processing / 自動言語処理
-- Uses Japanese patterns as fallback for error detection
-- エラー検出時は日本語パターンをフォールバックとして使用
-- No prompt addition (prevents interference with language detection)
-- プロンプト追加なし（言語検出への干渉を防ぐ）
+---
 
 ## Dictionary Processing / 辞書処理
 
-Dictionary correction is **language-agnostic** and applies to all languages when enabled:
-辞書修正は**言語非依存**で、有効時は全言語に適用されます:
-
+- 有効時、言語非依存で置換を適用。
+- 例:
 ```
-Dictionary Entry: { from: ["AI"], to: "artificial intelligence" }
-辞書エントリ: { from: ["AI"], to: "artificial intelligence" }
+{ from: ["AI"], to: "artificial intelligence" }
 
-Applied to:
-適用対象:
-✓ English: "AI system" → "artificial intelligence system"
-✓ Japanese: "AIシステム" → "artificial intelligenceシステム"  
-✓ Chinese: "AI系统" → "artificial intelligence系统"
-✓ Korean: "AI시스템" → "artificial intelligence시스템"
+EN: "AI system" → "artificial intelligence system"
+JA: "AIシステム" → "artificial intelligenceシステム"
+ZH: "AI系统" → "artificial intelligence系统"
+KO: "AI시스템" → "artificial intelligence시스템"
 ```
 
-## Processing Performance / 処理性能
+---
 
-The system logs detailed performance metrics:
-システムは詳細なパフォーマンス指標をログに記録します:
+## Status & Metrics / ステータスと計測
 
-- Audio blob size and type / 音声Blobサイズとタイプ
-- Processing duration / 処理時間
-- Original vs corrected text length / 元のテキストと修正後のテキスト長
-- Model used and cost estimation / 使用モデルとコスト推定
+- ステータス: 録音準備/録音中/処理中（待機数付き）/完了/エラー。
+- メトリクス: 音声サイズ、処理時間、原文/補正後の長さ、モデル、出力長などをログ出力。
+
+---
 
 ## Error Handling / エラーハンドリング
 
-The system handles various error scenarios:
-システムは様々なエラーシナリオを処理します:
+1) API エラー: 401（キー不正）、429（クォータ超過）、5xx（ネットワーク/サーバ）
+2) プロンプト漏洩: 言語別検出 → 空文字化で軽減
+3) 空/無音: 早期終了で空文字返却、UIに短すぎ警告
+4) クリーニング安全装置: 過剰削減を検知してスキップ/ロールバック
 
-1. **API Errors**: Invalid key, quota exceeded, network errors
-   - API エラー: 無効なキー、クォータ超過、ネットワークエラー
-2. **Prompt Leakage**: Detection and mitigation of prompt content in output
-   - プロンプト漏洩: 出力内のプロンプト内容の検出と軽減
-3. **Empty Audio**: Graceful handling of silent or empty audio input
-   - 空音声: 無音または空の音声入力の適切な処理
+---
 
-This visualization shows the complete flow from audio input to final transcribed and corrected text, highlighting the sophisticated multilingual processing that makes this plugin effective for users of Japanese, English, Chinese, and Korean languages while maintaining auto-detection compatibility.
+## Notes / 補足
 
-この可視化は、音声入力から最終的な文字起こし・修正テキストまでの完全なフローを示し、このプラグインが日本語、英語、中国語、韓国語のユーザーに効果的でありながら自動検出との互換性を維持する洗練された多言語処理を強調しています。
+- 既定は VAD 無効の連続録音。必要に応じて `maxRecordingSeconds` を調整してください。
+- 連打・素早い操作でも安定するよう、開始の二重実行は内部ガードで抑止しています。
+- 「開始しにくい」挙動を避けるため、UIロックは最小限に留めています。
+
