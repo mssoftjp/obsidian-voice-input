@@ -113,6 +113,9 @@ export const ja: TranslationResource = {
         }
     },
     ui: {
+        help: {
+            dictionaryFromComma: '入力語はカンマ区切りで複数指定できます（例: パターン1, パターン2）。'
+        },
         commands: {
             openView: 'ビューを開く'
         },

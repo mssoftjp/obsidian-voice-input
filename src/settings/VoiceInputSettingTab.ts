@@ -270,6 +270,10 @@ export class VoiceInputSettingTab extends PluginSettingTab {
 
         // Definite Corrections Section
         tableContainer.createEl('h4', { text: this.i18n.t('ui.settings.dictionaryDefinite', { max: DICTIONARY_CONSTANTS.MAX_DEFINITE_CORRECTIONS }) });
+        tableContainer.createEl('div', {
+            cls: 'setting-item-description',
+            text: this.i18n.t('ui.help.dictionaryFromComma')
+        });
         this.createCorrectionTable(
             tableContainer,
             this.plugin.settings.customDictionary.definiteCorrections,

@@ -113,6 +113,9 @@ export const zh: TranslationResource = {
         }
     },
     ui: {
+        help: {
+            dictionaryFromComma: '“来源词”支持用逗号分隔的多个模式（例如：模式1, 模式2）。'
+        },
         commands: {
             openView: '打开视图'
         },

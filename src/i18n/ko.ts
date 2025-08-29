@@ -113,6 +113,9 @@ export const ko: TranslationResource = {
         }
     },
     ui: {
+        help: {
+            dictionaryFromComma: '입력어는 쉼표로 여러 패턴을 지정할 수 있습니다(예: 패턴1, 패턴2).'
+        },
         commands: {
             openView: '뷰 열기'
         },

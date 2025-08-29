@@ -132,6 +132,9 @@ export type TranslationResource = {
     };
   };
   ui: {
+    help: {
+      dictionaryFromComma: string;
+    };
     commands: {
       openView: string;
     };

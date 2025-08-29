@@ -113,6 +113,9 @@ export const en: TranslationResource = {
         }
     },
     ui: {
+        help: {
+            dictionaryFromComma: 'Enter multiple source patterns separated by commas (e.g., "pattern 1, pattern 2").'
+        },
         commands: {
             openView: 'Open view'
         },
