@@ -113,6 +113,9 @@ export const en: TranslationResource = {
         }
     },
     ui: {
+        commands: {
+            openView: 'Open view'
+        },
         buttons: {
             recordStart: 'Start Voice Input',
             recordStop: 'Stop Voice Input',

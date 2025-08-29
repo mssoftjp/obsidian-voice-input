@@ -132,6 +132,9 @@ export type TranslationResource = {
     };
   };
   ui: {
+    commands: {
+      openView: string;
+    };
     buttons: {
       recordStart: string;
       recordStop: string;

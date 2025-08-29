@@ -110,7 +110,7 @@ export default class VoiceInputPlugin extends Plugin {
             // Add command
             this.addCommand({
                 id: 'open-voice-input',
-                name: i18n.t('ui.titles.main'),
+                name: i18n.t('ui.commands.openView'),
                 callback: () => {
                     this.logger.debug('Command executed: open-voice-input');
                     this.viewManager.activateVoiceInputView();

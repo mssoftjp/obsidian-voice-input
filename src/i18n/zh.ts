@@ -113,6 +113,9 @@ export const zh: TranslationResource = {
         }
     },
     ui: {
+        commands: {
+            openView: '打开视图'
+        },
         buttons: {
             recordStart: '开始语音输入',
             recordStop: '停止语音输入',

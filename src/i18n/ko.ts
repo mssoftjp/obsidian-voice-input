@@ -113,6 +113,9 @@ export const ko: TranslationResource = {
         }
     },
     ui: {
+        commands: {
+            openView: '뷰 열기'
+        },
         buttons: {
             recordStart: '음성 입력 시작',
             recordStop: '음성 입력 중지',

@@ -113,6 +113,9 @@ export const ja: TranslationResource = {
         }
     },
     ui: {
+        commands: {
+            openView: 'ビューを開く'
+        },
         buttons: {
             recordStart: '音声入力開始',
             recordStop: '音声入力停止',
