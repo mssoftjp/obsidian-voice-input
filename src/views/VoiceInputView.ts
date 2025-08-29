@@ -67,6 +67,20 @@ export class VoiceInputView extends ItemView {
             this.setupFocusManagement();
             this.setupAutoSaveOnBlur();
             this.setupPeriodicSave();
+
+            // Subscribe to settings change events to keep UI toggles in sync
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const ws: any = this.app.workspace as any;
+                if (ws?.on) {
+                    const ref = ws.on('voice-input:settings-changed', () => {
+                        this.ui?.updateSettingsUI();
+                        this.actions?.updateTranscriptionService();
+                    });
+                    // Ensure cleanup via plugin's registerEvent lifecycle
+                    this.plugin.registerEvent(ref);
+                }
+            } catch (_) { /* noop */ }
         }
     }
 
