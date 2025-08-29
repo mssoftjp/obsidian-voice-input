@@ -58,8 +58,10 @@ Tip: A settings gear in the view header opens the plugin’s settings.
 ## Security & Privacy
 
 - Processing in memory; audio is not written to disk by the plugin
-- HTTPS for all network requests (via Obsidian’s `requestUrl`)
+- Audio you record is transmitted to OpenAI for transcription over HTTPS (via Obsidian’s `requestUrl`).
 - API key is encrypted for storage
+
+Note: When Electron SafeStorage is unavailable, the plugin falls back to lightweight obfuscation for the stored key; the plugin is desktop‑only by design.
 
 See also OpenAI’s Privacy Policy.
 
@@ -162,8 +164,10 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 ## セキュリティ / プライバシー
 
 - 処理はメモリ内で行い、音声ファイルはプラグイン側でディスク保存しません
-- 通信はHTTPS（Obsidianの `requestUrl` 経由）
+- 録音した音声は文字起こしのため OpenAI に送信され、HTTPS（Obsidian の `requestUrl` 経由）で通信します。
 - APIキーは保存時に暗号化
+
+補足: Electron の SafeStorage が利用できない環境では保存キーを軽度に難読化して保持します（本プラグインはデスクトップ専用の設計です）。
 
 OpenAIのプライバシーポリシーもご参照ください。
 
