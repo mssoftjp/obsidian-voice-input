@@ -1,11 +1,11 @@
 {
-  "id": "voice-input",
-  "name": "Voice Input",
-  "version": "0.8.0",
-  "minAppVersion": "1.7.0",
-  "description": "Voice input with real-time transcription using GPT-4o.",
-  "author": "Musashino Software",
-  "authorUrl": "https://github.com/mssoftjp",
-  "fundingUrl": "https://buymeacoffee.com/mssoft",
-  "isDesktopOnly": true
+	"id": "voice-input",
+	"name": "Voice Input",
+	"version": "0.9.0",
+	"minAppVersion": "1.7.0",
+	"description": "Voice input with real-time transcription using GPT-4o.",
+	"author": "Musashino Software",
+	"authorUrl": "https://github.com/mssoftjp",
+	"fundingUrl": "https://buymeacoffee.com/mssoft",
+	"isDesktopOnly": true
 }

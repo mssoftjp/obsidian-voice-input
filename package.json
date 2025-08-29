@@ -1,6 +1,6 @@
 {
   "name": "voice-input",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Voice input plugin for Obsidian with accurate transcription",
   "main": "main.js",
   "scripts": {
