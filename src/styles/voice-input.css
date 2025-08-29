@@ -117,9 +117,9 @@
 	padding: 54px 12px;
 	font-size: 20px;
 	font-weight: 600;
-	background: #f9e79f; /* Soft yellow */
-	color: var(--text-normal);
-	border: 1px solid #f4d03f;
+    background: var(--background-secondary);
+    color: var(--text-normal);
+    border: 1px solid var(--background-modifier-border);
 	border-radius: 4px;
 	cursor: pointer;
 	transition: background-color 0.2s;
@@ -130,7 +130,7 @@
 }
 
 .voice-input-cancel-button-full:hover {
-	background: #f4d03f; /* Slightly darker yellow on hover */
+    background: var(--background-modifier-hover);
 }
 
 
