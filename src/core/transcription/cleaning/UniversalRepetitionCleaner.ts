@@ -56,7 +56,7 @@ export class UniversalRepetitionCleaner implements TextCleaner {
         totalReductionSteps += step1Result.changes;
         
         // Step 2: Token repetition suppression  
-        const step2Result = this.suppressTokenRepetitions(cleaned, original.length);
+        const step2Result = this.suppressTokenRepetitions(cleaned, original.length, language);
         cleaned = step2Result.text;
         totalReductionSteps += step2Result.changes;
         
@@ -148,7 +148,7 @@ export class UniversalRepetitionCleaner implements TextCleaner {
     /**
      * Suppress token repetitions using language-independent tokenization
      */
-    private suppressTokenRepetitions(text: string, originalLength: number): { text: string; changes: number } {
+    private suppressTokenRepetitions(text: string, originalLength: number, language?: string): { text: string; changes: number } {
         const config = CLEANING_CONFIG.repetition;
         let changes = 0;
         
@@ -178,7 +178,12 @@ export class UniversalRepetitionCleaner implements TextCleaner {
                 
                 // Create escape pattern for regex
                 const escapedToken = this.escapeRegex(normalizedToken);
-                const tokenRegex = new RegExp(`\\b${escapedToken}\\b`, 'gi');
+                // Use Unicode-aware boundaries for CJK languages where \b is ineffective
+                const isCJK = !!language && /^(ja|zh|ko)/i.test(language);
+                const pattern = isCJK
+                    ? `(?<!\\p{L})${escapedToken}(?!\\p{L})`
+                    : `\\b${escapedToken}\\b`;
+                const tokenRegex = new RegExp(pattern, isCJK ? 'giu' : 'gi');
                 
                 // Remove excess occurrences
                 let removed = 0;
@@ -205,13 +210,25 @@ export class UniversalRepetitionCleaner implements TextCleaner {
         const sentences = this.splitIntoSentences(text);
         const result: string[] = [];
         const seenSentences = new Map<string, number>();
+        // For near-duplicate detection using 3-gram Jaccard
+        const seenKeys: string[] = [];
         
         for (const sentence of sentences) {
             const normalizedSentence = this.normalizeSentence(sentence);
             
             if (normalizedSentence.length >= config.minimumSentenceLengthForSimilarity) {
-                const count = seenSentences.get(normalizedSentence) || 0;
-                seenSentences.set(normalizedSentence, count + 1);
+                // Find an existing key that is identical or highly similar
+                let key = normalizedSentence;
+                let similarKey: string | null = null;
+                for (const k of seenKeys) {
+                    if (k === normalizedSentence) { similarKey = k; break; }
+                    const sim = this.jaccard3GramSimilarity(k, normalizedSentence);
+                    if (sim >= config.similarityThreshold) { similarKey = k; break; }
+                }
+                if (similarKey) key = similarKey; else seenKeys.push(key);
+
+                const count = seenSentences.get(key) || 0;
+                seenSentences.set(key, count + 1);
                 
                 // Only keep if under repetition threshold
                 if (count + 1 <= config.sentenceRepetition) {
@@ -226,6 +243,27 @@ export class UniversalRepetitionCleaner implements TextCleaner {
         }
         
         return { text: result.join(''), changes };
+    }
+
+    /**
+     * Compute Jaccard similarity over 3-gram sets of two normalized strings
+     */
+    private jaccard3GramSimilarity(a: string, b: string): number {
+        const aSet = this.toNGramSet(a, 3);
+        const bSet = this.toNGramSet(b, 3);
+        if (aSet.size === 0 && bSet.size === 0) return 1;
+        let inter = 0;
+        for (const g of aSet) if (bSet.has(g)) inter++;
+        const union = aSet.size + bSet.size - inter;
+        return union > 0 ? inter / union : 1;
+    }
+
+    private toNGramSet(s: string, n: number): Set<string> {
+        const set = new Set<string>();
+        const len = s.length;
+        if (len < n) { set.add(s); return set; }
+        for (let i = 0; i <= len - n; i++) set.add(s.slice(i, i + n));
+        return set;
     }
     
     /**

@@ -52,8 +52,10 @@ export class PromptContaminationCleaner implements TextCleaner {
             this.logger.debug('XML tags removed');
         }
         
-        // Step 2: Remove exact instruction matches at text beginning
+        // Step 2: Remove leading prompt block (multi-line instructions at the very beginning)
         const beforeInstructions = cleaned;
+        cleaned = this.removeLeadingPromptBlock(cleaned, instructionPatterns);
+        // Also apply exact instruction matches for residuals
         cleaned = this.removeInstructionPatterns(cleaned, instructionPatterns);
         if (cleaned !== beforeInstructions) {
             patternsMatched++;
@@ -77,6 +79,19 @@ export class PromptContaminationCleaner implements TextCleaner {
         }
         
         // Step 5: Clean up excessive whitespace
+        cleaned = this.normalizeWhitespace(cleaned);
+
+        // Step 6: Final safeguard — remove any leftover exact instruction phrases anywhere (very conservative list)
+        // This catches cases where punctuation or line breaks prevented earlier head-only removal.
+        for (const pattern of instructionPatterns) {
+            try {
+                const escaped = pattern.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                const anywhere = new RegExp(`${escaped}(?:[\u3002\.：:])?`, 'gi');
+                cleaned = cleaned.replace(anywhere, '');
+            } catch {
+                // ignore
+            }
+        }
         cleaned = this.normalizeWhitespace(cleaned);
         
         const processingTime = performance.now() - startTime;
@@ -138,23 +153,67 @@ export class PromptContaminationCleaner implements TextCleaner {
         
         return cleaned;
     }
+
+    /**
+     * Remove consecutive instruction/context lines at the very beginning (until a non-instruction line appears)
+     */
+    private removeLeadingPromptBlock(text: string, instructionPatterns: string[]): string {
+        const lines = text.split(/\r?\n/);
+        let cutIndex = 0;
+
+        // Build quick regexes for instructions and context labels across languages
+        const escapedInstructions = instructionPatterns.map(p => p.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
+        // Identify a line as instruction if it STARTS with an instruction phrase (rest of line may include more prompts)
+        const instructionRegexes = escapedInstructions.map(e => new RegExp(`^\s*${e}`, 'i'));
+        const contextRegexes: RegExp[] = [
+            /^\s*Output\s*format\s*:?\s*$/i,
+            /^\s*Format\s*:?\s*$/i,
+            /^\s*出力形式\s*:?\s*$/,
+            /^\s*输出格式\s*:?\s*$/,
+            /^\s*출력\s*형식\s*:?\s*$/,
+            /^\s*\(Speaker\s+content\s+only\)\s*$/i,
+            /^\s*（話者の発言のみ）\s*$/,
+            /^\s*（仅说话者内容）\s*$/,
+            /^\s*（화자\s*발언만）\s*$/
+        ];
+
+        for (let i = 0; i < lines.length; i++) {
+            const ln = lines[i];
+            const trimmed = ln.trim();
+            if (trimmed.length === 0) { cutIndex = i + 1; continue; }
+            const isInstruction = instructionRegexes.some(r => r.test(trimmed));
+            const isContext = contextRegexes.some(r => r.test(trimmed));
+            if (isInstruction || isContext) {
+                cutIndex = i + 1;
+                continue;
+            }
+            // stop when encountering first non-instruction/context line
+            break;
+        }
+
+        return lines.slice(cutIndex).join('\n');
+    }
     
     /**
      * Remove instruction patterns from the beginning of text
      */
     private removeInstructionPatterns(text: string, instructionPatterns: string[]): string {
         let cleaned = text;
-        
-        for (const pattern of instructionPatterns) {
-            // Check if text starts with this pattern
-            if (cleaned.trimStart().startsWith(pattern)) {
-                const index = cleaned.indexOf(pattern);
-                if (index >= 0) {
-                    cleaned = cleaned.slice(index + pattern.length).trim();
+        let changed = true;
+        // Greedily remove any known instruction that appears at the very beginning (allowing optional punctuation right after)
+        while (changed) {
+            changed = false;
+            for (const pattern of instructionPatterns) {
+                const escaped = pattern.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                // Match at start of string or start of any line (multiline), forgiving trailing punctuation
+                const reg = new RegExp(`^\\s*${escaped}(?:[\u3002\.：:])?\\s*`, 'im');
+                const before = cleaned;
+                cleaned = cleaned.replace(reg, '');
+                if (cleaned !== before) {
+                    changed = true;
                 }
             }
         }
-        
         return cleaned;
     }
     
@@ -163,12 +222,17 @@ export class PromptContaminationCleaner implements TextCleaner {
      */
     private removeSnippetPatterns(text: string, instructionPatterns: string[], snippetLengths: number[]): string {
         let cleaned = text;
+        // Restrict snippet search to head region to minimize false positives
+        const MAX_SNIPPET_SEARCH_CHARS = 300;
+        const head = cleaned.slice(0, MAX_SNIPPET_SEARCH_CHARS);
+        let headMut = head;
         
-        // Multilingual suffix lexicon for enhanced snippet detection
+        // Multilingual suffix lexicon for enhanced snippet detection (added JA)
         const suffixLexicon = [
             /\b(please|do\s*not\s*include|only|content|output\s*format)\b/gi, // EN
             /(请|請|不要|仅|只|内容|输出格式|輸出格式)/g,                                // ZH
-            /(해주세요|하지\s*마세요|포함하지\s*마세요|만|내용|출력\s*형식)/g            // KO
+            /(해주세요|하지\s*마세요|포함하지\s*마세요|만|내용|출력\s*형식)/g,            // KO
+            /(この指示文|指示文|出力形式|形式|内容|話者|のみ|含めないでください|含めないで)$/g // JA
         ];
         
         for (const pattern of instructionPatterns) {
@@ -179,24 +243,25 @@ export class PromptContaminationCleaner implements TextCleaner {
                 // Escape special regex characters
                 const escapedSnippet = snippet.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
                 
-                // Enhanced multilingual contextual matching
+                // Enhanced multilingual contextual matching (head region only)
                 for (const suffixPattern of suffixLexicon) {
                     const contextRegex = new RegExp(
                         `${escapedSnippet}[^。.!?！？\\n]{0,50}(${suffixPattern.source})`,
                         suffixPattern.flags
                     );
-                    cleaned = cleaned.replace(contextRegex, '');
+                    headMut = headMut.replace(contextRegex, '');
                 }
                 
-                // Legacy pattern for Japanese (maintaining backward compatibility)
+                // Legacy pattern for Japanese (apply once within head)
                 const legacyJapaneseRegex = new RegExp(
-                    `${escapedSnippet}[^。.!?！？\\n]{0,50}(?:ください|してください|です|ます)\\b`,
-                    'gi'
+                    `${escapedSnippet}[^。.!?！？\\n]{0,50}(?:ください|してください|です|ます)(?![\u3041-\u3096\u30A1-\u30FA\u4E00-\u9FFF])`,
+                    'i'
                 );
-                cleaned = cleaned.replace(legacyJapaneseRegex, '');
+                headMut = headMut.replace(legacyJapaneseRegex, '');
             }
         }
-        
+        // Apply head mutations back to full text
+        cleaned = headMut + cleaned.slice(head.length);
         return cleaned;
     }
     
@@ -205,8 +270,23 @@ export class PromptContaminationCleaner implements TextCleaner {
      */
     private removeContextPatterns(text: string, contextPatterns: string[]): string {
         let cleaned = text;
-        
-        // Direct pattern matching for speaker-only phrases
+
+        // 1) Apply patterns from configuration (strings like '/.../flags')
+        const compiled: RegExp[] = [];
+        for (const p of contextPatterns) {
+            try {
+                const m = p.match(/^\/(.*)\/([gimsuy]*)$/);
+                if (m) {
+                    const [, body, flags] = m as RegExpMatchArray;
+                    compiled.push(new RegExp(body, flags || 'g'));
+                }
+            } catch {
+                // ignore invalid patterns
+            }
+        }
+        for (const r of compiled) cleaned = cleaned.replace(r, '');
+
+        // 2) Built-in safe patterns
         const speakerPatterns = [
             /\(Speaker content only\)/gi,
             /\(SPEAKER CONTENT ONLY\)/gi,
@@ -214,12 +294,8 @@ export class PromptContaminationCleaner implements TextCleaner {
             /（仅说话者内容）/g,
             /（화자 발언만）/g
         ];
-        
-        for (const pattern of speakerPatterns) {
-            cleaned = cleaned.replace(pattern, '');
-        }
-        
-        // Remove format-only lines
+        for (const pattern of speakerPatterns) cleaned = cleaned.replace(pattern, '');
+
         const formatPatterns = [
             /^Output format:\s*$/gm,
             /^Format:\s*$/gm,
@@ -227,11 +303,8 @@ export class PromptContaminationCleaner implements TextCleaner {
             /^输出格式:\s*$/gm,
             /^출력 형식:\s*$/gm
         ];
-        
-        for (const pattern of formatPatterns) {
-            cleaned = cleaned.replace(pattern, '');
-        }
-        
+        for (const pattern of formatPatterns) cleaned = cleaned.replace(pattern, '');
+
         return cleaned;
     }
     

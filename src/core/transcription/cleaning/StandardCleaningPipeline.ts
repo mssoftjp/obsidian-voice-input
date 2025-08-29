@@ -198,7 +198,7 @@ export class StandardCleaningPipeline implements CleaningPipeline {
         // Relax safety thresholds for structural cleaners that may legitimately
         // remove large wrappers (e.g., TRANSCRIPT tags or full prompt lines).
         // This prevents false rollbacks like when input is mostly XML wrappers.
-        const isStructuralCleaner = cleanerName === 'PromptContaminationCleaner';
+        const isStructuralCleaner = cleanerName === 'PromptContaminationCleaner' || cleanerName === 'Pipeline';
         const emergencyThreshold = isStructuralCleaner
             ? Math.max(0.95, CLEANING_CONFIG.safety.emergencyFallbackThreshold)
             : CLEANING_CONFIG.safety.emergencyFallbackThreshold;
