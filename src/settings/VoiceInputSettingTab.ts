@@ -219,7 +219,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                     await this.plugin.saveSettings();
                 }));
 
-        // AI Post-processing Toggle and Model Selection
+        // AI Post-processing (dictionary-based)
         new Setting(containerEl)
             .setName(this.i18n.t('ui.settings.aiPostProcessing'))
             .setDesc(this.i18n.t('ui.settings.aiPostProcessingDesc'))
