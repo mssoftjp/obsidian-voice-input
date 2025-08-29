@@ -242,7 +242,7 @@
 	font-size: 14px;
 }
 
-.setting-item-description {
+.voice-input-settings-panel .setting-item-description {
 	padding: 8px 0;
 	font-size: 13px;
 	color: var(--text-muted);
