@@ -56,7 +56,22 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 ))
                 .setValue(this.plugin.settings.pluginLanguage)
                 .onChange(async (value: Locale) => {
+                    const transcriptionLocale = value as 'ja' | 'en' | 'zh' | 'ko';
                     this.plugin.settings.pluginLanguage = value;
+
+                    // Keep transcription language synchronized while linking remains enabled
+                    if (this.plugin.settings.advanced?.languageLinkingEnabled !== false) {
+                        this.plugin.settings.transcriptionLanguage = transcriptionLocale;
+                        if (!this.plugin.settings.advanced) {
+                            this.plugin.settings.advanced = {
+                                languageLinkingEnabled: true,
+                                transcriptionLanguage: transcriptionLocale
+                            };
+                        } else {
+                            this.plugin.settings.advanced.transcriptionLanguage = transcriptionLocale;
+                        }
+                    }
+
                     await this.plugin.saveSettings();
                     this.i18n.setLocale(value);
 
