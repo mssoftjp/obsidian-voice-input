@@ -70,9 +70,6 @@ export const DEFAULT_TRANSCRIPTION_SETTINGS = {
     /** デフォルトの文字起こしモデル */
     model: 'gpt-4o-transcribe' as const,
 
-    /** 言語設定 */
-    language: 'ja',
-
     /** 文字起こし補正の有効化 */
     enableTranscriptionCorrection: true
 } as const;
@@ -83,7 +80,6 @@ export const DEFAULT_TRANSCRIPTION_SETTINGS = {
 export const DEFAULT_USER_SETTINGS = {
     /** 基本設定 */
     openaiApiKey: '',
-    language: DEFAULT_TRANSCRIPTION_SETTINGS.language,
     enableTranscriptionCorrection: DEFAULT_TRANSCRIPTION_SETTINGS.enableTranscriptionCorrection,
 
     /** 音声設定 */

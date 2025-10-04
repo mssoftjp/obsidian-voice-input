@@ -38,6 +38,7 @@ export class AudioRecorder extends Disposable {
     private logger: Logger | null = null;
     private recordingStartTime: number = 0;
     private maxRecordingTimer: NodeJS.Timeout | null = null;
+    private isStarting: boolean = false;
 
     constructor(options: AudioRecorderOptions) {
         super();
@@ -71,6 +72,17 @@ export class AudioRecorder extends Disposable {
     async initialize(): Promise<void> {
         this.throwIfDisposed();
         
+        // 既にAudioContextが有効なら再初期化はスキップ
+        if (this.audioContext && this.audioContext.state !== 'closed') {
+            // まだビジュアライザー未生成ならここで生成
+            if (!this.visualizer && this.options.visualizerContainer) {
+                this.visualizer = this.options.useSimpleVisualizer
+                    ? new SimpleAudioLevelIndicator(this.options.visualizerContainer)
+                    : new AudioVisualizer(this.options.visualizerContainer);
+            }
+            return;
+        }
+
         if (this.options.useVAD && this.vadProcessor) {
             await this.vadProcessor.initialize();
         }
@@ -127,11 +139,21 @@ export class AudioRecorder extends Disposable {
 
     async startRecording(): Promise<void> {
         this.throwIfDisposed();
-        if (this.isRecording) {
+        if (this.isRecording || this.isStarting) {
             return;
         }
+        this.isStarting = true;
 
         try {
+            // Ensure AudioContext exists (防御的)
+            if (!this.audioContext || this.audioContext.state === 'closed') {
+                await this.initialize();
+            }
+            // Safariなどでのsuspend対策
+            if (this.audioContext!.state === 'suspended') {
+                await this.audioContext!.resume();
+            }
+
             // Log recording session start
             this.logger?.info('Starting recording session', {
                 sampleRate: AUDIO_CONSTANTS.SAMPLE_RATE,
@@ -183,7 +205,13 @@ export class AudioRecorder extends Disposable {
             }
 
             // Setup audio processing chain with filters
-            this.sourceNode = this.audioContext!.createMediaStreamSource(this.stream);
+            if (!this.audioContext) {
+                throw new TranscriptionError(
+                    TranscriptionErrorType.AUDIO_INITIALIZATION_FAILED,
+                    'Audio context is not initialized'
+                );
+            }
+            this.sourceNode = this.audioContext.createMediaStreamSource(this.stream);
             this.gainNode = this.audioContext!.createGain();
             this.gainNode.gain.value = DEFAULT_AUDIO_SETTINGS.gain; // デフォルトゲイン
             
@@ -249,6 +277,8 @@ export class AudioRecorder extends Disposable {
         } catch (error) {
             this.logger?.error('Failed to start recording', error);
             throw error;
+        } finally {
+            this.isStarting = false;
         }
     }
 

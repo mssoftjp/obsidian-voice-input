@@ -80,6 +80,7 @@ export type TranslationResource = {
       transcribing: string;
       correcting: string;
       completed: string;
+      waiting: string;
     };
     transcription: {
       vadAutoStopped: string;
@@ -131,6 +132,12 @@ export type TranslationResource = {
     };
   };
   ui: {
+    help: {
+      dictionaryFromComma: string;
+    };
+    commands: {
+      openView: string;
+    };
     buttons: {
       recordStart: string;
       recordStop: string;
@@ -172,8 +179,17 @@ export type TranslationResource = {
       transcriptionModelDesc: string;
       maxRecordingDuration: string;
       maxRecordingDurationDesc: string;
+      language: string;
+      languageDesc: string;
+      transcriptionLanguage: string;
+      transcriptionLanguageDesc: string;
       pluginLanguage: string;
       pluginLanguageDesc: string;
+      // Advanced settings
+      languageLinking: string;
+      languageLinkingDesc: string;
+      advancedTranscriptionLanguage: string;
+      advancedTranscriptionLanguageDesc: string;
       customDictionary: string;
       customDictionaryDesc: string;
       dictionaryDefinite: string;
@@ -183,6 +199,11 @@ export type TranslationResource = {
     options: {
       modelMini: string;
       modelFull: string;
+      languageAuto: string;
+      languageJa: string;
+      languageEn: string;
+      languageZh: string;
+      languageKo: string;
     };
     tooltips: {
       copy: string;

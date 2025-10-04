@@ -60,7 +60,8 @@ export const ja: TranslationResource = {
         processing: {
             transcribing: 'ステータス: 文字起こし中...',
             correcting: 'ステータス: 清書中...',
-            completed: 'ステータス: 完了'
+            completed: 'ステータス: 完了',
+            waiting: '待機中'
         },
         transcription: {
             vadAutoStopped: 'ステータス: 無音検出により自動停止しました',
@@ -112,6 +113,12 @@ export const ja: TranslationResource = {
         }
     },
     ui: {
+        help: {
+            dictionaryFromComma: '入力語はカンマ区切りで複数指定できます（例: パターン1, パターン2）。'
+        },
+        commands: {
+            openView: 'ビューを開く'
+        },
         buttons: {
             recordStart: '音声入力開始',
             recordStop: '音声入力停止',
@@ -140,7 +147,7 @@ export const ja: TranslationResource = {
         },
         titles: {
             main: 'Voice Input',
-            settings: 'Voice Input 設定',
+            settings: 'Voice Input 設定'
         },
         settings: {
             apiKey: 'OpenAI API キー',
@@ -153,8 +160,17 @@ export const ja: TranslationResource = {
             transcriptionModelDesc: '音声認識に使用するモデルを選択',
             maxRecordingDuration: '最大録音時間',
             maxRecordingDurationDesc: '最大録音時間（秒）（{min}秒〜{max}分）',
+            language: '音声認識言語',
+            languageDesc: '音声認識と文字起こしの言語を設定します。',
+            transcriptionLanguage: '音声認識言語',
+            transcriptionLanguageDesc: '音声認識と文字起こしの言語を設定します。',
             pluginLanguage: 'プラグイン言語',
             pluginLanguageDesc: 'UI表示、音声認識処理、補正辞書の言語を設定',
+            // 高度設定
+            languageLinking: 'UI言語と認識言語を連動する',
+            languageLinkingDesc: 'オンの場合、認識言語がUI言語に従います。オフの場合、認識言語を個別に設定できます。',
+            advancedTranscriptionLanguage: '認識言語（高度設定）',
+            advancedTranscriptionLanguageDesc: '音声認識の言語を個別に設定します。',
             customDictionary: 'カスタム辞書',
             customDictionaryDesc: '補正辞書を管理',
             dictionaryDefinite: '固定補正（最大{max}個）',
@@ -163,7 +179,12 @@ export const ja: TranslationResource = {
         },
         options: {
             modelMini: 'GPT-4o mini Transcribe',
-            modelFull: 'GPT-4o Transcribe'
+            modelFull: 'GPT-4o Transcribe',
+            languageAuto: '自動',
+            languageJa: '日本語',
+            languageEn: '英語',
+            languageZh: '中国語',
+            languageKo: '韓国語'
         },
         tooltips: {
             copy: 'クリップボードにコピー',
@@ -182,6 +203,6 @@ export const ja: TranslationResource = {
             fromMultiple: '入力語（カンマ区切り）',
             to: '修正語',
             context: '文脈キーワード'
-        },
+        }
     }
 };

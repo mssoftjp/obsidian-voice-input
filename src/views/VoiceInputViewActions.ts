@@ -28,6 +28,8 @@ export class VoiceInputViewActions {
         processingQueue: []
     };
     private isProcessingAudio = false;
+    // 連打や高速操作による並行実行を防ぐための遷移ロック
+    private isTransitioning = false;
     private statusTimer: NodeJS.Timeout | null = null;
     private clearConfirmTimer: NodeJS.Timeout | null = null;
     private clearPressCount = 0;
@@ -113,10 +115,20 @@ export class VoiceInputViewActions {
 	 * Toggle recording on/off
 	 */
     async toggleRecording() {
+        if (this.isTransitioning) return; // 二重操作防止
+        this.isTransitioning = true;
         if (this.audioRecorder && this.audioRecorder.isActive()) {
-            await this.stopRecording();
+            try {
+                await this.stopRecording();
+            } finally {
+                this.isTransitioning = false;
+            }
         } else {
-            await this.startRecording();
+            try {
+                await this.startRecording();
+            } finally {
+                this.isTransitioning = false;
+            }
         }
     }
 
@@ -398,7 +410,7 @@ export class VoiceInputViewActions {
             // When processing, the first item is being processed, others are waiting
             const waitingCount = queueLength > 0 ? queueLength - 1 : 0;
             if (waitingCount > 0) {
-                statusText += ` (${waitingCount} 待機中)`;
+                statusText += ` (${waitingCount} ${this.i18n.t('status.processing.waiting')})`;
             }
             this.view.ui.statusEl.setText(statusText);
             this.view.ui.statusEl.addClass('processing');
@@ -455,7 +467,7 @@ export class VoiceInputViewActions {
             if (!this.transcriptionService) {
                 throw new Error('Transcription service not available');
             }
-            const result = await this.transcriptionService.transcribeAudio(audioBlob, this.plugin.settings.pluginLanguage);
+            const result = await this.transcriptionService.transcribeAudio(audioBlob, this.plugin.getResolvedLanguage());
 
             // Check if result is empty
             if (!result.text || result.text.trim() === '') {
@@ -603,7 +615,10 @@ export class VoiceInputViewActions {
 	 * Cancel recording without processing
 	 */
     async cancelRecording() {
+        if (this.isTransitioning) return; // 二重キャンセル防止
+        this.isTransitioning = true;
         if (!this.audioRecorder || !this.audioRecorder.isActive()) {
+            this.isTransitioning = false;
             return;
         }
 
@@ -628,6 +643,8 @@ export class VoiceInputViewActions {
             this.logger.error('Error cancelling recording', error);
             this.updateUIAfterError();
             this.view.ui.setButtonsEnabled(true);
+        } finally {
+            this.isTransitioning = false;
         }
     }
 

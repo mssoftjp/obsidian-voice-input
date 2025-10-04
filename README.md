@@ -7,9 +7,12 @@ High-accuracy voice input for Obsidian. Uses OpenAI GPT-4o Audio Transcriptions 
 - One‑click recording: start/stop from a microphone ribbon icon
 - Push‑to‑talk: long‑press to record, release to stop
 - Model selection: GPT‑4o Transcribe or GPT‑4o mini Transcribe
-- AI post‑processing: optional dictionary-based cleanup (JA)
+- Language separation: independent UI language and voice recognition language settings
+- Auto language detection: automatic voice recognition language based on Obsidian locale
+- AI post‑processing: optional dictionary-based cleanup (applied to all languages when enabled)
 - Quick controls in view: copy/clear/insert at cursor/append to end
 - Auto‑save drafts: periodic and on blur, automatic restore
+- Multilingual support: Japanese, English, Chinese, Korean interface languages
 
 ## Requirements
 
@@ -47,15 +50,18 @@ Tip: A settings gear in the view header opens the plugin’s settings.
 
 - OpenAI API Key: stored locally (encrypted at rest)
 - Transcription Model: `gpt-4o-transcribe` or `gpt-4o-mini-transcribe`
-- AI Post‑processing: enable dictionary‑based cleanup (Japanese)
+- **Transcription Language**: Auto/Japanese/English/Chinese/Korean (auto-detection recommended)
+- AI Post‑processing: enable dictionary‑based cleanup (applied to all languages when enabled)
 - Maximum Recording Duration: slider (default 5 min)
-- Plugin Language: English/Japanese (auto‑detected from Obsidian, adjustable)
+- Plugin Language: English/Japanese (controls UI display only, auto‑detected from Obsidian, adjustable)
 
 ## Security & Privacy
 
 - Processing in memory; audio is not written to disk by the plugin
-- HTTPS for all network requests (via Obsidian’s `requestUrl`)
+- Audio you record is transmitted to OpenAI for transcription over HTTPS (via Obsidian’s `requestUrl`).
 - API key is encrypted for storage
+
+Note: When Electron SafeStorage is unavailable, the plugin falls back to lightweight obfuscation for the stored key; the plugin is desktop‑only by design.
 
 See also OpenAI’s Privacy Policy.
 
@@ -72,6 +78,10 @@ See also OpenAI’s Privacy Policy.
 - Deploy locally: `npm run deploy-local` (copies to detected vaults)
 - Analyze unused code (build-time): `npm run analyze:unused`
 
+### Documentation
+
+- Processing flow visualization: see [`docs/PROCESSING_FLOW.md`](docs/PROCESSING_FLOW.md)
+
 Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 
 —
@@ -85,9 +95,12 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 - ワンクリック録音（リボンのマイクアイコン）
 - プッシュトゥトーク（長押しで録音開始、離して停止）
 - モデル選択（GPT‑4o Transcribe / GPT‑4o mini Transcribe）
-- AI後処理（辞書ベースの補正、JA向け）
+- 言語設定の分離（UI言語と音声認識言語を独立設定）
+- 自動言語検出（Obsidianロケールに基づく音声認識言語の自動検出）
+- AI後処理（辞書ベースの補正、日本語のみ適用）
 - ビュー内のクイック操作（コピー/クリア/カーソル位置へ挿入/末尾へ追記）
 - 自動保存（定期保存とフォーカス外れ時）。再オープン時に自動復元
+- 多言語サポート（日本語、英語、中国語、韓国語のインターフェース）
 
 ## 必要条件
 
@@ -125,15 +138,36 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 
 - OpenAI APIキー: ローカルに暗号化して保存
 - 文字起こしモデル: `gpt-4o-transcribe` または `gpt-4o-mini-transcribe`
-- AI後処理: 辞書ベースの補正（日本語向け）
+- **音声認識言語**: 自動/日本語/英語/中国語/韓国語（自動検出を推奨）
+- AI後処理: 辞書ベースの補正（有効時は全言語に適用）
 - 最大録音時間: スライダー（初期値5分）
-- プラグイン言語: 英語/日本語（Obsidian設定から自動検出、変更可）
+- **プラグイン言語**: UI表示のみを制御。Obsidianの言語設定から自動検出（ja/zh/ko/en）。
+
+### 言語設定
+
+- **プラグイン言語**: UI表示のみを制御。Obsidianの言語設定から自動検出（ja/zh/ko/en）。
+- **音声認識言語**: 音声認識/文字起こしの言語。既定は「自動」（Obsidianのロケールから ja/zh/ko/en を自動選択）。
+
+#### 自動検出の動作
+
+- ja-* → 日本語
+- zh-* → 中国語
+- ko-* → 韓国語
+- その他 → 英語
+
+#### 言語別の処理
+
+- 日本語 (ja): 精度向上のためプロンプトを付与＋辞書補正（有効時）
+- 中国語/英語/韓国語 (zh/en/ko): プロンプトは付与しません。クリーニングは言語別＋汎用（コロン付き）で安全側に適用。
+- 自動: 上記の動作を自動選択。
 
 ## セキュリティ / プライバシー
 
 - 処理はメモリ内で行い、音声ファイルはプラグイン側でディスク保存しません
-- 通信はHTTPS（Obsidianの `requestUrl` 経由）
+- 録音した音声は文字起こしのため OpenAI に送信され、HTTPS（Obsidian の `requestUrl` 経由）で通信します。
 - APIキーは保存時に暗号化
+
+補足: Electron の SafeStorage が利用できない環境では保存キーを軽度に難読化して保持します（本プラグインはデスクトップ専用の設計です）。
 
 OpenAIのプライバシーポリシーもご参照ください。
 
@@ -148,6 +182,10 @@ OpenAIのプライバシーポリシーもご参照ください。
 - 依存インストール: `npm ci`
 - ビルド: `npm run build-plugin`
 - ローカル配布: `npm run deploy-local`
+
+### ドキュメント
+
+- 処理フローの可視化: [`docs/PROCESSING_FLOW.md`](docs/PROCESSING_FLOW.md) を参照
 
 サードパーティライセンスは `THIRD_PARTY_LICENSES.md` を参照してください。
 

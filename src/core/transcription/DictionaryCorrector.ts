@@ -2,7 +2,6 @@
 import { CorrectionRule, DictionaryCorrectorOptions, ITextCorrector, SimpleCorrectionDictionary, CorrectionEntry } from '../../interfaces';
 import { TranscriptionError, TranscriptionErrorType } from '../../errors';
 import { API_CONSTANTS, DICTIONARY_CONSTANTS } from '../../config';
-import { requestUrl } from 'obsidian';
 
 /**
  * 辞書修正設定

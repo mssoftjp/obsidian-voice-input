@@ -110,7 +110,7 @@ export default class VoiceInputPlugin extends Plugin {
             // Add command
             this.addCommand({
                 id: 'open-voice-input',
-                name: i18n.t('ui.titles.main'),
+                name: i18n.t('ui.commands.openView'),
                 callback: () => {
                     this.logger.debug('Command executed: open-voice-input');
                     this.viewManager.activateVoiceInputView();
@@ -221,16 +221,38 @@ export default class VoiceInputPlugin extends Plugin {
                 this.logger?.info('Migrating interfaceLanguage to pluginLanguage');
             }
 
-            // languageからpluginLanguageへの移行
-            if ('language' in data && !('pluginLanguage' in data)) {
-                // 言語コードを正規化（ja → ja、en → en、その他 → en）
-                const langCode = data.language as string;
-                migratedData.pluginLanguage = (langCode === 'ja' || langCode === 'en') ? langCode : 'en';
+            // languageからtranscriptionLanguageへの移行（autoは検出ロケールへ変換）
+            if ('language' in data && !('transcriptionLanguage' in data)) {
+                // 既存のlanguageフィールドをtranscriptionLanguageに移行
+                const langValue = data.language;
+                if (langValue === 'ja' || langValue === 'en' || langValue === 'zh' || langValue === 'ko') {
+                    migratedData.transcriptionLanguage = langValue;
+                } else if (langValue === 'auto') {
+                    // auto は廃止: 起動環境のロケールへ固定
+                    migratedData.transcriptionLanguage = this.detectPluginLanguage();
+                } else {
+                    migratedData.transcriptionLanguage = this.detectPluginLanguage();
+                }
                 delete migratedData.language;
                 needsSave = true;
+                this.logger?.info(`Migrating language (${data.language}) to transcriptionLanguage (${migratedData.transcriptionLanguage})`);
+            }
+
+            // languageからpluginLanguageへの移行（古いバージョンとの互換性のため）
+            if ('language' in data && !('pluginLanguage' in data)) {
+                // 言語コードを正規化（ja → ja、en → en、zh → zh、ko → ko、その他 → en）
+                const langCode = data.language as string;
+                if (langCode === 'ja' || langCode === 'en' || langCode === 'zh' || langCode === 'ko') {
+                    migratedData.pluginLanguage = langCode;
+                } else {
+                    migratedData.pluginLanguage = 'en';
+                }
+                needsSave = true;
                 this.logger?.info(`Migrating language (${data.language}) to pluginLanguage (${migratedData.pluginLanguage})`);
-            } else if ('language' in data) {
-                // pluginLanguageが既に存在する場合は、languageフィールドを削除
+            }
+
+            // 不要になったlanguageフィールドの削除
+            if ('language' in data) {
                 delete migratedData.language;
                 needsSave = true;
                 this.logger?.info('Removing redundant language field');
@@ -298,17 +320,44 @@ export default class VoiceInputPlugin extends Plugin {
             // pluginLanguageが設定されていない場合
             if (!hasSettingsKey(data, 'pluginLanguage') &&
                 !hasSettingsKey(data, 'interfaceLanguage')) {
-                const obsidianLocale = this.getObsidianLocale();
-                this.settings.pluginLanguage = obsidianLocale.startsWith('ja') ? 'ja' : 'en';
+                this.settings.pluginLanguage = this.detectPluginLanguage();
                 needsSave = true;
-                this.logger?.info(`Auto-detected language: ${this.settings.pluginLanguage} (from Obsidian: ${obsidianLocale})`);
+                this.logger?.info(`Auto-detected language: ${this.settings.pluginLanguage} (from Obsidian: ${getObsidianLocale(this.app)})`);
+            }
+
+            // 高度設定のマイグレーション（auto を廃止）
+            if (!hasSettingsKey(data, 'advanced')) {
+                // 既存ユーザーには言語連動をデフォルトで有効化（現行動作維持）
+                this.settings.advanced = {
+                    languageLinkingEnabled: true,
+                    transcriptionLanguage: this.detectPluginLanguage()
+                };
+                needsSave = true;
+                this.logger?.info('Initialized advanced settings with language linking enabled for backward compatibility');
+            } else if (data.advanced && !hasSettingsKey(data.advanced, 'languageLinkingEnabled')) {
+                // advancedオブジェクトは存在するが、languageLinkingEnabledが無い場合
+                this.settings.advanced.languageLinkingEnabled = true;
+                needsSave = true;
+                this.logger?.info('Added languageLinkingEnabled to existing advanced settings');
+            } else if (data.advanced) {
+                // auto からの置換
+                const adv = data.advanced as { transcriptionLanguage?: string };
+                if (adv.transcriptionLanguage === 'auto') {
+                    this.settings.advanced.transcriptionLanguage = this.detectPluginLanguage();
+                    needsSave = true;
+                    this.logger?.info('Migrated advanced.transcriptionLanguage from auto to detected locale');
+                }
             }
         } else {
             // 保存データが存在しない場合（初回起動）
-            const obsidianLocale = this.getObsidianLocale();
-            this.settings.pluginLanguage = obsidianLocale.startsWith('ja') ? 'ja' : 'en';
+            this.settings.pluginLanguage = this.detectPluginLanguage();
+            this.settings.transcriptionLanguage = this.detectPluginLanguage();
+            this.settings.advanced = {
+                languageLinkingEnabled: true,
+                transcriptionLanguage: this.detectPluginLanguage()
+            };
             needsSave = true;
-            this.logger?.info(`First run - auto-detected language: ${this.settings.pluginLanguage}`);
+            this.logger?.info(`First run - detected locale: ${this.settings.pluginLanguage}, transcriptionLanguage set to detected locale, advanced settings initialized`);
         }
 
         // 必要に応じて設定を保存
@@ -327,10 +376,34 @@ export default class VoiceInputPlugin extends Plugin {
     }
 
     /**
-	 * Obsidianの言語設定を取得
-	 */
-    private getObsidianLocale(): string {
-        return getObsidianLocale(this.app);
+     * Plugin language auto detection (ja/zh/ko/en)
+     */
+    private detectPluginLanguage(): 'ja' | 'zh' | 'ko' | 'en' {
+        const obsidianLocale = getObsidianLocale(this.app).toLowerCase();
+        if (obsidianLocale.startsWith('ja')) {
+            return 'ja';
+        } else if (obsidianLocale.startsWith('zh')) {
+            return 'zh';
+        } else if (obsidianLocale.startsWith('ko')) {
+            return 'ko';
+        } else {
+            return 'en';
+        }
+    }
+
+    /**
+     * 解決済み言語を取得（高度設定の連動設定に基づく）
+     * auto は廃止済みのため、常に具体的な言語コードを返す
+     */
+    getResolvedLanguage(): 'ja' | 'zh' | 'ko' | 'en' {
+        // 言語連動が無効な場合: advanced.transcriptionLanguage を優先
+        if (this.settings.advanced?.languageLinkingEnabled === false) {
+            const advancedLang = this.settings.advanced?.transcriptionLanguage;
+            return (advancedLang ?? this.detectPluginLanguage()) as 'ja' | 'zh' | 'ko' | 'en';
+        }
+        // 言語連動が有効: 通常の transcriptionLanguage を使用
+        const baseLang = this.settings.transcriptionLanguage;
+        return (baseLang ?? this.detectPluginLanguage()) as 'ja' | 'zh' | 'ko' | 'en';
     }
 
     async saveSettings() {
@@ -340,6 +413,13 @@ export default class VoiceInputPlugin extends Plugin {
             openaiApiKey: this.settings.openaiApiKey ? SafeStorageService.encryptForStore(this.settings.openaiApiKey) : ''
         };
         await this.saveData(dataToSave);
+
+        // Broadcast settings-changed event for open views to react immediately (UI + services)
+        try {
+            // Custom workspace event (safe to ignore if not observed)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (this.app.workspace as any).trigger?.('voice-input:settings-changed', { settings: this.settings });
+        } catch (_) { /* noop */ }
 
         // Update logger configuration based on new settings
         Logger.getInstance().updateConfig({

@@ -60,7 +60,8 @@ export const ko: TranslationResource = {
         processing: {
             transcribing: '상태: 음성 텍스트 변환 중...',
             correcting: '상태: 텍스트 정리 중...',
-            completed: '상태: 완료'
+            completed: '상태: 완료',
+            waiting: '대기 중'
         },
         transcription: {
             vadAutoStopped: '상태: 무음 감지로 자동 중지됨',
@@ -112,6 +113,12 @@ export const ko: TranslationResource = {
         }
     },
     ui: {
+        help: {
+            dictionaryFromComma: '입력어는 쉼표로 여러 패턴을 지정할 수 있습니다(예: 패턴1, 패턴2).'
+        },
+        commands: {
+            openView: '뷰 열기'
+        },
         buttons: {
             recordStart: '음성 입력 시작',
             recordStop: '음성 입력 중지',
@@ -140,7 +147,7 @@ export const ko: TranslationResource = {
         },
         titles: {
             main: 'Voice Input',
-            settings: 'Voice Input 설정',
+            settings: 'Voice Input 설정'
         },
         settings: {
             apiKey: 'OpenAI API 키',
@@ -153,8 +160,17 @@ export const ko: TranslationResource = {
             transcriptionModelDesc: '음성 인식에 사용할 모델 선택',
             maxRecordingDuration: '최대 녹음 시간',
             maxRecordingDurationDesc: '최대 녹음 시간(초) ({min}초~{max}분)',
+            language: '음성 인식 언어',
+            languageDesc: '음성 인식 및 전사를 위한 언어를 설정합니다.',
+            transcriptionLanguage: '음성 인식 언어',
+            transcriptionLanguageDesc: '음성 인식 및 전사를 위한 언어를 설정합니다.',
             pluginLanguage: '플러그인 언어',
             pluginLanguageDesc: 'UI 표시, 음성 처리 및 교정 사전의 언어 설정',
+            // 고급 설정
+            languageLinking: 'UI 언어와 인식 언어 연동',
+            languageLinkingDesc: '활성화하면 인식 언어가 UI 언어를 따릅니다. 비활성화하면 인식 언어를 독립적으로 설정할 수 있습니다.',
+            advancedTranscriptionLanguage: '인식 언어 (고급 설정)',
+            advancedTranscriptionLanguageDesc: '음성 인식 언어를 독립적으로 설정합니다.',
             customDictionary: '사용자 정의 사전',
             customDictionaryDesc: '후처리에 사용되는 교정 사전 관리',
             dictionaryDefinite: '고정 교정 (최대 {max}개)',
@@ -163,7 +179,12 @@ export const ko: TranslationResource = {
         },
         options: {
             modelMini: 'GPT-4o mini Transcribe',
-            modelFull: 'GPT-4o Transcribe'
+            modelFull: 'GPT-4o Transcribe',
+            languageAuto: '자동',
+            languageJa: '일본어',
+            languageEn: '영어',
+            languageZh: '중국어',
+            languageKo: '한국어'
         },
         tooltips: {
             copy: '클립보드에 복사',
@@ -182,6 +203,6 @@ export const ko: TranslationResource = {
             fromMultiple: '입력어（쉼표구분）',
             to: '교정어',
             context: '문맥 키워드'
-        },
+        }
     }
 };

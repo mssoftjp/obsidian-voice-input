@@ -56,7 +56,22 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 ))
                 .setValue(this.plugin.settings.pluginLanguage)
                 .onChange(async (value: Locale) => {
+                    const transcriptionLocale = value as 'ja' | 'en' | 'zh' | 'ko';
                     this.plugin.settings.pluginLanguage = value;
+
+                    // Keep transcription language synchronized while linking remains enabled
+                    if (this.plugin.settings.advanced?.languageLinkingEnabled !== false) {
+                        this.plugin.settings.transcriptionLanguage = transcriptionLocale;
+                        if (!this.plugin.settings.advanced) {
+                            this.plugin.settings.advanced = {
+                                languageLinkingEnabled: true,
+                                transcriptionLanguage: transcriptionLocale
+                            };
+                        } else {
+                            this.plugin.settings.advanced.transcriptionLanguage = transcriptionLocale;
+                        }
+                    }
+
                     await this.plugin.saveSettings();
                     this.i18n.setLocale(value);
 
@@ -72,6 +87,51 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                     // Refresh the settings tab to show new language
                     this.display();
                 }));
+
+        // Advanced Language Settings
+        new Setting(containerEl)
+            .setName(this.i18n.t('ui.settings.languageLinking'))
+            .setDesc(this.i18n.t('ui.settings.languageLinkingDesc'))
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.advanced?.languageLinkingEnabled !== false)
+                .onChange(async (value) => {
+                    // Initialize advanced object if it doesn't exist
+                    if (!this.plugin.settings.advanced) {
+                        this.plugin.settings.advanced = {
+                            languageLinkingEnabled: value,
+                            transcriptionLanguage: this.plugin.getResolvedLanguage()
+                        };
+                    } else {
+                        this.plugin.settings.advanced.languageLinkingEnabled = value;
+                    }
+                    await this.plugin.saveSettings();
+                    // Refresh the UI to show/hide the advanced transcription language setting
+                    this.display();
+                }));
+
+        // Advanced Transcription Language Setting (only shown when linking is disabled)
+        if (this.plugin.settings.advanced?.languageLinkingEnabled === false) {
+            new Setting(containerEl)
+                .setName(this.i18n.t('ui.settings.advancedTranscriptionLanguage'))
+                .setDesc(this.i18n.t('ui.settings.advancedTranscriptionLanguageDesc'))
+                .addDropdown(dropdown => dropdown
+                    .addOption('ja', this.i18n.t('ui.options.languageJa'))
+                    .addOption('en', this.i18n.t('ui.options.languageEn'))
+                    .addOption('zh', this.i18n.t('ui.options.languageZh'))
+                    .addOption('ko', this.i18n.t('ui.options.languageKo'))
+                    .setValue(this.plugin.settings.advanced.transcriptionLanguage ?? this.plugin.getResolvedLanguage())
+                    .onChange(async (value: 'ja' | 'en' | 'zh' | 'ko') => {
+                        if (!this.plugin.settings.advanced) {
+                            this.plugin.settings.advanced = {
+                                languageLinkingEnabled: false,
+                                transcriptionLanguage: value
+                            };
+                        } else {
+                            this.plugin.settings.advanced.transcriptionLanguage = value;
+                        }
+                        await this.plugin.saveSettings();
+                    }));
+        }
 
         // OpenAI API Key
         const apiKeySetting = new Setting(containerEl)
@@ -174,7 +234,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                     await this.plugin.saveSettings();
                 }));
 
-        // AI Post-processing Toggle and Model Selection
+        // AI Post-processing (dictionary-based)
         new Setting(containerEl)
             .setName(this.i18n.t('ui.settings.aiPostProcessing'))
             .setDesc(this.i18n.t('ui.settings.aiPostProcessingDesc'))
@@ -215,34 +275,36 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                     this.display(); // Refresh UI
                 }));
 
-        // Dictionary (Unified table editor) - Only show for Japanese
-        if (this.plugin.settings.pluginLanguage === 'ja') {
-            new Setting(containerEl)
-                .setName(this.i18n.t('ui.settings.customDictionary'))
-                .setDesc(this.i18n.t('ui.settings.customDictionaryDesc'));
+        // Dictionary (Unified table editor) - Show for all languages
+        new Setting(containerEl)
+            .setName(this.i18n.t('ui.settings.customDictionary'))
+            .setDesc(this.i18n.t('ui.settings.customDictionaryDesc'));
 
-            // Create table container for dictionary tables
-            const tableContainer = containerEl.createDiv('dictionary-table-container');
+        // Create table container for dictionary tables
+        const tableContainer = containerEl.createDiv('dictionary-table-container');
 
-            // Definite Corrections Section
-            tableContainer.createEl('h4', { text: this.i18n.t('ui.settings.dictionaryDefinite', { max: DICTIONARY_CONSTANTS.MAX_DEFINITE_CORRECTIONS }) });
-            this.createCorrectionTable(
-                tableContainer,
-                this.plugin.settings.customDictionary.definiteCorrections,
-                false
-            );
+        // Definite Corrections Section
+        tableContainer.createEl('h4', { text: this.i18n.t('ui.settings.dictionaryDefinite', { max: DICTIONARY_CONSTANTS.MAX_DEFINITE_CORRECTIONS }) });
+        tableContainer.createEl('div', {
+            cls: 'setting-item-description',
+            text: this.i18n.t('ui.help.dictionaryFromComma')
+        });
+        this.createCorrectionTable(
+            tableContainer,
+            this.plugin.settings.customDictionary.definiteCorrections,
+            false
+        );
 
-            // Import/Export buttons
-            new Setting(containerEl)
-                .setName(this.i18n.t('ui.settings.dictionaryImportExport'))
-                .setDesc(this.i18n.t('ui.settings.dictionaryImportExportDesc'))
-                .addButton(button => button
-                    .setButtonText(this.i18n.t('ui.buttons.export'))
-                    .onClick(() => this.exportDictionary()))
-                .addButton(button => button
-                    .setButtonText(this.i18n.t('ui.buttons.import'))
-                    .onClick(() => this.importDictionary()));
-        }
+        // Import/Export buttons
+        new Setting(containerEl)
+            .setName(this.i18n.t('ui.settings.dictionaryImportExport'))
+            .setDesc(this.i18n.t('ui.settings.dictionaryImportExportDesc'))
+            .addButton(button => button
+                .setButtonText(this.i18n.t('ui.buttons.export'))
+                .onClick(() => this.exportDictionary()))
+            .addButton(button => button
+                .setButtonText(this.i18n.t('ui.buttons.import'))
+                .onClick(() => this.importDictionary()));
 
         // Debug Settings Section - Removed as per ai-transcriber pattern
         // containerEl.createEl('h3', { text: this.i18n.t('ui.titles.debugSettings') || 'Debug Settings' });

@@ -231,7 +231,6 @@ export class VoiceInputViewUI {
                         this.plugin.settings.enableTranscriptionCorrection = value;
                         await this.plugin.saveSettings();
                         this.view.actions.updateTranscriptionService();
-                        // Enable/disable the model dropdown
                     });
             });
     }
@@ -378,7 +377,7 @@ export class VoiceInputViewUI {
             this.transcriptionModelDropdown.setValue(this.plugin.settings.transcriptionModel);
         }
 
-        // Update post-processing model dropdown
+        // (no additional post-processing UI elements to update)
     }
 
     /**

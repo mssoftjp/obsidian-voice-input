@@ -60,7 +60,8 @@ export const zh: TranslationResource = {
         processing: {
             transcribing: '状态：语音转文字中...',
             correcting: '状态：文本处理中...',
-            completed: '状态：完成'
+            completed: '状态：完成',
+            waiting: '等待中'
         },
         transcription: {
             vadAutoStopped: '状态：检测到静音自动停止',
@@ -112,6 +113,12 @@ export const zh: TranslationResource = {
         }
     },
     ui: {
+        help: {
+            dictionaryFromComma: '“来源词”支持用逗号分隔的多个模式（例如：模式1, 模式2）。'
+        },
+        commands: {
+            openView: '打开视图'
+        },
         buttons: {
             recordStart: '开始语音输入',
             recordStop: '停止语音输入',
@@ -140,7 +147,7 @@ export const zh: TranslationResource = {
         },
         titles: {
             main: 'Voice Input',
-            settings: 'Voice Input 设置',
+            settings: 'Voice Input 设置'
         },
         settings: {
             apiKey: 'OpenAI API 密钥',
@@ -153,8 +160,17 @@ export const zh: TranslationResource = {
             transcriptionModelDesc: '选择用于语音识别的模型',
             maxRecordingDuration: '最大录音时长',
             maxRecordingDurationDesc: '最大录音时间（秒）（{min}秒～{max}分钟）',
+            language: '语音识别语言',
+            languageDesc: '设置用于语音识别和转录的语言。',
+            transcriptionLanguage: '语音识别语言',
+            transcriptionLanguageDesc: '设置用于语音识别和转录的语言。',
             pluginLanguage: '插件语言',
             pluginLanguageDesc: '设置UI显示、语音处理和校正词典的语言',
+            // 高级设置
+            languageLinking: '关联UI语言与识别语言',
+            languageLinkingDesc: '启用时，识别语言跟随UI语言。禁用时，可独立设置识别语言。',
+            advancedTranscriptionLanguage: '识别语言（高级设置）',
+            advancedTranscriptionLanguageDesc: '独立设置语音识别的语言。',
             customDictionary: '自定义词典',
             customDictionaryDesc: '管理用于后处理的校正词典',
             dictionaryDefinite: '固定校正（最多{max}个）',
@@ -163,7 +179,12 @@ export const zh: TranslationResource = {
         },
         options: {
             modelMini: 'GPT-4o mini Transcribe',
-            modelFull: 'GPT-4o Transcribe'
+            modelFull: 'GPT-4o Transcribe',
+            languageAuto: '自动',
+            languageJa: '日语',
+            languageEn: '英语',
+            languageZh: '中文',
+            languageKo: '韩语'
         },
         tooltips: {
             copy: '复制到剪贴板',
@@ -182,6 +203,6 @@ export const zh: TranslationResource = {
             fromMultiple: '输入词（逗号分隔）',
             to: '校正词',
             context: '语境关键词'
-        },
+        }
     }
 };
