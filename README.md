@@ -70,12 +70,13 @@ See also OpenAI’s Privacy Policy.
 - Microphone not recognized: allow mic access and restart Obsidian
 - Transcription fails: verify API key, connectivity, and OpenAI credit
 - Quiet audio: move closer to the mic and reduce background noise
+ - Deploy didn’t find your vault: open the vault in Obsidian once so it appears in `obsidian.json`, then re‑run `npm run deploy`.
 
 ## Development
 
 - Install deps: `npm ci`
 - Build: `npm run build-plugin` (outputs `build/latest/`)
-- Deploy locally: `npm run deploy-local` (copies to detected vaults)
+- Deploy locally: `npm run deploy` (alias: `npm run deploy-local`) — vaults are auto‑detected from Obsidian's config (and a few common locations as fallback). Works for iCloud or local vaults alike.
 - Analyze unused code (build-time): `npm run analyze:unused`
 
 ### Documentation
@@ -178,12 +179,13 @@ OpenAIのプライバシーポリシーもご参照ください。
 - マイクが認識されない: マイク許可の付与、Obsidianの再起動
 - 文字起こしに失敗: APIキー、通信、OpenAIクレジット残高を確認
 - 音量が小さい/雑音が多い: マイクに近づく、静かな環境で録音
+ - 配布先の Vault が見つからない: 一度 Obsidian でその Vault を開いて `obsidian.json` に登録させてから、`npm run deploy` を再実行してください。
 
 ## 開発
 
 - 依存インストール: `npm ci`
 - ビルド: `npm run build-plugin`
-- ローカル配布: `npm run deploy-local`
+- ローカル配布: `npm run deploy`（`npm run deploy-local` のエイリアス）。Vault は Obsidian の設定（必要に応じて一般的な場所も）から自動検出します。iCloud/ローカルの別を意識せずに配布できます。
 
 ### ドキュメント
 
