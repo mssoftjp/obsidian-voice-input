@@ -229,11 +229,11 @@
 }
 
 
-.setting-error {
+.voice-input-setting-error {
 	color: var(--text-error);
 }
 
-.setting-duration-text {
+.voice-input-setting-duration-text {
 	display: inline-block;
 	min-width: 3em;
 	text-align: right;
@@ -265,61 +265,61 @@
 }
 
 /* Dictionary Table Styles */
-.dictionary-table-container {
+.voice-input-dictionary-table-container {
     margin: 1em 0;
 }
 
-.dictionary-table-container h4 {
+.voice-input-dictionary-table-container h4 {
     margin: 1em 0 0.5em;
     font-size: 0.9em;
     font-weight: 600;
 }
 
-.dictionary-table {
+.voice-input-dictionary-table {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 1em;
     font-size: 0.85em;
 }
 
-.dictionary-table th,
-.dictionary-table td {
+.voice-input-dictionary-table th,
+.voice-input-dictionary-table td {
     border: 1px solid var(--background-modifier-border);
     padding: 6px 8px;
     text-align: left;
 }
 
-.dictionary-table th {
+.voice-input-dictionary-table th {
     background-color: var(--background-secondary);
     font-weight: 600;
 }
 
-.dictionary-table input[type="text"],
-.dictionary-table input[type="number"],
-.dictionary-table select {
+.voice-input-dictionary-table input[type="text"],
+.voice-input-dictionary-table input[type="number"],
+.voice-input-dictionary-table select {
     width: 100%;
     border: none;
     background: transparent;
     padding: 2px;
 }
 
-.dictionary-table input[type="text"]:focus,
-.dictionary-table input[type="number"]:focus,
-.dictionary-table select:focus {
+.voice-input-dictionary-table input[type="text"]:focus,
+.voice-input-dictionary-table input[type="number"]:focus,
+.voice-input-dictionary-table select:focus {
     outline: 1px solid var(--interactive-accent);
     background: var(--background-primary);
 }
 
-.dictionary-table input[type="number"] {
+.voice-input-dictionary-table input[type="number"] {
     max-width: 60px;
 }
 
-.dictionary-table .action-column {
+.voice-input-dictionary-table .voice-input-action-column {
     width: 40px;
     text-align: center;
 }
 
-.dictionary-delete-button {
+.voice-input-dictionary-delete-button {
     background: none;
     border: none;
     color: var(--text-error);
@@ -331,12 +331,12 @@
     line-height: 1;
 }
 
-.dictionary-delete-button:hover {
+.voice-input-dictionary-delete-button:hover {
     background: var(--background-modifier-error);
     border-radius: 3px;
 }
 
-.dictionary-add-button {
+.voice-input-dictionary-add-button {
     background: var(--interactive-accent);
     color: var(--text-on-accent);
     border: none;
@@ -346,19 +346,19 @@
     font-size: 0.9em;
 }
 
-.dictionary-add-button:hover {
+.voice-input-dictionary-add-button:hover {
     background: var(--interactive-accent-hover);
 }
 
 /* Dictionary Tabs */
-.dictionary-tabs {
+.voice-input-dictionary-tabs {
     display: flex;
     gap: 4px;
     margin-bottom: 1em;
     border-bottom: 2px solid var(--background-modifier-border);
 }
 
-.dictionary-tab {
+.voice-input-dictionary-tab {
     background: none;
     border: none;
     border-bottom: 2px solid transparent;
@@ -371,17 +371,17 @@
     margin-bottom: -2px;
 }
 
-.dictionary-tab:hover {
+.voice-input-dictionary-tab:hover {
     color: var(--text-normal);
 }
 
-.dictionary-tab.active {
+.voice-input-dictionary-tab.active {
     color: var(--text-normal);
     border-bottom-color: var(--interactive-accent);
 }
 
 /* Read-only table styles */
-.dictionary-table tr.read-only td {
+.voice-input-dictionary-table tr.read-only td {
     background: var(--background-secondary-alt);
     color: var(--text-muted);
 }
@@ -396,7 +396,7 @@
 }
 
 /* Audio Visualizer Styles */
-.audio-visualizer-canvas {
+.voice-input-audio-visualizer-canvas {
     width: calc(100% - 4px);
     height: 56px;
     background: transparent;
@@ -405,7 +405,7 @@
     margin: 2px;
 }
 
-.audio-level-indicator {
+.voice-input-audio-level-indicator {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -415,7 +415,7 @@
     box-sizing: border-box;
 }
 
-.audio-level-container {
+.voice-input-audio-level-container {
     flex: 1;
     height: 6px;
     background: var(--background-modifier-border);
@@ -423,7 +423,7 @@
     overflow: hidden;
 }
 
-.audio-level-bar {
+.voice-input-audio-level-bar {
     height: 100%;
     width: 0%;
     background: linear-gradient(90deg, var(--interactive-accent), var(--interactive-accent-hover));
@@ -432,11 +432,11 @@
 }
 
 /* Audio level bar controlled by CSS custom property - theme compatible */
-.audio-level-bar.active {
+.voice-input-audio-level-bar.active {
     width: var(--audio-level-width, 0%);
 }
 
-.audio-vad-indicator {
+.voice-input-audio-vad-indicator {
     width: 8px;
     height: 8px;
     border-radius: 50%;
@@ -444,7 +444,7 @@
     transition: background-color 0.2s ease;
 }
 
-.audio-vad-indicator.speech {
+.voice-input-audio-vad-indicator.speech {
     background: var(--color-green);
 }
 

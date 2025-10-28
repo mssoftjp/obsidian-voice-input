@@ -149,10 +149,10 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                     // マスクされた値は無視
                     if (value && !value.includes('*')) {
                         if (!SecurityUtils.validateOpenAIAPIKey(value)) {
-                            apiKeySetting.descEl.addClass('setting-error');
+                            apiKeySetting.descEl.addClass('voice-input-setting-error');
                             apiKeySetting.setDesc(this.i18n.t('error.api.invalidKeyDetail'));
                         } else {
-                            apiKeySetting.descEl.removeClass('setting-error');
+                            apiKeySetting.descEl.removeClass('voice-input-setting-error');
                             apiKeySetting.setDesc(this.i18n.t('ui.settings.apiKeyDesc'));
                             // Store API key (will be encrypted on save)
                             this.plugin.settings.openaiApiKey = value;
@@ -252,7 +252,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
 
         // Add text display for current value
         const durationText = maxRecordingSetting.controlEl.createEl('span', {
-            cls: 'setting-duration-text',
+            cls: 'voice-input-setting-duration-text',
             text: this.formatDuration(this.plugin.settings.maxRecordingSeconds)
         });
 
@@ -281,7 +281,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
             .setDesc(this.i18n.t('ui.settings.customDictionaryDesc'));
 
         // Create table container for dictionary tables
-        const tableContainer = containerEl.createDiv('dictionary-table-container');
+        const tableContainer = containerEl.createDiv('voice-input-dictionary-table-container');
 
         // Definite Corrections Section
         tableContainer.createEl('h4', { text: this.i18n.t('ui.settings.dictionaryDefinite', { max: DICTIONARY_CONSTANTS.MAX_DEFINITE_CORRECTIONS }) });
@@ -386,7 +386,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
         isContextual: boolean,
         isReadOnly = false
     ): HTMLTableElement {
-        const table = container.createEl('table', { cls: 'dictionary-table' });
+        const table = container.createEl('table', { cls: 'voice-input-dictionary-table' });
 
         // Create header
         const thead = table.createEl('thead');
@@ -396,7 +396,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
         if (isContextual) {
             headerRow.createEl('th', { text: this.i18n.t('ui.labels.context') });
         }
-        headerRow.createEl('th', { text: '', cls: 'action-column' });
+        headerRow.createEl('th', { text: '', cls: 'voice-input-action-column' });
 
         // Create body
         const tbody = table.createEl('tbody');
@@ -406,7 +406,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
         if (!isReadOnly) {
             const addButton = container.createEl('button', {
                 text: '+',
-                cls: 'dictionary-add-button'
+                cls: 'voice-input-dictionary-add-button'
             });
             addButton.onclick = () => {
                 const newEntry = { from: [''], to: '' };
@@ -461,11 +461,11 @@ export class VoiceInputSettingTab extends PluginSettingTab {
             }
 
             // Delete button
-            const actionCell = row.createEl('td', { cls: 'action-column' });
+            const actionCell = row.createEl('td', { cls: 'voice-input-action-column' });
             if (!isReadOnly) {
                 const deleteButton = actionCell.createEl('button', {
                     text: '×',
-                    cls: 'dictionary-delete-button'
+                    cls: 'voice-input-dictionary-delete-button'
                 });
                 deleteButton.onclick = () => {
                     entries.splice(index, 1);

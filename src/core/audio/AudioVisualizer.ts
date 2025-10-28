@@ -17,7 +17,7 @@ export class AudioVisualizer extends Disposable {
     constructor(container: HTMLElement) {
         super();
         this.canvas = document.createElement('canvas');
-        this.canvas.className = 'audio-visualizer-canvas';
+        this.canvas.className = 'voice-input-audio-visualizer-canvas';
         this.canvas.width = 200;
         this.canvas.height = 56;
         container.appendChild(this.canvas);
@@ -231,20 +231,20 @@ export class SimpleAudioLevelIndicator {
 
     private createUI(): void {
         const wrapper = document.createElement('div');
-        wrapper.className = 'audio-level-indicator';
+        wrapper.className = 'voice-input-audio-level-indicator';
 
         // Level bar
         const levelContainer = document.createElement('div');
-        levelContainer.className = 'audio-level-container';
+        levelContainer.className = 'voice-input-audio-level-container';
 
         this.levelBar = document.createElement('div');
-        this.levelBar.className = 'audio-level-bar';
+        this.levelBar.className = 'voice-input-audio-level-bar';
 
         levelContainer.appendChild(this.levelBar);
 
         // VAD indicator
         this.vadIndicator = document.createElement('div');
-        this.vadIndicator.className = 'audio-vad-indicator';
+        this.vadIndicator.className = 'voice-input-audio-vad-indicator';
 
         wrapper.appendChild(levelContainer);
         wrapper.appendChild(this.vadIndicator);
