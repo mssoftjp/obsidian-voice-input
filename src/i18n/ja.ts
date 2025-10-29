@@ -55,7 +55,9 @@ export const ja: TranslationResource = {
             micInit: 'ステータス: マイク初期化中...',
             recording: 'ステータス: 録音中...',
             stopped: 'ステータス: 停止済み',
-            cancelled: 'ステータス: キャンセルされました'
+            cancelled: 'ステータス: キャンセルされました',
+            vadSpeech: 'ステータス: 発話を検出',
+            vadSilence: 'ステータス: 無音を検出'
         },
         processing: {
             transcribing: 'ステータス: 文字起こし中...',
@@ -98,7 +100,8 @@ export const ja: TranslationResource = {
             enterApiKey: 'APIキーを入力してください',
             serviceInitFailed: 'サービスの初期化に失敗しました',
             audioTooShort: '音声が短すぎます',
-            noAudioDetected: '音声が検出されませんでした'
+            noAudioDetected: '音声が検出されませんでした',
+            localVadMissing: 'ローカルVADモジュールが見つからないため、サーバーVADに切り替えます。{path} に fvad.wasm と fvad.js を配置してください。'
         },
         error: {
             clipboardFailed: 'クリップボードへのコピーに失敗しました',
@@ -175,7 +178,12 @@ export const ja: TranslationResource = {
             customDictionaryDesc: '補正辞書を管理',
             dictionaryDefinite: '固定補正（最大{max}個）',
             dictionaryImportExport: '辞書のインポート/エクスポート',
-            dictionaryImportExportDesc: '補正辞書をJSONファイルとしてインポート・エクスポート'
+            dictionaryImportExportDesc: '補正辞書をJSONファイルとしてインポート・エクスポート',
+            vadMode: '音声区間検出（VAD）',
+            vadModeDesc: 'サーバーVADは追加モジュール不要の推奨設定です。',
+            vadModeLocalMissing: 'ローカルVADを有効にするには {path} に fvad.wasm と fvad.js を配置してください。',
+            vadModeLocalAvailable: '{path} でローカルVAD用モジュールを検出しました。無音で自動停止します。',
+            vadModeDisabledDesc: 'VADを無効化すると無音でも録音を継続します。'
         },
         options: {
             modelMini: 'GPT-4o mini Transcribe',
@@ -184,7 +192,10 @@ export const ja: TranslationResource = {
             languageJa: '日本語',
             languageEn: '英語',
             languageZh: '中国語',
-            languageKo: '韓国語'
+            languageKo: '韓国語',
+            vadServer: 'サーバー（標準）',
+            vadLocal: 'ローカル（fvad.wasm が必要）',
+            vadDisabled: 'オフ'
         },
         tooltips: {
             copy: 'クリップボードにコピー',

@@ -55,7 +55,9 @@ export const ko: TranslationResource = {
             micInit: '상태: 마이크 초기화 중...',
             recording: '상태: 녹음 중...',
             stopped: '상태: 중지됨',
-            cancelled: '상태: 취소됨'
+            cancelled: '상태: 취소됨',
+            vadSpeech: '상태: 음성을 감지했습니다',
+            vadSilence: '상태: 무음을 감지했습니다'
         },
         processing: {
             transcribing: '상태: 음성 텍스트 변환 중...',
@@ -98,7 +100,8 @@ export const ko: TranslationResource = {
             enterApiKey: 'API 키를 입력해주세요',
             serviceInitFailed: '서비스 초기화에 실패했습니다',
             audioTooShort: '오디오가 너무 짧습니다',
-            noAudioDetected: '오디오가 감지되지 않았습니다'
+            noAudioDetected: '오디오가 감지되지 않았습니다',
+            localVadMissing: '로컬 VAD 모듈을 찾을 수 없어 서버 VAD로 전환합니다. {path} 에 fvad.wasm 및 fvad.js 를 배치하세요.'
         },
         error: {
             clipboardFailed: '클립보드 복사에 실패했습니다',
@@ -175,7 +178,12 @@ export const ko: TranslationResource = {
             customDictionaryDesc: '후처리에 사용되는 교정 사전 관리',
             dictionaryDefinite: '고정 교정 (최대 {max}개)',
             dictionaryImportExport: '사전 가져오기/내보내기',
-            dictionaryImportExportDesc: '교정 사전을 JSON 파일로 가져오기 또는 내보내기'
+            dictionaryImportExportDesc: '교정 사전을 JSON 파일로 가져오기 또는 내보내기',
+            vadMode: '음성 활동 감지(VAD)',
+            vadModeDesc: '서버 VAD는 추가 모듈 없이 사용할 수 있는 권장 설정입니다.',
+            vadModeLocalMissing: '로컬 VAD를 사용하려면 {path} 에 fvad.wasm 및 fvad.js 를 배치하세요.',
+            vadModeLocalAvailable: '{path} 에서 로컬 VAD 모듈을 감지했습니다. 무음 시 자동으로 녹음을 중지합니다.',
+            vadModeDisabledDesc: 'VAD를 끄면 무음이어도 녹음이 계속됩니다.'
         },
         options: {
             modelMini: 'GPT-4o mini Transcribe',
@@ -184,7 +192,10 @@ export const ko: TranslationResource = {
             languageJa: '일본어',
             languageEn: '영어',
             languageZh: '중국어',
-            languageKo: '한국어'
+            languageKo: '한국어',
+            vadServer: '서버(기본값)',
+            vadLocal: '로컬(fvad.wasm 필요)',
+            vadDisabled: '꺼짐'
         },
         tooltips: {
             copy: '클립보드에 복사',

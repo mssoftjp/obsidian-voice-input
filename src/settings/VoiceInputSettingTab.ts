@@ -13,7 +13,7 @@ import { getI18n, createServiceLogger } from '../services';
 import type { I18nService, Locale } from '../interfaces';
 import { SUPPORTED_LOCALES } from '../interfaces';
 import { VIEW_TYPE_VOICE_INPUT } from '../views';
-import { Logger } from '../utils';
+import { Logger, hasLocalVadAssets, getLocalVadInstructionsPath } from '../utils';
 import { patternsToString, stringToPatterns, migrateCorrectionEntries } from '../utils';
 import { DeferredViewHelper } from '../utils';
 
@@ -233,6 +233,44 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                     this.plugin.settings.transcriptionModel = value as 'gpt-4o-transcribe' | 'gpt-4o-mini-transcribe';
                     await this.plugin.saveSettings();
                 }));
+
+        const vadInstructionsPath = getLocalVadInstructionsPath(this.app);
+        const initialVadMode = this.plugin.settings.vadMode ?? 'server';
+        const vadModeSetting = new Setting(containerEl)
+            .setName(this.i18n.t('ui.settings.vadMode'))
+            .addDropdown(dropdown => {
+                dropdown
+                    .addOption('server', this.i18n.t('ui.options.vadServer'))
+                    .addOption('local', this.i18n.t('ui.options.vadLocal'))
+                    .addOption('disabled', this.i18n.t('ui.options.vadDisabled'))
+                    .setValue(initialVadMode)
+                    .onChange(async (value) => {
+                        const mode = value as 'server' | 'local' | 'disabled';
+                        this.plugin.settings.vadMode = mode;
+                        await this.plugin.saveSettings();
+                        const available = await updateVadDescription(mode);
+                        if (mode === 'local' && !available) {
+                            new Notice(this.i18n.t('notification.warning.localVadMissing', { path: vadInstructionsPath }));
+                        }
+                    });
+            });
+
+        const updateVadDescription = async (mode: 'server' | 'local' | 'disabled'): Promise<boolean> => {
+            if (mode === 'local') {
+                const available = await hasLocalVadAssets(this.app);
+                const key = available ? 'ui.settings.vadModeLocalAvailable' : 'ui.settings.vadModeLocalMissing';
+                vadModeSetting.setDesc(this.i18n.t(key, { path: vadInstructionsPath }));
+                return available;
+            }
+            if (mode === 'disabled') {
+                vadModeSetting.setDesc(this.i18n.t('ui.settings.vadModeDisabledDesc'));
+                return true;
+            }
+            vadModeSetting.setDesc(this.i18n.t('ui.settings.vadModeDesc'));
+            return true;
+        };
+
+        void updateVadDescription(initialVadMode);
 
         // AI Post-processing (dictionary-based)
         new Setting(containerEl)

@@ -75,6 +75,8 @@ export type TranslationResource = {
       recording: string;
       stopped: string;
       cancelled: string;
+      vadSpeech: string;
+      vadSilence: string;
     };
     processing: {
       transcribing: string;
@@ -118,6 +120,7 @@ export type TranslationResource = {
       serviceInitFailed: string;
       audioTooShort: string;
       noAudioDetected: string;
+      localVadMissing: string;
     };
     error: {
       clipboardFailed: string;
@@ -195,6 +198,11 @@ export type TranslationResource = {
       dictionaryDefinite: string;
       dictionaryImportExport: string;
       dictionaryImportExportDesc: string;
+      vadMode: string;
+      vadModeDesc: string;
+      vadModeLocalMissing: string;
+      vadModeLocalAvailable: string;
+      vadModeDisabledDesc: string;
     };
     options: {
       modelMini: string;
@@ -204,6 +212,9 @@ export type TranslationResource = {
       languageEn: string;
       languageZh: string;
       languageKo: string;
+      vadServer: string;
+      vadLocal: string;
+      vadDisabled: string;
     };
     tooltips: {
       copy: string;

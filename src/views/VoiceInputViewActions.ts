@@ -8,8 +8,9 @@ import type { VoiceInputView } from './VoiceInputView';
 import type VoiceInputPlugin from '../plugin';
 import { getI18n, createServiceLogger } from '../services';
 import type { I18nService } from '../interfaces';
-import type { StopReason, RecordingState } from '../interfaces';
-import { Logger } from '../utils';
+import type { StopReason, RecordingState, AudioRecorderOptionsWithVAD, AudioRecorderOptionsWithoutVAD } from '../interfaces';
+import { Logger, hasLocalVadAssets, getLocalVadInstructionsPath } from '../utils';
+import { DEFAULT_AUDIO_SETTINGS, DEFAULT_VAD_SETTINGS } from '../config';
 
 /**
  * Handles all recording and text manipulation actions for the Voice Input View
@@ -25,7 +26,8 @@ export class VoiceInputViewActions {
     recordingState: RecordingState = {
         isRecording: false,
         isPushToTalkMode: false,
-        processingQueue: []
+        processingQueue: [],
+        activeVadMode: 'server'
     };
     private isProcessingAudio = false;
     // 連打や高速操作による並行実行を防ぐための遷移ロック
@@ -33,6 +35,7 @@ export class VoiceInputViewActions {
     private statusTimer: NodeJS.Timeout | null = null;
     private clearConfirmTimer: NodeJS.Timeout | null = null;
     private clearPressCount = 0;
+    private pendingVadAutoStop = false;
 
     constructor(view: VoiceInputView, plugin: VoiceInputPlugin) {
         this.view = view;
@@ -111,6 +114,16 @@ export class VoiceInputViewActions {
         }
     }
 
+    private handleVADStatusChange(status: 'speech' | 'silence') {
+        if (status === 'speech') {
+            this.pendingVadAutoStop = false;
+            this.view.ui.statusEl.setText(this.i18n.t('status.recording.vadSpeech'));
+        } else {
+            this.pendingVadAutoStop = true;
+            this.view.ui.statusEl.setText(this.i18n.t('status.recording.vadSilence'));
+        }
+    }
+
     /**
 	 * Toggle recording on/off
 	 */
@@ -151,8 +164,32 @@ export class VoiceInputViewActions {
         // Obsidian provides its own secure environment
 
         try {
+            const desiredVadMode = this.plugin.settings.vadMode ?? 'server';
+            const wantsLocalVad = desiredVadMode === 'local';
+            const wantsDisabled = desiredVadMode === 'disabled';
+            let localVadAvailable = false;
+
+            if (wantsLocalVad) {
+                localVadAvailable = await hasLocalVadAssets(this.app);
+                if (!localVadAvailable) {
+                    const pluginPath = getLocalVadInstructionsPath(this.app);
+                    new Notice(this.i18n.t('notification.warning.localVadMissing', { path: pluginPath }));
+                    this.logger.warn('Local VAD assets not found; falling back to server VAD', { pluginPath });
+                }
+            }
+
+            const effectiveVadMode: 'server' | 'local' | 'disabled' = localVadAvailable
+                ? 'local'
+                : wantsDisabled
+                    ? 'disabled'
+                    : 'server';
+            this.recordingState.activeVadMode = effectiveVadMode;
+            this.pendingVadAutoStop = false;
+
             this.logger.info('Starting recording session', {
-                mode: 'continuous',
+                requestedVadMode: desiredVadMode,
+                effectiveVadMode,
+                localVadAvailable,
                 maxDuration: this.plugin.settings.maxRecordingSeconds
             });
 
@@ -169,24 +206,47 @@ export class VoiceInputViewActions {
             this.view.ui.setButtonsEnabled(false);
             this.view.ui.showCancelButton(true); // Show cancel button
 
-            // Initialize audio recorder for continuous recording mode
-            // AudioWorklet requires serving from same origin as the page
-            // In Obsidian, we'll let it fallback to ScriptProcessor
-            this.audioRecorder = new AudioRecorder({
-                useVAD: false,  // 常に連続録音モード
-                onSpeechEnd: async (audioBlob) => {
-                    // 連続録音モードでのonSpeechEndは最大時間到達時のみ
-                    this.recordingState.isRecording = false;
-                    this.updateUIAfterStop();
-                    await this.processRecordedAudio(audioBlob, { type: 'max-duration' });
-                },
-                onMicrophoneStatusChange: (status) => {
-                    this.handleMicrophoneStatus(status);
-                },
-                visualizerContainer: this.view.ui.visualizerContainer,
-                useSimpleVisualizer: false,
-                maxRecordingSeconds: this.plugin.settings.maxRecordingSeconds
-            });
+            const handleSpeechEnd = async (audioBlob: Blob) => {
+                this.recordingState.isRecording = false;
+                const reasonType: StopReason['type'] = (this.recordingState.activeVadMode === 'local' && this.pendingVadAutoStop)
+                    ? 'vad-auto'
+                    : 'max-duration';
+                this.pendingVadAutoStop = false;
+                this.updateUIAfterStop();
+                await this.processRecordedAudio(audioBlob, { type: reasonType });
+            };
+
+            const handleMicrophoneStatusChange = (status: 'initializing' | 'ready' | 'error') => {
+                this.handleMicrophoneStatus(status);
+            };
+
+            if (effectiveVadMode === 'local') {
+                const vadOptions: AudioRecorderOptionsWithVAD = {
+                    useVAD: true,
+                    app: this.app,
+                    onSpeechEnd: handleSpeechEnd,
+                    onMicrophoneStatusChange: handleMicrophoneStatusChange,
+                    onVADStatusChange: (status) => this.handleVADStatusChange(status),
+                    visualizerContainer: this.view.ui.visualizerContainer,
+                    useSimpleVisualizer: false,
+                    maxRecordingSeconds: this.plugin.settings.maxRecordingSeconds,
+                    autoStopSilenceDuration: DEFAULT_AUDIO_SETTINGS.autoStopSilenceDuration,
+                    vadMode: DEFAULT_VAD_SETTINGS.mode,
+                    minSpeechDuration: DEFAULT_VAD_SETTINGS.minSpeechDuration,
+                    minSilenceDuration: DEFAULT_VAD_SETTINGS.minSilenceDuration
+                };
+                this.audioRecorder = new AudioRecorder(vadOptions);
+            } else {
+                const continuousOptions: AudioRecorderOptionsWithoutVAD = {
+                    useVAD: false,
+                    onSpeechEnd: handleSpeechEnd,
+                    onMicrophoneStatusChange: handleMicrophoneStatusChange,
+                    visualizerContainer: this.view.ui.visualizerContainer,
+                    useSimpleVisualizer: false,
+                    maxRecordingSeconds: this.plugin.settings.maxRecordingSeconds
+                };
+                this.audioRecorder = new AudioRecorder(continuousOptions);
+            }
 
             await this.audioRecorder.initialize();
             await this.audioRecorder.startRecording();
@@ -217,6 +277,7 @@ export class VoiceInputViewActions {
             return;
         }
 
+        this.pendingVadAutoStop = false;
         // Default to manual stop if no reason provided
         const stopReason = reason || { type: 'manual' as const };
         this.recordingState.lastStopReason = stopReason;

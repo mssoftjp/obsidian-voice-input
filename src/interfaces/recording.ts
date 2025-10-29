@@ -28,4 +28,5 @@ export interface RecordingState {
   isPushToTalkMode: boolean;
   lastStopReason?: StopReason;
   processingQueue: AudioQueueItem[];
+  activeVadMode?: 'server' | 'local' | 'disabled';
 }

@@ -55,7 +55,9 @@ export const zh: TranslationResource = {
             micInit: '状态：麦克风初始化中...',
             recording: '状态：录音中...',
             stopped: '状态：已停止',
-            cancelled: '状态：已取消'
+            cancelled: '状态：已取消',
+            vadSpeech: '状态：检测到语音',
+            vadSilence: '状态：检测到静音'
         },
         processing: {
             transcribing: '状态：语音转文字中...',
@@ -98,7 +100,8 @@ export const zh: TranslationResource = {
             enterApiKey: '请输入API密钥',
             serviceInitFailed: '服务初始化失败',
             audioTooShort: '音频过短',
-            noAudioDetected: '未检测到音频'
+            noAudioDetected: '未检测到音频',
+            localVadMissing: '未找到本地VAD模块，已切换为服务器端检测。请将 fvad.wasm 和 fvad.js 放在 {path}。'
         },
         error: {
             clipboardFailed: '复制到剪贴板失败',
@@ -175,7 +178,12 @@ export const zh: TranslationResource = {
             customDictionaryDesc: '管理用于后处理的校正词典',
             dictionaryDefinite: '固定校正（最多{max}个）',
             dictionaryImportExport: '词典导入/导出',
-            dictionaryImportExportDesc: '将校正词典作为JSON文件导入或导出'
+            dictionaryImportExportDesc: '将校正词典作为JSON文件导入或导出',
+            vadMode: '语音活动检测（VAD）',
+            vadModeDesc: '推荐使用服务器VAD，无需额外模块。',
+            vadModeLocalMissing: '启用本地VAD需要将 fvad.wasm 和 fvad.js 放在 {path}。',
+            vadModeLocalAvailable: '在 {path} 检测到本地VAD模块，将在静音时自动停止录音。',
+            vadModeDisabledDesc: '关闭VAD时，录音不会因静音自动停止。'
         },
         options: {
             modelMini: 'GPT-4o mini Transcribe',
@@ -184,7 +192,10 @@ export const zh: TranslationResource = {
             languageJa: '日语',
             languageEn: '英语',
             languageZh: '中文',
-            languageKo: '韩语'
+            languageKo: '韩语',
+            vadServer: '服务器（默认）',
+            vadLocal: '本地（需要 fvad.wasm）',
+            vadDisabled: '关闭'
         },
         tooltips: {
             copy: '复制到剪贴板',

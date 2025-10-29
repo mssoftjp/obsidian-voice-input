@@ -6,6 +6,7 @@ export interface VoiceInputSettings {
     openaiApiKey: string;
     enableTranscriptionCorrection: boolean; // 文字起こし補正を有効化（辞書補正）
     transcriptionModel: 'gpt-4o-transcribe' | 'gpt-4o-mini-transcribe';
+    vadMode: 'server' | 'local' | 'disabled';
     // 録音設定
     maxRecordingSeconds: number; // 最大録音時間（秒）
     // 言語設定
@@ -31,6 +32,7 @@ export const DEFAULT_SETTINGS: VoiceInputSettings = {
     // 言語設定
     transcriptionLanguage: 'en', // 初期値（実際は起動時に環境ロケールへ移行）
     pluginLanguage: 'en', // 初期値、実際はObsidianの設定に従う
+    vadMode: 'server',
     customDictionary: { definiteCorrections: [] },
     // デバッグ設定
     debugMode: false, // 本番環境ではデフォルトでオフ

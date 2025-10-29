@@ -348,6 +348,12 @@ export default class VoiceInputPlugin extends Plugin {
                     this.logger?.info('Migrated advanced.transcriptionLanguage from auto to detected locale');
                 }
             }
+
+            if (!hasSettingsKey(data, 'vadMode')) {
+                this.settings.vadMode = 'server';
+                needsSave = true;
+                this.logger?.info('Initialized vadMode to server (default)');
+            }
         } else {
             // 保存データが存在しない場合（初回起動）
             this.settings.pluginLanguage = this.detectPluginLanguage();
@@ -356,6 +362,7 @@ export default class VoiceInputPlugin extends Plugin {
                 languageLinkingEnabled: true,
                 transcriptionLanguage: this.detectPluginLanguage()
             };
+            this.settings.vadMode = 'server';
             needsSave = true;
             this.logger?.info(`First run - detected locale: ${this.settings.pluginLanguage}, transcriptionLanguage set to detected locale, advanced settings initialized`);
         }

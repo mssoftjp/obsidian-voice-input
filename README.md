@@ -13,6 +13,7 @@ High-accuracy multilingual voice input for Obsidian. Uses OpenAI GPT-4o Audio Tr
 - Quick controls in view: copy/clear/insert at cursor/append to end
 - Auto‑save drafts: periodic and on blur, automatic restore
 - Multilingual support: Japanese, English, Chinese, Korean interface languages
+- Voice activity detection modes: Server VAD (default) with optional local auto-stop when you install fvad.wasm/fvad.js
 
 ## Requirements
 
@@ -25,7 +26,7 @@ Note: OpenAI usage is billed by API.
 ## Installation (manual)
 
 1. Download the latest assets from Releases
-2. Copy `main.js`, `manifest.json`, `styles.css`, `fvad.wasm`, `fvad.js`
+2. Copy `main.js`, `manifest.json`, `styles.css` (add `fvad.wasm` and `fvad.js` only if you plan to enable Local VAD)
 3. Place them under `<vault>/.obsidian/plugins/voice-input/`
 4. Restart Obsidian and enable the plugin
 
@@ -54,6 +55,7 @@ Tip: A settings gear in the view header opens the plugin’s settings.
 - AI Post‑processing: enable dictionary‑based cleanup (applied to all languages when enabled)
 - Maximum Recording Duration: slider (default 5 min)
 - Plugin Language: Japanese/English/Chinese/Korean (controls UI display only, auto-detected from Obsidian, adjustable)
+- Voice Activity Detection: choose Server (default), Local (requires `fvad.wasm`/`fvad.js`), or Off
 
 ## Security & Privacy
 
@@ -102,6 +104,7 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 - ビュー内のクイック操作（コピー/クリア/カーソル位置へ挿入/末尾へ追記）
 - 自動保存（定期保存とフォーカス外れ時）。再オープン時に自動復元
 - 多言語サポート（日本語、英語、中国語、韓国語のインターフェース）
+- VADモード選択（標準はサーバーVAD。`fvad.wasm`/`fvad.js` を配置するとローカルVADで無音自動停止が可能）
 
 ## 必要条件
 
@@ -114,7 +117,7 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 ## インストール（手動）
 
 1. Releases から最新版を取得
-2. `main.js`、`manifest.json`、`styles.css`、`fvad.wasm`、`fvad.js` を配置
+2. `main.js`、`manifest.json`、`styles.css`（ローカルVADを使う場合のみ `fvad.wasm` と `fvad.js` も）を配置
 3. `<Vault>/.obsidian/plugins/voice-input/` に置く
 4. Obsidianを再起動し、プラグインを有効化
 
@@ -143,6 +146,7 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 - AI後処理: 辞書ベースの補正（有効時は全言語に適用）
 - 最大録音時間: スライダー（初期値5分）
 - **プラグイン言語**: UI表示のみを制御。Obsidianの言語設定から自動検出（ja/zh/ko/en）。
+- 音声区間検出 (VAD): サーバー（標準）、ローカル（`fvad.wasm`/`fvad.js` 必須）、オフ から選択
 
 ### 言語設定
 

@@ -55,7 +55,9 @@ export const en: TranslationResource = {
             micInit: 'Status: Initializing microphone...',
             recording: 'Status: Recording...',
             stopped: 'Status: Stopped',
-            cancelled: 'Status: Cancelled'
+            cancelled: 'Status: Cancelled',
+            vadSpeech: 'Status: Speech detected',
+            vadSilence: 'Status: Silence detected'
         },
         processing: {
             transcribing: 'Status: Transcribing...',
@@ -98,7 +100,8 @@ export const en: TranslationResource = {
             enterApiKey: 'Please enter API key',
             serviceInitFailed: 'Service initialization failed',
             audioTooShort: 'Audio is too short',
-            noAudioDetected: 'No audio detected'
+            noAudioDetected: 'No audio detected',
+            localVadMissing: 'Local VAD module not found. Using server-side detection instead. Place fvad.wasm and fvad.js under {path}.'
         },
         error: {
             clipboardFailed: 'Failed to copy to clipboard',
@@ -175,7 +178,12 @@ export const en: TranslationResource = {
             customDictionaryDesc: 'Manage corrections used for post-processing',
             dictionaryDefinite: 'Definite Corrections (max {max})',
             dictionaryImportExport: 'Dictionary Import/Export',
-            dictionaryImportExportDesc: 'Import or export your correction dictionary as JSON'
+            dictionaryImportExportDesc: 'Import or export your correction dictionary as JSON',
+            vadMode: 'Voice Activity Detection (VAD)',
+            vadModeDesc: 'Server VAD is recommended and requires no additional modules.',
+            vadModeLocalMissing: 'Local VAD requires fvad.wasm and fvad.js under {path}. Install them before switching.',
+            vadModeLocalAvailable: 'Local VAD files found in {path}. Recording will auto-stop on silence.',
+            vadModeDisabledDesc: 'Disable VAD to capture audio continuously without auto-stop.'
         },
         options: {
             modelMini: 'GPT-4o mini Transcribe',
@@ -184,7 +192,10 @@ export const en: TranslationResource = {
             languageJa: 'Japanese',
             languageEn: 'English',
             languageZh: 'Chinese',
-            languageKo: 'Korean'
+            languageKo: 'Korean',
+            vadServer: 'Server (default)',
+            vadLocal: 'Local (requires fvad.wasm)',
+            vadDisabled: 'Off'
         },
         tooltips: {
             copy: 'Copy to clipboard',
