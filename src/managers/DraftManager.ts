@@ -1,5 +1,5 @@
 import type { App } from 'obsidian';
-import { normalizePath } from 'obsidian';
+import { normalizePath, TFile, TFolder } from 'obsidian';
 import { getLogger } from '../utils';
 import type { Logger } from '../utils';
 import { FILE_CONSTANTS } from '../config';
@@ -17,9 +17,41 @@ export class DraftManager {
     /**
 	 * Get the draft file path using the vault's config directory
 	 */
-    private static getDraftPath(app: App): string {
-        const path = `${app.vault.configDir}/plugins/${FILE_CONSTANTS.PLUGIN_ID}/draft.txt`;
+    private static getDraftFolderPath(app: App): string {
+        const path = `${app.vault.configDir}/plugins/${FILE_CONSTANTS.PLUGIN_ID}`;
         return normalizePath(path);
+    }
+
+    private static getDraftPath(app: App): string {
+        return normalizePath(`${this.getDraftFolderPath(app)}/draft.txt`);
+    }
+
+    private static async ensureDraftFolder(app: App): Promise<void> {
+        const folderPath = this.getDraftFolderPath(app);
+        const abstractFile = app.vault.getAbstractFileByPath(folderPath);
+
+        if (abstractFile instanceof TFolder) {
+            return;
+        }
+
+        if (abstractFile) {
+            this.logger?.warn('Draft path exists but is not a folder', { folderPath });
+            return;
+        }
+
+        try {
+            const adapter = app.vault.adapter;
+            if (await adapter.exists(folderPath)) {
+                return;
+            }
+            await adapter.mkdir(folderPath);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            if (!message.includes('File already exists') && !message.includes('folder already exists')) {
+                this.logger?.error('Failed to create draft folder', error);
+                throw error;
+            }
+        }
     }
 
     /**
@@ -60,7 +92,32 @@ export class DraftManager {
                 : text;
 
             const draftPath = this.getDraftPath(app);
-            await app.vault.adapter.write(draftPath, textToSave);
+            await this.ensureDraftFolder(app);
+
+            let saved = false;
+            const existingFile = app.vault.getFileByPath(draftPath);
+            if (existingFile instanceof TFile) {
+                try {
+                    await app.vault.modify(existingFile, textToSave);
+                    saved = true;
+                } catch (error) {
+                    this.logger?.warn('Vault.modify failed for draft, falling back to adapter', error);
+                }
+            } else {
+                try {
+                    await app.vault.create(draftPath, textToSave);
+                    saved = true;
+                } catch (error) {
+                    const message = error instanceof Error ? error.message : String(error);
+                    if (!message.includes('already exists')) {
+                        this.logger?.warn('Vault.create failed for draft, falling back to adapter', error);
+                    }
+                }
+            }
+
+            if (!saved) {
+                await app.vault.adapter.write(draftPath, textToSave);
+            }
 
             this.logger?.info('Draft saved successfully', {
                 source,
@@ -82,6 +139,13 @@ export class DraftManager {
     static async loadDraft(app: App): Promise<string | null> {
         try {
             const draftPath = this.getDraftPath(app);
+            const draftFile = app.vault.getFileByPath(draftPath);
+            if (draftFile instanceof TFile) {
+                const text = await app.vault.read(draftFile);
+                this.logger?.info('Draft loaded successfully', { textLength: text?.length });
+                return text;
+            }
+
             if (!await app.vault.adapter.exists(draftPath)) {
                 return null;
             }
@@ -102,9 +166,16 @@ export class DraftManager {
     static async clearDraft(app: App): Promise<void> {
         try {
             const draftPath = this.getDraftPath(app);
+            const draftFile = app.vault.getFileByPath(draftPath);
+            if (draftFile) {
+                await app.vault.delete(draftFile);
+                this.logger?.info('Draft cleared successfully');
+                return;
+            }
+
             if (await app.vault.adapter.exists(draftPath)) {
                 await app.vault.adapter.remove(draftPath);
-                this.logger?.info('Draft cleared successfully');
+                this.logger?.info('Draft cleared successfully (adapter fallback)');
             }
         } catch (error) {
             this.logger?.error('Failed to clear draft', error);

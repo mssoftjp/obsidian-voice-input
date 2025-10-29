@@ -107,21 +107,14 @@ export class VADProcessor extends Disposable {
     private async initializeFvadModule(wasmBuffer: ArrayBuffer): Promise<void> {
         // スクリプトタグを使用して fvad.js を読み込む
         // これは Obsidian の制限された環境でモジュールを読み込む最も確実な方法
-        const adapter = this.app.vault.adapter;
-        if (!(adapter instanceof FileSystemAdapter)) {
-            throw new Error('WebRTC VAD requires FileSystemAdapter (desktop version)');
-        }
-        
-        // プラグインID（manifest.json から）
-        const pluginId = FILE_CONSTANTS.PLUGIN_ID;
-        const basePath = normalizePath(`${this.app.vault.configDir}/plugins/${pluginId}`);
+        this.ensureFileSystemAdapter();
         
         // グローバルオブジェクトを準備（型安全に）
         const globalWindow = window as WindowWithFvad;
         
         // fvad.js の内容を読み込んで評価（プラグインルートから）
-        const fvadJsPath = normalizePath(`${basePath}/fvad.js`);
-        const fvadJsContent = await adapter.read(fvadJsPath);
+        const fvadJsPath = this.getPluginAssetPath('fvad.js');
+        const fvadJsContent = await this.readPluginTextAsset('fvad.js');
         
         // モジュールを評価するための一時的な環境を作成
         return new Promise((resolve, reject) => {
@@ -227,26 +220,54 @@ export class VADProcessor extends Disposable {
      * WASM ファイルを読み込む
      */
     private async loadWasmFile(): Promise<ArrayBuffer> {
+        this.ensureFileSystemAdapter();
+        return this.readPluginBinaryAsset('fvad.wasm');
+    }
+
+    private ensureFileSystemAdapter(): FileSystemAdapter {
         const adapter = this.app.vault.adapter;
-        
-        // FileSystemAdapter が必要
         if (!(adapter instanceof FileSystemAdapter)) {
             throw new Error('WebRTC VAD requires FileSystemAdapter (desktop version)');
         }
-        
-        // プラグインフォルダからの相対パス（プラグインルートにあるfvad.wasm）
-        const pluginId = FILE_CONSTANTS.PLUGIN_ID;
-        const wasmPath = normalizePath(`${this.app.vault.configDir}/plugins/${pluginId}/fvad.wasm`);
-        
-        // ファイルの存在確認
-        const exists = await adapter.exists(wasmPath);
-        if (!exists) {
-            throw new Error(`WASM file not found: ${wasmPath}`);
+        return adapter;
+    }
+
+    private getPluginAssetBasePath(): string {
+        return normalizePath(`${this.app.vault.configDir}/plugins/${FILE_CONSTANTS.PLUGIN_ID}`);
+    }
+
+    private getPluginAssetPath(fileName: string): string {
+        return normalizePath(`${this.getPluginAssetBasePath()}/${fileName}`);
+    }
+
+    private async readPluginTextAsset(fileName: string): Promise<string> {
+        const fullPath = this.getPluginAssetPath(fileName);
+        const existingFile = this.app.vault.getFileByPath(fullPath);
+        if (existingFile) {
+            return this.app.vault.read(existingFile);
         }
-        
-        // バイナリとして読み込む
-        const wasmBuffer = await adapter.readBinary(wasmPath);
-        return wasmBuffer;
+
+        const adapter = this.ensureFileSystemAdapter();
+        const exists = await adapter.exists(fullPath);
+        if (!exists) {
+            throw new Error(`Asset not found: ${fullPath}`);
+        }
+        return adapter.read(fullPath);
+    }
+
+    private async readPluginBinaryAsset(fileName: string): Promise<ArrayBuffer> {
+        const fullPath = this.getPluginAssetPath(fileName);
+        const existingFile = this.app.vault.getFileByPath(fullPath);
+        if (existingFile) {
+            return this.app.vault.readBinary(existingFile);
+        }
+
+        const adapter = this.ensureFileSystemAdapter();
+        const exists = await adapter.exists(fullPath);
+        if (!exists) {
+            throw new Error(`Asset not found: ${fullPath}`);
+        }
+        return adapter.readBinary(fullPath);
     }
 
     /**
