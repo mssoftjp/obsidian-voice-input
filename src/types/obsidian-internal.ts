@@ -3,7 +3,7 @@
  * These extend the official Obsidian API types to include internal/undocumented APIs
  */
 
-import { App, Vault, moment } from 'obsidian';
+import { App, Vault, getLanguage, moment } from 'obsidian';
 
 /**
  * Extended App interface with internal properties
@@ -51,6 +51,16 @@ export function hasWebkitAudioContext(window: Window): window is WindowWithWebki
  * Safely get Obsidian locale with fallbacks
  */
 export function getObsidianLocale(app: App): string {
+    try {
+        const apiLocale = getLanguage?.();
+        if (apiLocale && apiLocale.trim().length > 0) {
+            return apiLocale.toLowerCase();
+        }
+    } catch (error) {
+        // Fallback to legacy heuristics if the API call fails for any reason
+        console.warn('[voice-input] Failed to resolve locale via getLanguage()', error);
+    }
+
     const appInternal = app as AppInternal;
 
     // Try to get locale from app configuration first
