@@ -180,7 +180,7 @@ export const zh: TranslationResource = {
             dictionaryImportExport: '词典导入/导出',
             dictionaryImportExportDesc: '将校正词典作为JSON文件导入或导出',
             vadMode: '语音活动检测（VAD）',
-            vadModeDesc: '默认的“关闭”会保持原始音频，以获得最高的转写精度。启用服务器VAD可以在上传前剪掉静音，可能减少带宽并加快响应，但也可能影响分段精度。本地VAD（需要 fvad.wasm / fvad.js）会在桌面端检测静音并自动停止录音。',
+            vadModeDesc: '默认的“关闭”会保持原始音频，以获得最高的转写精度。启用服务器VAD可以在上传前剪掉静音，可能缩短整体响应时间，但也可能影响分段精度。本地VAD（需要 fvad.wasm / fvad.js）会在桌面端检测静音并自动停止录音。',
             vadModeLocalMissing: '启用本地VAD需要将 fvad.wasm 和 fvad.js 放在 {path}。',
             vadModeLocalAvailable: '在 {path} 检测到本地VAD模块，将在静音时自动停止录音。',
             vadModeDisabledDesc: '关闭VAD：持续录音并完整发送音频。'
@@ -193,7 +193,7 @@ export const zh: TranslationResource = {
             languageEn: '英语',
             languageZh: '中文',
             languageKo: '韩语',
-            vadServer: '服务器（可能更快）',
+            vadServer: '服务器（响应更快）',
             vadLocal: '本地（需要 fvad.wasm）',
             vadDisabled: '关闭（默认）'
         },

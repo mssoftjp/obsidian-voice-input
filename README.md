@@ -55,7 +55,7 @@ Tip: A settings gear in the view header opens the plugin’s settings.
 - AI Post‑processing: enable dictionary‑based cleanup (applied to all languages when enabled)
 - Maximum Recording Duration: slider (default 5 min)
 - Plugin Language: Japanese/English/Chinese/Korean (controls UI display only, auto-detected from Obsidian, adjustable)
-- Voice Activity Detection: choose Off (default), Server (may reduce upload time), or Local (requires `fvad.wasm`/`fvad.js`)
+- Voice Activity Detection: choose Off (default), Server (faster turnaround), or Local (requires `fvad.wasm`/`fvad.js`)
 
 ## Security & Privacy
 
@@ -146,7 +146,7 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 - AI後処理: 辞書ベースの補正（有効時は全言語に適用）
 - 最大録音時間: スライダー（初期値5分）
 - **プラグイン言語**: UI表示のみを制御。Obsidianの言語設定から自動検出（ja/zh/ko/en）。
-- 音声区間検出 (VAD): オフ（標準）、サーバー（通信量を抑えたい場合）、ローカル（`fvad.wasm`/`fvad.js` 必須）から選択
+- 音声区間検出 (VAD): オフ（標準）、サーバー（応答を速めたい場合）、ローカル（`fvad.wasm`/`fvad.js` 必須）から選択
 
 ### 言語設定
 
