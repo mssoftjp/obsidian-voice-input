@@ -183,7 +183,16 @@ export const en: TranslationResource = {
             vadModeDesc: 'Off (default) keeps the raw audio for maximum accuracy. Server VAD can trim silence upstream for quicker turnaround but may slightly affect segmentation accuracy. Local VAD (requires fvad.wasm/fvad.js) stops recording automatically on the desktop.',
             vadModeLocalMissing: 'Local VAD requires fvad.wasm and fvad.js under {path}. Install them before switching.',
             vadModeLocalAvailable: 'Local VAD files found in {path}. Recording will auto-stop on silence.',
-            vadModeDisabledDesc: 'VAD disabled – audio is recorded continuously and sent untouched.'
+            vadModeDisabledDesc: 'VAD disabled – audio is recorded continuously and sent untouched.',
+            vadModeSummaryServer: 'Cuts silence on the server for faster turnaround (cloud processing).',
+            vadModeSummaryLocal: 'Detects silence locally and auto-stops on desktop (requires fvad.wasm/fvad.js).',
+            vadModeInstallButton: 'Choose fvad.wasm…',
+            vadModeInstallDesc: 'Download fvad.wasm (and fvad.js) from the official WebRTC VAD port, then choose the wasm file to copy it into the plugin folder (desktop only).',
+            vadModeInstallLinkLabel: 'fvad-wasm project',
+            vadModeInstallInvalidName: 'Please select a file named fvad.wasm.',
+            vadModeInstallInvalidType: 'The selected file does not appear to be a WebAssembly module.',
+            vadModeInstallSuccess: 'fvad.wasm installed. Local VAD will be attempted the next time you record.',
+            vadModeInstallWriteError: 'Failed to install fvad.wasm: {error}'
         },
         options: {
             modelMini: 'GPT-4o mini Transcribe',

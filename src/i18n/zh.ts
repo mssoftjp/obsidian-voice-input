@@ -183,7 +183,16 @@ export const zh: TranslationResource = {
             vadModeDesc: '默认的“关闭”会保持原始音频，以获得最高的转写精度。启用服务器VAD可以在上传前剪掉静音，可能缩短整体响应时间，但也可能影响分段精度。本地VAD（需要 fvad.wasm / fvad.js）会在桌面端检测静音并自动停止录音。',
             vadModeLocalMissing: '启用本地VAD需要将 fvad.wasm 和 fvad.js 放在 {path}。',
             vadModeLocalAvailable: '在 {path} 检测到本地VAD模块，将在静音时自动停止录音。',
-            vadModeDisabledDesc: '关闭VAD：持续录音并完整发送音频。'
+            vadModeDisabledDesc: '关闭VAD：持续录音并完整发送音频。',
+            vadModeSummaryServer: '服务器裁剪静音，加快整体响应（云端处理）',
+            vadModeSummaryLocal: '在桌面本地检测静音并自动停止（需 fvad.wasm/fvad.js）',
+            vadModeInstallButton: '选择 fvad.wasm…',
+            vadModeInstallDesc: '请从官方 WebRTC VAD 移植项目下载 fvad.wasm（以及 fvad.js），在此选择 wasm 文件即可复制到插件目录（仅桌面）。',
+            vadModeInstallLinkLabel: 'fvad-wasm 项目',
+            vadModeInstallInvalidName: '请选择名为 fvad.wasm 的文件。',
+            vadModeInstallInvalidType: '所选文件不像 WebAssembly 模块。',
+            vadModeInstallSuccess: '已安装 fvad.wasm。下次录音将尝试本地 VAD。',
+            vadModeInstallWriteError: '安装 fvad.wasm 失败：{error}'
         },
         options: {
             modelMini: 'GPT-4o mini Transcribe',

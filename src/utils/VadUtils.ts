@@ -14,17 +14,40 @@ function getPluginAssetPath(app: App, fileName: string): string {
 
 export async function hasLocalVadAssets(app: App): Promise<boolean> {
     const adapter = app.vault.adapter;
-    const wasmPath = getPluginAssetPath(app, FVAD_WASM);
-    const jsPath = getPluginAssetPath(app, FVAD_JS);
 
-    const [hasWasm, hasJs] = await Promise.all([
-        adapter.exists(wasmPath),
-        adapter.exists(jsPath)
-    ]);
+    const baseDir = getPluginBasePath(app);
+    const wasmCandidates = [
+        getPluginAssetPath(app, FVAD_WASM),
+        normalizePath(`${baseDir}/node_modules/@echogarden/fvad-wasm/${FVAD_WASM}`)
+    ];
+    const jsCandidates = [
+        getPluginAssetPath(app, FVAD_JS),
+        normalizePath(`${baseDir}/node_modules/@echogarden/fvad-wasm/${FVAD_JS}`)
+    ];
 
-    return Boolean(hasWasm && hasJs);
+    const hasWasm = await existsInCandidates(adapter, wasmCandidates);
+    const hasJs = await existsInCandidates(adapter, jsCandidates);
+
+    return hasWasm && hasJs;
 }
 
 export function getLocalVadInstructionsPath(app: App): string {
     return getPluginBasePath(app);
+}
+
+export function getLocalVadAssetPath(app: App, fileName: string): string {
+    return getPluginAssetPath(app, fileName);
+}
+
+async function existsInCandidates(adapter: App['vault']['adapter'], paths: string[]): Promise<boolean> {
+    for (const candidate of paths) {
+        try {
+            if (await adapter.exists(candidate)) {
+                return true;
+            }
+        } catch {
+            // Ignore individual errors and continue checking other candidates
+        }
+    }
+    return false;
 }

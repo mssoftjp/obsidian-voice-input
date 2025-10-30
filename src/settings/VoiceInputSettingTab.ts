@@ -2,7 +2,8 @@ import {
     App,
     PluginSettingTab,
     Setting,
-    Notice
+    Notice,
+    Platform
 } from 'obsidian';
 import VoiceInputPlugin from '../plugin';
 import { DEFAULT_SETTINGS } from '../interfaces';
@@ -13,7 +14,7 @@ import { getI18n, createServiceLogger } from '../services';
 import type { I18nService, Locale } from '../interfaces';
 import { SUPPORTED_LOCALES } from '../interfaces';
 import { VIEW_TYPE_VOICE_INPUT } from '../views';
-import { Logger, hasLocalVadAssets, getLocalVadInstructionsPath } from '../utils';
+import { Logger, hasLocalVadAssets, getLocalVadInstructionsPath, getLocalVadAssetPath } from '../utils';
 import { patternsToString, stringToPatterns, migrateCorrectionEntries } from '../utils';
 import { DeferredViewHelper } from '../utils';
 
@@ -234,43 +235,143 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                     await this.plugin.saveSettings();
                 }));
 
+        const FVAD_DOWNLOAD_URL = 'https://github.com/echogarden-project/fvad-wasm';
+        const wasmFileName = 'fvad.wasm';
         const vadInstructionsPath = getLocalVadInstructionsPath(this.app);
-        const initialVadMode = this.plugin.settings.vadMode ?? 'server';
+        const initialVadMode = this.plugin.settings.vadMode ?? 'disabled';
         const vadModeSetting = new Setting(containerEl)
             .setName(this.i18n.t('ui.settings.vadMode'))
             .addDropdown(dropdown => {
                 dropdown
+                    .addOption('disabled', this.i18n.t('ui.options.vadDisabled'))
                     .addOption('server', this.i18n.t('ui.options.vadServer'))
                     .addOption('local', this.i18n.t('ui.options.vadLocal'))
-                    .addOption('disabled', this.i18n.t('ui.options.vadDisabled'))
                     .setValue(initialVadMode)
                     .onChange(async (value) => {
                         const mode = value as 'server' | 'local' | 'disabled';
                         this.plugin.settings.vadMode = mode;
                         await this.plugin.saveSettings();
-                        const available = await updateVadDescription(mode);
-                        if (mode === 'local' && !available) {
+                        const hasLocal = await refreshVadUI(mode);
+                        if (mode === 'local' && !hasLocal) {
                             new Notice(this.i18n.t('notification.warning.localVadMissing', { path: vadInstructionsPath }));
                         }
                     });
             });
 
-        const updateVadDescription = async (mode: 'server' | 'local' | 'disabled'): Promise<boolean> => {
-            if (mode === 'local') {
-                const available = await hasLocalVadAssets(this.app);
-                const key = available ? 'ui.settings.vadModeLocalAvailable' : 'ui.settings.vadModeLocalMissing';
-                vadModeSetting.setDesc(this.i18n.t(key, { path: vadInstructionsPath }));
-                return available;
+        const infoEl = vadModeSetting.settingEl.querySelector('.setting-item-info') as HTMLElement | null;
+        const helperContainer = infoEl?.createDiv({ cls: 'voice-input-vad-helper' }) as HTMLDivElement | null;
+        let helperNote: HTMLDivElement | null = null;
+        let helperButton: HTMLButtonElement | null = null;
+
+        if (helperContainer) {
+            helperNote = helperContainer.createDiv({ cls: 'setting-item-description' }) as HTMLDivElement;
+            helperButton = helperContainer.createEl('button', { text: this.i18n.t('ui.settings.vadModeInstallButton') }) as HTMLButtonElement;
+            helperButton.classList.add('mod-cta');
+            helperContainer.style.display = 'none';
+
+            helperButton.addEventListener('click', async () => {
+                try {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.wasm,application/wasm';
+                    input.onchange = async () => {
+                        const file = input.files?.[0];
+                        if (!file) return;
+                        if (file.name !== wasmFileName) {
+                            new Notice(this.i18n.t('ui.settings.vadModeInstallInvalidName'));
+                            return;
+                        }
+
+                        const buffer = await file.arrayBuffer();
+                        const bytes = new Uint8Array(buffer);
+                        if (bytes.length < 8 || bytes[0] !== 0x00 || bytes[1] !== 0x61 || bytes[2] !== 0x73 || bytes[3] !== 0x6d) {
+                            new Notice(this.i18n.t('ui.settings.vadModeInstallInvalidType'));
+                            return;
+                        }
+
+                        try {
+                            const adapter = this.app.vault.adapter;
+                            if (!(await adapter.exists(vadInstructionsPath))) {
+                                try {
+                                    await adapter.mkdir(vadInstructionsPath);
+                                } catch (_) {
+                                    // Ignore mkdir errors (likely already exists)
+                                }
+                            }
+                            const targetPath = getLocalVadAssetPath(this.app, wasmFileName);
+                            await adapter.writeBinary(targetPath, bytes);
+                            new Notice(this.i18n.t('ui.settings.vadModeInstallSuccess'));
+                            await refreshVadUI('local');
+                        } catch (error) {
+                            const message = error instanceof Error ? error.message : String(error);
+                            new Notice(this.i18n.t('ui.settings.vadModeInstallWriteError', { error: message }));
+                        }
+                    };
+                    input.click();
+                } catch (error) {
+                    const message = error instanceof Error ? error.message : String(error);
+                    new Notice(this.i18n.t('ui.settings.vadModeInstallWriteError', { error: message }));
+                }
+            });
+        }
+
+        const createVadDescription = (includeMissing: boolean, includeLocal: boolean): DocumentFragment => {
+            const fragment = document.createDocumentFragment();
+            fragment.appendText(this.i18n.t('ui.settings.vadModeDesc'));
+            fragment.appendChild(document.createElement('br'));
+            fragment.appendText(`${this.i18n.t('ui.options.vadServer')}: ${this.i18n.t('ui.settings.vadModeSummaryServer')}`);
+            fragment.appendChild(document.createElement('br'));
+            fragment.appendText(`${this.i18n.t('ui.options.vadLocal')}: ${this.i18n.t('ui.settings.vadModeSummaryLocal')}`);
+
+            if (includeMissing) {
+                fragment.appendChild(document.createElement('br'));
+                fragment.appendChild(document.createElement('br'));
+                fragment.appendText(this.i18n.t('ui.settings.vadModeLocalMissing', { path: vadInstructionsPath }));
+                fragment.appendChild(document.createElement('br'));
+                const link = document.createElement('a');
+                link.href = FVAD_DOWNLOAD_URL;
+                link.textContent = this.i18n.t('ui.settings.vadModeInstallLinkLabel');
+                link.target = '_blank';
+                fragment.appendChild(link);
+            } else if (includeLocal) {
+                fragment.appendChild(document.createElement('br'));
+                fragment.appendChild(document.createElement('br'));
+                fragment.appendText(this.i18n.t('ui.settings.vadModeLocalAvailable', { path: vadInstructionsPath }));
             }
-            if (mode === 'disabled') {
-                vadModeSetting.setDesc(this.i18n.t('ui.settings.vadModeDisabledDesc'));
-                return true;
-            }
-            vadModeSetting.setDesc(this.i18n.t('ui.settings.vadModeDesc'));
-            return true;
+
+            return fragment;
         };
 
-        void updateVadDescription(initialVadMode);
+        const refreshVadUI = async (mode: 'server' | 'local' | 'disabled'): Promise<boolean> => {
+            const hasLocal = await hasLocalVadAssets(this.app);
+            const includeMissing = mode === 'local' && !hasLocal;
+            const includeLocal = mode === 'local' && hasLocal;
+            vadModeSetting.setDesc(createVadDescription(includeMissing, includeLocal));
+
+            if (helperContainer && helperNote && helperButton) {
+                const shouldShowHelper = !Platform.isMobileApp && mode === 'local' && !hasLocal;
+                helperContainer.style.display = shouldShowHelper ? '' : 'none';
+                while (helperNote.firstChild) {
+                    helperNote.removeChild(helperNote.firstChild);
+                }
+                if (shouldShowHelper) {
+                    helperNote.appendText(this.i18n.t('ui.settings.vadModeInstallDesc') + ' ');
+                    helperNote.createEl('a', {
+                        text: this.i18n.t('ui.settings.vadModeInstallLinkLabel'),
+                        href: FVAD_DOWNLOAD_URL,
+                        attr: { target: '_blank' }
+                    });
+                }
+            }
+
+            if (mode === 'disabled') {
+                return true;
+            }
+
+            return mode === 'local' ? hasLocal : true;
+        };
+
+        void refreshVadUI(initialVadMode);
 
         // AI Post-processing (dictionary-based)
         new Setting(containerEl)

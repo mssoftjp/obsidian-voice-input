@@ -203,6 +203,15 @@ export type TranslationResource = {
       vadModeLocalMissing: string;
       vadModeLocalAvailable: string;
       vadModeDisabledDesc: string;
+      vadModeSummaryServer: string;
+      vadModeSummaryLocal: string;
+      vadModeInstallButton: string;
+      vadModeInstallDesc: string;
+      vadModeInstallLinkLabel: string;
+      vadModeInstallInvalidName: string;
+      vadModeInstallInvalidType: string;
+      vadModeInstallSuccess: string;
+      vadModeInstallWriteError: string;
     };
     options: {
       modelMini: string;
