@@ -186,7 +186,7 @@ export const zh: TranslationResource = {
             vadModeDisabledDesc: '关闭VAD：持续录音并完整发送音频。',
             vadModeSummaryServer: '服务器裁剪静音，加快整体响应（云端处理）',
             vadModeSummaryLocal: '在桌面本地检测静音并自动停止（需 fvad.wasm/fvad.js）',
-            vadModeInstallButton: '选择 fvad.wasm…',
+            vadModeInstallButton: '选择 fvad.wasm / fvad.js…',
             vadModeInstallDesc: '请从官方 WebRTC VAD 移植项目下载 fvad.wasm（以及 fvad.js），在此选择 wasm 文件即可复制到插件目录（仅桌面）。',
             vadModeInstallLinkLabel: 'fvad-wasm 项目',
             vadModeInstallInvalidName: '请选择名为 fvad.wasm 的文件。',

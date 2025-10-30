@@ -186,7 +186,7 @@ export const ja: TranslationResource = {
             vadModeDisabledDesc: 'VADを無効化すると録音は常に継続し、加工せず送信されます。',
             vadModeSummaryServer: 'サーバー側で無音をカット（応答を速めたい場合）',
             vadModeSummaryLocal: 'デスクトップで無音を検出して自動停止（fvad.wasm/fvad.js 必須）',
-            vadModeInstallButton: 'fvad.wasm を選択…',
+            vadModeInstallButton: 'fvad.wasm / fvad.js を選択…',
             vadModeInstallDesc: '公式の WebRTC VAD 移植プロジェクトから fvad.wasm（および fvad.js）をダウンロードし、ここで wasm ファイルを選択するとプラグインフォルダにコピーされます（デスクトップのみ）。',
             vadModeInstallLinkLabel: 'fvad-wasm プロジェクト',
             vadModeInstallInvalidName: 'fvad.wasm というファイルを選択してください。',

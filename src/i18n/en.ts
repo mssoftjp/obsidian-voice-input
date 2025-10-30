@@ -186,7 +186,7 @@ export const en: TranslationResource = {
             vadModeDisabledDesc: 'VAD disabled – audio is recorded continuously and sent untouched.',
             vadModeSummaryServer: 'Cuts silence on the server for faster turnaround (cloud processing).',
             vadModeSummaryLocal: 'Detects silence locally and auto-stops on desktop (requires fvad.wasm/fvad.js).',
-            vadModeInstallButton: 'Choose fvad.wasm…',
+            vadModeInstallButton: 'Choose fvad.wasm / fvad.js…',
             vadModeInstallDesc: 'Download fvad.wasm (and fvad.js) from the official WebRTC VAD port, then choose the wasm file to copy it into the plugin folder (desktop only).',
             vadModeInstallLinkLabel: 'fvad-wasm project',
             vadModeInstallInvalidName: 'Please select a file named fvad.wasm.',

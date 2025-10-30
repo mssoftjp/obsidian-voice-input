@@ -186,7 +186,7 @@ export const ko: TranslationResource = {
             vadModeDisabledDesc: 'VAD 끄기: 무음이 있어도 녹음을 계속 진행합니다.',
             vadModeSummaryServer: '서버에서 무음을 잘라 응답을 빠르게 함 (클라우드)',
             vadModeSummaryLocal: '데스크톱에서 무음을 감지해 자동 중지 (fvad.wasm/fvad.js 필요)',
-            vadModeInstallButton: 'fvad.wasm 선택…',
+            vadModeInstallButton: 'fvad.wasm / fvad.js 선택…',
             vadModeInstallDesc: '공식 WebRTC VAD 포트에서 fvad.wasm(및 fvad.js)을 다운로드한 뒤 여기서 wasm 파일을 선택하면 플러그인 폴더에 복사됩니다(데스크톱 한정).',
             vadModeInstallLinkLabel: 'fvad-wasm 프로젝트',
             vadModeInstallInvalidName: '파일 이름이 fvad.wasm 인 것을 선택해주세요.',
