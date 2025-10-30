@@ -180,10 +180,10 @@ export const ko: TranslationResource = {
             dictionaryImportExport: '사전 가져오기/내보내기',
             dictionaryImportExportDesc: '교정 사전을 JSON 파일로 가져오기 또는 내보내기',
             vadMode: '음성 활동 감지(VAD)',
-            vadModeDesc: '서버 VAD는 추가 모듈 없이 사용할 수 있는 권장 설정입니다.',
-            vadModeLocalMissing: '로컬 VAD를 사용하려면 {path} 에 fvad.wasm 및 fvad.js 를 배치하세요.',
+            vadModeDesc: '기본값인 “끄기”는 원본 오디오를 그대로 전송하여 최고 정확도를 유지합니다. 서버 VAD를 켜면 업로드 전에 무음을 잘라 통신량이나 속도가 개선될 수 있지만, 분할 방식에 따라 정확도에 영향이 있을 수 있습니다. 로컬 VAD(fvad.wasm / fvad.js 필요)는 데스크톱에서 무음을 감지해 자동으로 녹음을 멈춥니다.',
+            vadModeLocalMissing: '{path} 에 fvad.wasm 및 fvad.js 를 배치하면 로컬 VAD를 사용할 수 있습니다.',
             vadModeLocalAvailable: '{path} 에서 로컬 VAD 모듈을 감지했습니다. 무음 시 자동으로 녹음을 중지합니다.',
-            vadModeDisabledDesc: 'VAD를 끄면 무음이어도 녹음이 계속됩니다.'
+            vadModeDisabledDesc: 'VAD 끄기: 무음이 있어도 녹음을 계속 진행합니다.'
         },
         options: {
             modelMini: 'GPT-4o mini Transcribe',
@@ -193,9 +193,9 @@ export const ko: TranslationResource = {
             languageEn: '영어',
             languageZh: '중국어',
             languageKo: '한국어',
-            vadServer: '서버(기본값)',
+            vadServer: '서버(통신량 절약)',
             vadLocal: '로컬(fvad.wasm 필요)',
-            vadDisabled: '꺼짐'
+            vadDisabled: '꺼짐(기본값)'
         },
         tooltips: {
             copy: '클립보드에 복사',

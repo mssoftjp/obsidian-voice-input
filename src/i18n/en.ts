@@ -180,10 +180,10 @@ export const en: TranslationResource = {
             dictionaryImportExport: 'Dictionary Import/Export',
             dictionaryImportExportDesc: 'Import or export your correction dictionary as JSON',
             vadMode: 'Voice Activity Detection (VAD)',
-            vadModeDesc: 'Server VAD is recommended and requires no additional modules.',
+            vadModeDesc: 'Off (default) keeps the raw audio for maximum accuracy. Server VAD can trim silence upstream to speed uploads and lower bandwidth but may slightly affect segmentation accuracy. Local VAD (requires fvad.wasm/fvad.js) stops recording automatically on the desktop.',
             vadModeLocalMissing: 'Local VAD requires fvad.wasm and fvad.js under {path}. Install them before switching.',
             vadModeLocalAvailable: 'Local VAD files found in {path}. Recording will auto-stop on silence.',
-            vadModeDisabledDesc: 'Disable VAD to capture audio continuously without auto-stop.'
+            vadModeDisabledDesc: 'VAD disabled – audio is recorded continuously and sent untouched.'
         },
         options: {
             modelMini: 'GPT-4o mini Transcribe',
@@ -193,9 +193,9 @@ export const en: TranslationResource = {
             languageEn: 'English',
             languageZh: 'Chinese',
             languageKo: 'Korean',
-            vadServer: 'Server (default)',
+            vadServer: 'Server (faster upload)',
             vadLocal: 'Local (requires fvad.wasm)',
-            vadDisabled: 'Off'
+            vadDisabled: 'Off (default)'
         },
         tooltips: {
             copy: 'Copy to clipboard',

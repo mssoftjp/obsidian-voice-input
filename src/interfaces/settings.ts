@@ -32,7 +32,7 @@ export const DEFAULT_SETTINGS: VoiceInputSettings = {
     // 言語設定
     transcriptionLanguage: 'en', // 初期値（実際は起動時に環境ロケールへ移行）
     pluginLanguage: 'en', // 初期値、実際はObsidianの設定に従う
-    vadMode: 'server',
+    vadMode: 'disabled',
     customDictionary: { definiteCorrections: [] },
     // デバッグ設定
     debugMode: false, // 本番環境ではデフォルトでオフ

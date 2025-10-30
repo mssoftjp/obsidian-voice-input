@@ -180,10 +180,10 @@ export const ja: TranslationResource = {
             dictionaryImportExport: '辞書のインポート/エクスポート',
             dictionaryImportExportDesc: '補正辞書をJSONファイルとしてインポート・エクスポート',
             vadMode: '音声区間検出（VAD）',
-            vadModeDesc: 'サーバーVADは追加モジュール不要の推奨設定です。',
+            vadModeDesc: 'オフ（標準）は録音をそのまま送信するため精度重視です。サーバーVADを有効にすると無音区間を先にカットし、通信量やレスポンスが改善する場合がありますが、切り分けによって文字起こし精度に影響する可能性があります。ローカルVAD（fvad.wasm/fvad.js が必要）はPC側で無音を検出し自動停止します。',
             vadModeLocalMissing: 'ローカルVADを有効にするには {path} に fvad.wasm と fvad.js を配置してください。',
             vadModeLocalAvailable: '{path} でローカルVAD用モジュールを検出しました。無音で自動停止します。',
-            vadModeDisabledDesc: 'VADを無効化すると無音でも録音を継続します。'
+            vadModeDisabledDesc: 'VADを無効化すると録音は常に継続し、加工せず送信されます。'
         },
         options: {
             modelMini: 'GPT-4o mini Transcribe',
@@ -193,9 +193,9 @@ export const ja: TranslationResource = {
             languageEn: '英語',
             languageZh: '中国語',
             languageKo: '韓国語',
-            vadServer: 'サーバー（標準）',
+            vadServer: 'サーバー（通信量を抑えたい）',
             vadLocal: 'ローカル（fvad.wasm が必要）',
-            vadDisabled: 'オフ'
+            vadDisabled: 'オフ（標準）'
         },
         tooltips: {
             copy: 'クリップボードにコピー',

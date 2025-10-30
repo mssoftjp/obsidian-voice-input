@@ -350,9 +350,9 @@ export default class VoiceInputPlugin extends Plugin {
             }
 
             if (!hasSettingsKey(data, 'vadMode')) {
-                this.settings.vadMode = 'server';
+                this.settings.vadMode = 'disabled';
                 needsSave = true;
-                this.logger?.info('Initialized vadMode to server (default)');
+                this.logger?.info('Initialized vadMode to disabled (default)');
             }
         } else {
             // 保存データが存在しない場合（初回起動）
@@ -362,7 +362,7 @@ export default class VoiceInputPlugin extends Plugin {
                 languageLinkingEnabled: true,
                 transcriptionLanguage: this.detectPluginLanguage()
             };
-            this.settings.vadMode = 'server';
+            this.settings.vadMode = 'disabled';
             needsSave = true;
             this.logger?.info(`First run - detected locale: ${this.settings.pluginLanguage}, transcriptionLanguage set to detected locale, advanced settings initialized`);
         }
