@@ -192,7 +192,8 @@ export const zh: TranslationResource = {
             vadModeInstallInvalidName: '请选择名为 fvad.wasm 的文件。',
             vadModeInstallInvalidType: '所选文件不像 WebAssembly 模块。',
             vadModeInstallSuccess: '已安装 fvad.wasm。下次录音将尝试本地 VAD。',
-            vadModeInstallWriteError: '安装 fvad.wasm 失败：{error}'
+            vadModeInstallWriteError: '安装 VAD 相关文件失败：{error}',
+            vadModeInstallJsMissing: '本地 VAD 还需要 fvad.js。若不存在，请手动复制到同一插件目录。'
         },
         options: {
             modelMini: 'GPT-4o mini Transcribe',

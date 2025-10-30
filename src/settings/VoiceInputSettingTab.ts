@@ -237,6 +237,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
 
         const FVAD_DOWNLOAD_URL = 'https://github.com/echogarden-project/fvad-wasm';
         const wasmFileName = 'fvad.wasm';
+        const loaderFileName = 'fvad.js';
         const vadInstructionsPath = getLocalVadInstructionsPath(this.app);
         const initialVadMode = this.plugin.settings.vadMode ?? 'disabled';
         const vadModeSetting = new Setting(containerEl)
@@ -273,18 +274,20 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 try {
                     const input = document.createElement('input');
                     input.type = 'file';
-                    input.accept = '.wasm,application/wasm';
+                    input.accept = '.wasm,.js,application/wasm';
+                    input.multiple = true;
                     input.onchange = async () => {
-                        const file = input.files?.[0];
-                        if (!file) return;
-                        if (file.name !== wasmFileName) {
+                        const files = input.files ? Array.from(input.files) : [];
+                        const wasmFile = files.find(file => file.name === wasmFileName);
+                        const jsFile = files.find(file => file.name === loaderFileName);
+
+                        if (!wasmFile) {
                             new Notice(this.i18n.t('ui.settings.vadModeInstallInvalidName'));
                             return;
                         }
 
-                        const buffer = await file.arrayBuffer();
-                        const bytes = new Uint8Array(buffer);
-                        if (bytes.length < 8 || bytes[0] !== 0x00 || bytes[1] !== 0x61 || bytes[2] !== 0x73 || bytes[3] !== 0x6d) {
+                        const wasmBytes = new Uint8Array(await wasmFile.arrayBuffer());
+                        if (wasmBytes.length < 8 || wasmBytes[0] !== 0x00 || wasmBytes[1] !== 0x61 || wasmBytes[2] !== 0x73 || wasmBytes[3] !== 0x6d) {
                             new Notice(this.i18n.t('ui.settings.vadModeInstallInvalidType'));
                             return;
                         }
@@ -295,12 +298,27 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                                 try {
                                     await adapter.mkdir(vadInstructionsPath);
                                 } catch (_) {
-                                    // Ignore mkdir errors (likely already exists)
+                                    // Ignore errors when directory already exists or cannot be created
                                 }
                             }
-                            const targetPath = getLocalVadAssetPath(this.app, wasmFileName);
-                            await adapter.writeBinary(targetPath, bytes);
-                            new Notice(this.i18n.t('ui.settings.vadModeInstallSuccess'));
+
+                            const wasmTarget = getLocalVadAssetPath(this.app, wasmFileName);
+                            await adapter.writeBinary(wasmTarget, wasmBytes);
+
+                            let loaderPresent = await adapter.exists(getLocalVadAssetPath(this.app, loaderFileName));
+                            if (jsFile) {
+                                const loaderContent = await jsFile.text();
+                                const loaderTarget = getLocalVadAssetPath(this.app, loaderFileName);
+                                await adapter.write(loaderTarget, loaderContent);
+                                loaderPresent = true;
+                            }
+
+                            if (!loaderPresent) {
+                                new Notice(this.i18n.t('ui.settings.vadModeInstallJsMissing'));
+                            } else {
+                                new Notice(this.i18n.t('ui.settings.vadModeInstallSuccess'));
+                            }
+
                             await refreshVadUI('local');
                         } catch (error) {
                             const message = error instanceof Error ? error.message : String(error);
@@ -332,6 +350,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 link.href = FVAD_DOWNLOAD_URL;
                 link.textContent = this.i18n.t('ui.settings.vadModeInstallLinkLabel');
                 link.target = '_blank';
+                link.rel = 'noopener noreferrer';
                 fragment.appendChild(link);
             } else if (includeLocal) {
                 fragment.appendChild(document.createElement('br'));
@@ -359,7 +378,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                     helperNote.createEl('a', {
                         text: this.i18n.t('ui.settings.vadModeInstallLinkLabel'),
                         href: FVAD_DOWNLOAD_URL,
-                        attr: { target: '_blank' }
+                        attr: { target: '_blank', rel: 'noopener noreferrer' }
                     });
                 }
             }

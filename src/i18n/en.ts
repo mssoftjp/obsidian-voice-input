@@ -192,7 +192,8 @@ export const en: TranslationResource = {
             vadModeInstallInvalidName: 'Please select a file named fvad.wasm.',
             vadModeInstallInvalidType: 'The selected file does not appear to be a WebAssembly module.',
             vadModeInstallSuccess: 'fvad.wasm installed. Local VAD will be attempted the next time you record.',
-            vadModeInstallWriteError: 'Failed to install fvad.wasm: {error}'
+            vadModeInstallWriteError: 'Failed to install VAD assets: {error}',
+            vadModeInstallJsMissing: 'Local VAD also needs fvad.js in the same plugin folder. Please copy it manually if it is not present.'
         },
         options: {
             modelMini: 'GPT-4o mini Transcribe',

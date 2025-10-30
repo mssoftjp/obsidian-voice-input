@@ -212,6 +212,7 @@ export type TranslationResource = {
       vadModeInstallInvalidType: string;
       vadModeInstallSuccess: string;
       vadModeInstallWriteError: string;
+      vadModeInstallJsMissing: string;
     };
     options: {
       modelMini: string;
