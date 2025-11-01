@@ -13,7 +13,7 @@ High-accuracy multilingual voice input for Obsidian. Uses OpenAI GPT-4o Audio Tr
 - Quick controls in view: copy/clear/insert at cursor/append to end
 - Auto‑save drafts: periodic and on blur, automatic restore
 - Multilingual support: Japanese, English, Chinese, Korean interface languages
-- Voice activity detection modes: Off by default for maximum accuracy, plus optional server-side chunking or local auto-stop when you install fvad.wasm/fvad.js
+- Voice activity detection modes: Off by default for maximum accuracy. Optional server-side chunking or local auto‑stop (requires fvad.wasm/fvad.js, installed manually)
 
 ## Requirements
 
@@ -26,9 +26,11 @@ Note: OpenAI usage is billed by API.
 ## Installation (manual)
 
 1. Download the latest assets from Releases
-2. Copy `main.js`, `manifest.json`, `styles.css` (add `fvad.wasm` and `fvad.js` only if you plan to enable Local VAD)
+2. Copy `main.js`, `manifest.json`, `styles.css` to `<vault>/.obsidian/plugins/voice-input/`
 3. Place them under `<vault>/.obsidian/plugins/voice-input/`
 4. Restart Obsidian and enable the plugin
+
+Local VAD (optional): this plugin does not ship the WebAssembly files. If you want local VAD auto‑stop, download `fvad.wasm` and `fvad.js` from the fvad‑wasm project and place them in the same plugin folder, or use the “Choose fvad.wasm / fvad.js…” button in Settings → Voice Activity Detection to copy them. Local VAD is desktop‑only.
 
 ## Commands
 
@@ -55,7 +57,12 @@ Tip: A settings gear in the view header opens the plugin’s settings.
 - AI Post‑processing: enable dictionary‑based cleanup (applied to all languages when enabled)
 - Maximum Recording Duration: slider (default 5 min)
 - Plugin Language: Japanese/English/Chinese/Korean (controls UI display only, auto-detected from Obsidian, adjustable)
-- Voice Activity Detection: choose Off (default), Server (faster turnaround), or Local (requires `fvad.wasm`/`fvad.js`)
+- Voice Activity Detection: choose Off (default, most accurate), Server (faster turnaround via upstream silence trimming), or Local (desktop auto‑stop; requires `fvad.wasm`/`fvad.js` installed manually)
+
+### Drafts and sync
+
+- The plugin periodically auto‑saves your in‑progress text as a draft under `<vault>/.obsidian/plugins/voice-input/draft.txt` and restores it when you reopen the view.
+- Drafts are device‑local and are not synchronized by Obsidian Sync or other services. If you clear the text area, the draft is removed.
 
 ## Security & Privacy
 
@@ -104,7 +111,7 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 - ビュー内のクイック操作（コピー/クリア/カーソル位置へ挿入/末尾へ追記）
 - 自動保存（定期保存とフォーカス外れ時）。再オープン時に自動復元
 - 多言語サポート（日本語、英語、中国語、韓国語のインターフェース）
-- VADモード選択（標準はオフ。必要に応じてサーバーVADや `fvad.wasm` / `fvad.js` を使ったローカルVADを利用可能）
+- VADモード選択（標準はオフ＝精度重視。必要に応じてサーバーVAD（応答を速めたい場合）や `fvad.wasm` / `fvad.js` を使ったローカルVAD（デスクトップの自動停止）を利用可能）
 
 ## 必要条件
 
@@ -117,9 +124,11 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 ## インストール（手動）
 
 1. Releases から最新版を取得
-2. `main.js`、`manifest.json`、`styles.css`（ローカルVADを使う場合のみ `fvad.wasm` と `fvad.js` も）を配置
+2. `main.js`、`manifest.json`、`styles.css` を `<Vault>/.obsidian/plugins/voice-input/` に配置
 3. `<Vault>/.obsidian/plugins/voice-input/` に置く
 4. Obsidianを再起動し、プラグインを有効化
+
+ローカルVAD（任意）: 本プラグインは WebAssembly ファイルを同梱しません。ローカルVADの自動停止を使う場合、`fvad.wasm` と `fvad.js` を fvad‑wasm プロジェクトから取得して同じフォルダに配置するか、設定 → 音声区間検出 の「fvad.wasm / fvad.js を選択…」ボタンでコピーしてください。ローカルVADはデスクトップ専用です。
 
 ## コマンド
 
@@ -146,7 +155,12 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 - AI後処理: 辞書ベースの補正（有効時は全言語に適用）
 - 最大録音時間: スライダー（初期値5分）
 - **プラグイン言語**: UI表示のみを制御。Obsidianの言語設定から自動検出（ja/zh/ko/en）。
-- 音声区間検出 (VAD): オフ（標準）、サーバー（応答を速めたい場合）、ローカル（`fvad.wasm`/`fvad.js` 必須）から選択
+- 音声区間検出 (VAD): オフ（標準・精度重視）、サーバー（応答を速めたい場合の無音カット）、ローカル（デスクトップの自動停止。`fvad.wasm`/`fvad.js` を手動導入）から選択
+
+### ドラフトと同期
+
+- 入力途中のテキストは定期的にドラフトとして `<Vault>/.obsidian/plugins/voice-input/draft.txt` に保存され、ビュー再オープン時に復元されます。
+- ドラフトは端末ローカルの一時保存であり、Obsidian Sync 等では同期されません。テキストエリアを空にするとドラフトは削除されます。
 
 ### 言語設定
 
