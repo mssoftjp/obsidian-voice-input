@@ -12,8 +12,6 @@ const version = manifest.version;
 const jstDate = new Date(Date.now() + 9 * 60 * 60 * 1000); // JST = UTC+9
 const timestamp = jstDate.toISOString().replace(/[T:-]/g, '').replace(/\.\d{3}Z$/, '').replace(/^(\d{8})(\d{6})$/, '$1_$2'); // YYYYMMDD_HHMMSS
 
-const includeLocalVadAssets = process.env.INCLUDE_WASM === 'true' || process.argv.includes('--with-wasm');
-
 // Build output directories
 const buildRootDir = path.join(rootDir, 'build');
 const buildTimestampDir = path.join(buildRootDir, timestamp);
@@ -77,37 +75,15 @@ function copyToBuildDir(targetDir, targetName) {
         console.log(`  ⚠️  styles.css (optional, not found)`);
     }
     
-    const fvadSourceDir = path.join(rootDir, 'src', 'lib', 'fvad-wasm');
-    const fvadJsSrcPath = path.join(fvadSourceDir, 'fvad.js');
-
-    if (includeLocalVadAssets) {
-        const fvadJsDestPath = path.join(targetDir, 'fvad.js');
-        if (fs.existsSync(fvadJsSrcPath)) {
-            fs.copyFileSync(fvadJsSrcPath, fvadJsDestPath);
-            console.log('  ✅ fvad.js (WebAssembly loader)');
-        } else {
-            console.warn('  ⚠️  fvad.js not found (local VAD loader will be missing)');
+    // Ensure release bundle does not ship local VAD assets
+    ['fvad.js', 'fvad.wasm'].forEach(file => {
+        const targetPath = path.join(targetDir, file);
+        if (fs.existsSync(targetPath)) {
+            fs.rmSync(targetPath, { force: true });
+            console.log(`  🧹 removed local VAD asset: ${file}`);
         }
-
-        const fvadWasmSrcPath = path.join(fvadSourceDir, 'fvad.wasm');
-        const fvadWasmDestPath = path.join(targetDir, 'fvad.wasm');
-        if (fs.existsSync(fvadWasmSrcPath)) {
-            fs.copyFileSync(fvadWasmSrcPath, fvadWasmDestPath);
-            console.log('  ✅ fvad.wasm (WebAssembly binary)');
-        } else {
-            console.warn('  ⚠️  fvad.wasm not found (skipped)');
-        }
-    } else {
-        const leftoverFiles = ['fvad.js', 'fvad.wasm'];
-        leftoverFiles.forEach(file => {
-            const targetPath = path.join(targetDir, file);
-            if (fs.existsSync(targetPath)) {
-                fs.rmSync(targetPath, { force: true });
-                console.log(`  🧹 removed leftover ${file}`);
-            }
-        });
-        console.log('  • Skipping local VAD assets (INCLUDE_WASM not set)');
-    }
+    });
+    console.log('  • Local VAD assets are excluded from release bundles');
 
     // Copy license files (best practice to ship with distribution)
     const licenseFiles = ['LICENSE', 'THIRD_PARTY_LICENSES.md'];
