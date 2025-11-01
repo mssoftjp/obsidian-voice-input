@@ -25,10 +25,11 @@ Note: OpenAI usage is billed by API.
 
 ## Installation (manual)
 
-1. Download the latest assets from Releases
-2. Copy `main.js`, `manifest.json`, `styles.css` to `<vault>/.obsidian/plugins/voice-input/`
-3. Place them under `<vault>/.obsidian/plugins/voice-input/`
-4. Restart Obsidian and enable the plugin
+1. Download the latest assets from Releases.
+2. Copy `main.js`, `manifest.json`, and `styles.css` into `<vault>/.obsidian/plugins/voice-input/`.
+3. Restart Obsidian and enable the plugin.
+
+Compatibility: requires Obsidian 1.8.0 or later (per `minAppVersion`).
 
 Local VAD (optional): this plugin does not ship the WebAssembly files. If you want local VAD auto‑stop, download `fvad.wasm` and `fvad.js` from the fvad‑wasm project and place them in the same plugin folder, or use the “Choose fvad.wasm / fvad.js…” button in Settings → Voice Activity Detection to copy them. Local VAD is desktop‑only.
 
@@ -79,18 +80,6 @@ See also OpenAI’s Privacy Policy.
 - Microphone not recognized: allow mic access and restart Obsidian
 - Transcription fails: verify API key, connectivity, and OpenAI credit
 - Quiet audio: move closer to the mic and reduce background noise
- - Deploy didn’t find your vault: open the vault in Obsidian once so it appears in `obsidian.json`, then re‑run `npm run deploy`.
-
-## Development
-
-- Install deps: `npm ci`
-- Build: `npm run build-plugin` (outputs `build/latest/`)
-- Deploy locally: `npm run deploy` (alias: `npm run deploy-local`) — vaults are auto‑detected from Obsidian's config (and a few common locations as fallback). Works for iCloud or local vaults alike.
-- Analyze unused code (build-time): `npm run analyze:unused`
-
-### Documentation
-
-- Processing flow visualization: see [`docs/PROCESSING_FLOW.md`](docs/PROCESSING_FLOW.md)
 
 Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 
@@ -197,17 +186,6 @@ OpenAIのプライバシーポリシーもご参照ください。
 - マイクが認識されない: マイク許可の付与、Obsidianの再起動
 - 文字起こしに失敗: APIキー、通信、OpenAIクレジット残高を確認
 - 音量が小さい/雑音が多い: マイクに近づく、静かな環境で録音
- - 配布先の Vault が見つからない: 一度 Obsidian でその Vault を開いて `obsidian.json` に登録させてから、`npm run deploy` を再実行してください。
-
-## 開発
-
-- 依存インストール: `npm ci`
-- ビルド: `npm run build-plugin`
-- ローカル配布: `npm run deploy`（`npm run deploy-local` のエイリアス）。Vault は Obsidian の設定（必要に応じて一般的な場所も）から自動検出します。iCloud/ローカルの別を意識せずに配布できます。
-
-### ドキュメント
-
-- 処理フローの可視化: [`docs/PROCESSING_FLOW.md`](docs/PROCESSING_FLOW.md) を参照
 
 サードパーティライセンスは `THIRD_PARTY_LICENSES.md` を参照してください。
 
@@ -226,4 +204,4 @@ MIT License - 詳細は[LICENSE](LICENSE)ファイルをご確認ください。
 
 ## 貢献
 
-バグ報告や機能要望は[Issues](https://github.com/mssoftjp/obsidian-voice-input-private/issues)でお願いします。
+バグ報告や機能要望は[Issues](https://github.com/mssoftjp/obsidian-voice-input/issues)でお願いします。
