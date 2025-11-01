@@ -79,15 +79,16 @@ function copyToBuildDir(targetDir, targetName) {
     
     const fvadSourceDir = path.join(rootDir, 'src', 'lib', 'fvad-wasm');
     const fvadJsSrcPath = path.join(fvadSourceDir, 'fvad.js');
-    const fvadJsDestPath = path.join(targetDir, 'fvad.js');
-    if (fs.existsSync(fvadJsSrcPath)) {
-        fs.copyFileSync(fvadJsSrcPath, fvadJsDestPath);
-        console.log('  ✅ fvad.js (WebAssembly loader)');
-    } else {
-        console.warn('  ⚠️  fvad.js not found (local VAD loader will be missing)');
-    }
 
     if (includeLocalVadAssets) {
+        const fvadJsDestPath = path.join(targetDir, 'fvad.js');
+        if (fs.existsSync(fvadJsSrcPath)) {
+            fs.copyFileSync(fvadJsSrcPath, fvadJsDestPath);
+            console.log('  ✅ fvad.js (WebAssembly loader)');
+        } else {
+            console.warn('  ⚠️  fvad.js not found (local VAD loader will be missing)');
+        }
+
         const fvadWasmSrcPath = path.join(fvadSourceDir, 'fvad.wasm');
         const fvadWasmDestPath = path.join(targetDir, 'fvad.wasm');
         if (fs.existsSync(fvadWasmSrcPath)) {
@@ -97,7 +98,15 @@ function copyToBuildDir(targetDir, targetName) {
             console.warn('  ⚠️  fvad.wasm not found (skipped)');
         }
     } else {
-        console.log('  • Skipping fvad.wasm (INCLUDE_WASM not set)');
+        const leftoverFiles = ['fvad.js', 'fvad.wasm'];
+        leftoverFiles.forEach(file => {
+            const targetPath = path.join(targetDir, file);
+            if (fs.existsSync(targetPath)) {
+                fs.rmSync(targetPath, { force: true });
+                console.log(`  🧹 removed leftover ${file}`);
+            }
+        });
+        console.log('  • Skipping local VAD assets (INCLUDE_WASM not set)');
     }
 
     // Copy license files (best practice to ship with distribution)
