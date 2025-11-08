@@ -89,7 +89,7 @@ export class VADProcessor extends Disposable {
             await this.initializeFvadModule(wasmBuffer);
             
             // VAD インスタンスを作成して設定
-            await this.createAndConfigureVAD();
+            this.createAndConfigureVAD();
             
             this.logger.info('WebRTC VAD processor initialized successfully');
             
@@ -142,17 +142,20 @@ export class VADProcessor extends Disposable {
             document.head.appendChild(script);
             
             // モジュールが読み込まれるのを待つ
-            setTimeout(async () => {
-                try {
+            setTimeout(() => {
+                const loadModule = async (): Promise<void> => {
                     if (!hasFvadModule(globalWindow)) {
                         throw new Error('fvad module not found in global scope');
                     }
                     
                     const createModule = globalWindow.__fvadModule;
+                    if (!createModule) {
+                        throw new Error('fvad module factory is undefined');
+                    }
                     this.logger.debug('fvad module loaded from global scope');
                     
                     // WebAssembly モジュールを初期化
-                    this.fvadModule = await createModule!({
+                    this.fvadModule = await createModule({
                         wasmBinary: new Uint8Array(wasmBuffer),
                         instantiateWasm: (
                             imports: WebAssembly.Imports, 
@@ -164,7 +167,7 @@ export class VADProcessor extends Disposable {
                                 })
                                 .catch((error) => {
                                     this.logger.error('WebRTC VAD WASM instantiation error', error);
-                                    reject(error);
+                                    reject(error instanceof Error ? error : new Error(String(error)));
                                 });
                             return {};
                         }
@@ -173,11 +176,13 @@ export class VADProcessor extends Disposable {
                     // クリーンアップ
                     document.head.removeChild(script);
                     delete globalWindow.__fvadModule;
-                    
-                    resolve();
-                } catch (error) {
-                    reject(error);
-                }
+                };
+
+                loadModule()
+                    .then(() => resolve())
+                    .catch((error) => {
+                        reject(error instanceof Error ? error : new Error(String(error)));
+                    });
             }, 100); // モジュール読み込みを待つ
         });
     }
@@ -185,7 +190,7 @@ export class VADProcessor extends Disposable {
     /**
      * VAD インスタンスを作成して設定
      */
-    private async createAndConfigureVAD(): Promise<void> {
+    private createAndConfigureVAD(): void {
         if (!this.fvadModule) {
             throw new Error('fvad module not initialized');
         }
@@ -313,7 +318,7 @@ export class VADProcessor extends Disposable {
     /**
      * 音声セグメントを検出
      */
-    async detectSpeechSegments(audioData: Float32Array): Promise<VADSegment[]> {
+    detectSpeechSegments(audioData: Float32Array): VADSegment[] {
         this.throwIfDisposed();
         if (!this.fvadModule || !this.vadInstance || !this.bufferPtr) {
             throw new Error('VAD not initialized');

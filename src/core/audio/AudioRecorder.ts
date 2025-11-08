@@ -261,12 +261,17 @@ export class AudioRecorder extends Disposable {
 
             // Set up maximum recording time limit
             const maxSeconds = this.options.maxRecordingSeconds || AUDIO_CONSTANTS.MAX_RECORDING_SECONDS;
-            this.maxRecordingTimer = setTimeout(async () => {
+            this.maxRecordingTimer = setTimeout(() => {
                 this.logger?.info(`Maximum recording time (${maxSeconds}s) reached, stopping recording`);
-                const audioBlob = await this.stopRecording();
-                if (audioBlob && this.options.onSpeechEnd) {
-                    this.options.onSpeechEnd(audioBlob);
-                }
+                void this.stopRecording()
+                    .then((audioBlob) => {
+                        if (audioBlob && this.options.onSpeechEnd) {
+                            this.options.onSpeechEnd(audioBlob);
+                        }
+                    })
+                    .catch(error => {
+                        this.logger?.error('Failed to stop recording after reaching max duration', error);
+                    });
             }, maxSeconds * 1000);
 
             this.mediaRecorder.ondataavailable = (event) => {
@@ -293,7 +298,7 @@ export class AudioRecorder extends Disposable {
         }
     }
 
-    private async startContinuousProcessing(): Promise<void> {
+    private startContinuousProcessing(): void {
         if (!this.audioContext || !this.sourceNode) return;
         const lowPassFilter = this.lowPassFilter;
         if (!lowPassFilter) {
@@ -320,9 +325,13 @@ export class AudioRecorder extends Disposable {
                 this.workletNode.port.postMessage({ type: 'start' });
 
                 // Handle audio data from worklet
-                this.workletNode.port.onmessage = async (event) => {
+                this.workletNode.port.onmessage = (event) => {
                     if (event.data.type === 'audio' && this.isRecording) {
-                        await this.processAudioData(event.data.data);
+                        try {
+                            this.processAudioData(event.data.data);
+                        } catch (error) {
+                            this.logger?.error('Failed to process audio data from AudioWorklet', error);
+                        }
                     }
                 };
 
@@ -353,16 +362,20 @@ export class AudioRecorder extends Disposable {
         lowPassFilter.connect(scriptProcessor);
         scriptProcessor.connect(this.audioContext.destination);
 
-        scriptProcessor.onaudioprocess = async (event) => {
+        scriptProcessor.onaudioprocess = (event) => {
             if (!this.isRecording) return;
 
             const inputData = event.inputBuffer.getChannelData(0);
             const audioData = new Float32Array(inputData);
-            await this.processAudioData(audioData);
+            try {
+                this.processAudioData(audioData);
+            } catch (error) {
+                this.logger?.error('Failed to process audio data from ScriptProcessor', error);
+            }
         };
     }
 
-    private async processAudioData(audioData: Float32Array): Promise<void> {
+    private processAudioData(audioData: Float32Array): void {
         // Early return if not recording to prevent unnecessary processing
         if (!this.isRecording) {
             return;
@@ -401,7 +414,7 @@ export class AudioRecorder extends Disposable {
                 
 
                 // Process with VAD
-                const segments = this.vadProcessor ? await this.vadProcessor.detectSpeechSegments(combinedData) : [];
+                const segments = this.vadProcessor ? this.vadProcessor.detectSpeechSegments(combinedData) : [];
                 
                 if (segments.length > 0) {
                     this.handleSpeechDetected();
@@ -465,13 +478,19 @@ export class AudioRecorder extends Disposable {
         // Check if we should auto-stop due to silence (only in VAD mode)
         if (this.options.useVAD && this.lastSpeechTime > 0 && !this.silenceTimer) {
             const autoStopDuration = this.options.autoStopSilenceDuration ?? DEFAULT_AUDIO_SETTINGS.autoStopSilenceDuration;
-            this.silenceTimer = setTimeout(async () => {
-                if (this.isRecording) {
-                    const audioBlob = await this.stopRecording();
-                    if (audioBlob && this.options.onSpeechEnd) {
-                        this.options.onSpeechEnd(audioBlob);
-                    }
+            this.silenceTimer = setTimeout(() => {
+                if (!this.isRecording) {
+                    return;
                 }
+                void this.stopRecording()
+                    .then((audioBlob) => {
+                        if (audioBlob && this.options.onSpeechEnd) {
+                            this.options.onSpeechEnd(audioBlob);
+                        }
+                    })
+                    .catch(error => {
+                        this.logger?.error('Failed to stop recording after silence detection', error);
+                    });
             }, this.options.useVAD ? autoStopDuration : 0);
         }
     }
