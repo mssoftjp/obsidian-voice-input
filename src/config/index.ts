@@ -38,8 +38,7 @@ export {
  * 設定ヘルパー関数
  * @deprecated 現在未使用 - 将来の拡張用に保持
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const ConfigHelper = {
+export const ConfigHelper = {
     /**
    * ユーザー設定とデフォルト設定をマージ
    * @param userSettings ユーザーの設定

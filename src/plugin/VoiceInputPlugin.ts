@@ -422,11 +422,9 @@ export default class VoiceInputPlugin extends Plugin {
         await this.saveData(dataToSave);
 
         // Broadcast settings-changed event for open views to react immediately (UI + services)
-        try {
-            // Custom workspace event (safe to ignore if not observed)
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (this.app.workspace as any).trigger?.('voice-input:settings-changed', { settings: this.settings });
-        } catch (_) { /* noop */ }
+        if (typeof this.app.workspace.trigger === 'function') {
+            this.app.workspace.trigger('voice-input:settings-changed', { settings: this.settings });
+        }
 
         // Update logger configuration based on new settings
         Logger.getInstance().updateConfig({

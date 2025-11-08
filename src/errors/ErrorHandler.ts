@@ -136,7 +136,6 @@ export class ErrorHandler implements IDisposable {
                 !errorString.includes('voice-input')) {
                 // Log in development mode only
                 if (this.options.isDevelopment) {
-                    // eslint-disable-next-line no-console
                     console.debug('[VoiceInput] Ignored external error:', error);
                 }
                 return;
@@ -276,31 +275,32 @@ export class ErrorHandler implements IDisposable {
             timestamp: context.timestamp.toISOString()
         };
 
+        const detailedLog = {
+            ...logData,
+            stack: error.stack,
+            name: error.name
+        };
+
         if (this.options.isDevelopment) {
-            // 開発モードでは詳細情報を出力
-            // eslint-disable-next-line no-console
-            console.group(`[${severity.toUpperCase()}] ${context.component}.${context.operation}`);
-            // eslint-disable-next-line no-console
-            console.table(logData);
-            // eslint-disable-next-line no-console
-            console.trace();
-            // eslint-disable-next-line no-console
-            console.groupEnd();
-        } else {
-            // 本番モードでは簡潔に
-            switch (severity) {
-                case ErrorSeverity.FATAL:
-                case ErrorSeverity.ERROR:
-                    console.error(`[${context.component}] ${error.message}`, logData);
-                    break;
-                case ErrorSeverity.WARNING:
-                    console.warn(`[${context.component}] ${error.message}`, logData);
-                    break;
-                case ErrorSeverity.INFO:
-                    // eslint-disable-next-line no-console
-                    console.info(`[${context.component}] ${error.message}`, logData);
-                    break;
-            }
+            console.debug(
+                `[${severity.toUpperCase()}] ${context.component}.${context.operation}`,
+                detailedLog
+            );
+            return;
+        }
+
+        // 本番モードでは簡潔に
+        switch (severity) {
+            case ErrorSeverity.FATAL:
+            case ErrorSeverity.ERROR:
+                console.error(`[${context.component}] ${error.message}`, logData);
+                break;
+            case ErrorSeverity.WARNING:
+                console.warn(`[${context.component}] ${error.message}`, logData);
+                break;
+            case ErrorSeverity.INFO:
+                console.debug(`[${context.component}] ${error.message}`, logData);
+                break;
         }
     }
 

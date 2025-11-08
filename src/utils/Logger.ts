@@ -26,6 +26,7 @@ export class Logger {
     };
     private moduleLoggers: Map<string, Logger> = new Map();
     private static readonly MAX_MODULE_LOGGERS = 100; // Prevent unbounded growth
+    private performanceTimers: Map<string, number> = new Map();
 
     private constructor(config?: Partial<LoggerConfig>) {
         if (config) {
@@ -213,8 +214,11 @@ export class Logger {
 	 */
     time(label: string): void {
         if (this.shouldLog(LogLevel.DEBUG)) {
-            // eslint-disable-next-line no-console
-            console.time(`${this.config.prefix} ${label}`);
+            const timerKey = `${this.config.prefix} ${label}`;
+            const now = typeof performance !== 'undefined' && typeof performance.now === 'function'
+                ? performance.now()
+                : Date.now();
+            this.performanceTimers.set(timerKey, now);
         }
     }
 
@@ -223,8 +227,16 @@ export class Logger {
 	 */
     timeEnd(label: string): void {
         if (this.shouldLog(LogLevel.DEBUG)) {
-            // eslint-disable-next-line no-console
-            console.timeEnd(`${this.config.prefix} ${label}`);
+            const timerKey = `${this.config.prefix} ${label}`;
+            const start = this.performanceTimers.get(timerKey);
+            if (start === undefined) return;
+
+            const now = typeof performance !== 'undefined' && typeof performance.now === 'function'
+                ? performance.now()
+                : Date.now();
+            const duration = now - start;
+            this.performanceTimers.delete(timerKey);
+            console.debug(`${timerKey} ${duration.toFixed(2)}ms`);
         }
     }
 
