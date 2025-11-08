@@ -83,7 +83,7 @@ export class SecurityUtils {
             } else {
                 return { valid: false, error: `${i18n.t('error.general.error')}: HTTP ${status}` };
             }
-        } catch (_error) {
+        } catch {
             return { valid: false, error: i18n.t('error.general.network') };
         }
     }

@@ -1,8 +1,7 @@
 import { App, FileSystemAdapter, normalizePath } from 'obsidian';
-import { SpeechSegment } from '../../interfaces';
 import { VAD_CONSTANTS, DEFAULT_VAD_SETTINGS, FILE_CONSTANTS } from '../../config';
 import { Disposable } from '../../interfaces';
-import { FvadModule, FvadModuleFactory, WindowWithFvad, hasFvadModule } from '../../types';
+import { FvadModule, WindowWithFvad, hasFvadModule } from '../../types';
 import { createServiceLogger } from '../../services';
 import { Logger } from '../../utils';
 

@@ -40,16 +40,6 @@ export interface CorrectionRule {
     caseSensitive?: boolean;
 }
 
-/**
- * 辞書修正オプション
- *
- * CLAUDE.mdの哲学に従った設計:
- * - シンプルな固定置換のみをサポート
- */
-export interface DictionaryCorrectorOptions {
-    enabled: boolean;
-}
-
 // Simple correction dictionary for speech recognition errors
 export interface CorrectionEntry {
     from: string[];    // 誤認識パターン（複数対応）

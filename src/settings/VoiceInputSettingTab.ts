@@ -324,7 +324,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                                     if (!(await adapter.exists(vadInstructionsPath))) {
                                         try {
                                             await adapter.mkdir(vadInstructionsPath);
-                                        } catch (_) {
+                                        } catch {
                                             // Ignore errors when directory already exists or cannot be created
                                         }
                                     }

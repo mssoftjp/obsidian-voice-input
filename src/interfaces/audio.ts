@@ -87,9 +87,3 @@ export interface IVADProcessor {
     process(audioData: Float32Array): Promise<boolean>;
     destroy(): void;
 }
-
-export interface SpeechSegment {
-    audioData: Float32Array;
-    startTime: number;
-    endTime: number;
-}

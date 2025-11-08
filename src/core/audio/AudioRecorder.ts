@@ -1,4 +1,4 @@
-import { VADProcessor, VADSegment } from './VADProcessor';
+import { VADProcessor } from './VADProcessor';
 import { AudioVisualizer, SimpleAudioLevelIndicator } from './AudioVisualizer';
 import { AudioRecorderOptions } from '../../interfaces';
 import { TranscriptionError, TranscriptionErrorType } from '../../errors';
@@ -8,7 +8,7 @@ import { AUDIO_CONSTANTS, DEFAULT_AUDIO_SETTINGS, DEFAULT_VAD_SETTINGS, VAD_CONS
 import { Disposable, CompositeDisposable } from '../../interfaces';
 import { Logger } from '../../utils';
 import { createServiceLogger } from '../../services';
-import { WindowWithWebkitAudio, hasWebkitAudioContext } from '../../types';
+import { WindowWithWebkitAudio } from '../../types';
 
 export class AudioRecorder extends Disposable {
     private mediaRecorder: MediaRecorder | null = null;

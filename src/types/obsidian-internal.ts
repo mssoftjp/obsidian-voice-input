@@ -41,13 +41,6 @@ export function hasInternalSettingAPI(app: App): app is AppInternal {
 }
 
 /**
- * Type guard to check if window has webkit audio context
- */
-export function hasWebkitAudioContext(window: Window): window is WindowWithWebkitAudio {
-    return 'webkitAudioContext' in window;
-}
-
-/**
  * Safely get Obsidian locale with fallbacks
  */
 export function getObsidianLocale(app: App): string {
