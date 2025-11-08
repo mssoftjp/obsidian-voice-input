@@ -293,7 +293,7 @@ export class VoiceInputViewActions {
 
             // Clean up audio recorder (check if still exists)
             if (this.audioRecorder) {
-                this.audioRecorder.destroy();
+                this.audioRecorder.dispose();
                 this.audioRecorder = null;
             }
             this.recordingState.isRecording = false;
@@ -689,7 +689,7 @@ export class VoiceInputViewActions {
 
             // Clean up audio recorder
             if (this.audioRecorder) {
-                this.audioRecorder.destroy();
+                this.audioRecorder.dispose();
                 this.audioRecorder = null;
             }
 
@@ -891,7 +891,7 @@ export class VoiceInputViewActions {
             });
 
             // Then destroy the recorder
-            this.audioRecorder.destroy();
+            this.audioRecorder.dispose();
             this.audioRecorder = null;
         }
 

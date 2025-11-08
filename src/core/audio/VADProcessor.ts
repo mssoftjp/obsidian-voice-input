@@ -96,7 +96,7 @@ export class VADProcessor extends Disposable {
         } catch (error) {
             this.logger.error('WebRTC VAD initialization error', error);
             // リソースをクリーンアップ
-            this.destroy();
+            this.dispose();
             throw error;
         }
     }

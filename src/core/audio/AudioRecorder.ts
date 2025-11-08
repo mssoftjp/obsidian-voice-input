@@ -14,6 +14,7 @@ export class AudioRecorder extends Disposable {
     private mediaRecorder: MediaRecorder | null = null;
     private audioContext: AudioContext | null = null;
     private analyserNode: AnalyserNode | null = null;
+    private processingAnalyserNode: AnalyserNode | null = null;
     private sourceNode: MediaStreamAudioSourceNode | null = null;
     private gainNode: GainNode | null = null; // 音声増幅用
     private highPassFilter: BiquadFilterNode | null = null; // 80Hz HPF
@@ -30,6 +31,8 @@ export class AudioRecorder extends Disposable {
     private continuousAudioData: Float32Array[] = [];
     private audioRingBuffer: AudioRingBuffer;
     private sampleRate: number = AUDIO_CONSTANTS.SAMPLE_RATE;
+    private analyserFrameRequest: number | null = null;
+    private analyserDataBuffer: Float32Array | null = null;
     private workletReady: boolean = false;
     private workletBlobURL: string | null = null;
     private microphoneReady: boolean = false;
@@ -236,12 +239,17 @@ export class AudioRecorder extends Disposable {
             
             const analyserNode = audioContext.createAnalyser();
             this.analyserNode = analyserNode;
+
+            const processingAnalyserNode = audioContext.createAnalyser();
+            processingAnalyserNode.fftSize = AUDIO_CONSTANTS.BUFFER_SIZE;
+            this.processingAnalyserNode = processingAnalyserNode;
             
             // Connect: source -> gain -> HPF -> LPF -> analyser
             this.sourceNode.connect(gainNode);
             gainNode.connect(highPassFilter);
             highPassFilter.connect(lowPassFilter);
             lowPassFilter.connect(analyserNode);
+            lowPassFilter.connect(processingAnalyserNode);
 
             // Connect visualizer
             if (this.visualizer) {
@@ -306,6 +314,8 @@ export class AudioRecorder extends Disposable {
             return;
         }
 
+        this.stopAnalyserProcessing();
+
         if (this.workletReady) {
             // Use AudioWorklet (preferred)
             try {
@@ -339,40 +349,57 @@ export class AudioRecorder extends Disposable {
                 lowPassFilter.connect(this.workletNode);
                 this.workletNode.connect(this.audioContext.destination);
             } catch (error) {
-                this.logger?.warn('Failed to use AudioWorklet, falling back to ScriptProcessor', error);
+                this.logger?.warn('Failed to use AudioWorklet, falling back to analyser-based processing', error);
                 this.workletReady = false;
-                this.startLegacyProcessing();
+                this.startAnalyserProcessing();
             }
         } else {
-            // Fallback to ScriptProcessor
-            this.startLegacyProcessing();
+            // Fallback to analyser polling
+            this.startAnalyserProcessing();
         }
     }
 
-    private startLegacyProcessing(): void {
-        if (!this.audioContext || !this.sourceNode) return;
-
-        const bufferSize = AUDIO_CONSTANTS.BUFFER_SIZE;
-        const scriptProcessor = this.audioContext.createScriptProcessor(bufferSize, 1, 1);
-        const lowPassFilter = this.lowPassFilter;
-        if (!lowPassFilter) {
-            this.logger?.warn('Low-pass filter not initialized; cannot start legacy audio processing');
+    private startAnalyserProcessing(): void {
+        const analyser = this.processingAnalyserNode;
+        if (!analyser) {
+            this.logger?.warn('Processing analyser not initialized; cannot start analyser-based audio processing');
             return;
         }
-        lowPassFilter.connect(scriptProcessor);
-        scriptProcessor.connect(this.audioContext.destination);
 
-        scriptProcessor.onaudioprocess = (event) => {
-            if (!this.isRecording) return;
+        this.stopAnalyserProcessing();
 
-            const inputData = event.inputBuffer.getChannelData(0);
-            const audioData = new Float32Array(inputData);
+        if (!this.analyserDataBuffer || this.analyserDataBuffer.length !== analyser.fftSize) {
+            this.analyserDataBuffer = new Float32Array(analyser.fftSize);
+        }
+
+        const processFrame = (): void => {
+            if (!this.isRecording || !this.processingAnalyserNode || !this.analyserDataBuffer) {
+                this.analyserFrameRequest = null;
+                return;
+            }
+
+            this.processingAnalyserNode.getFloatTimeDomainData(this.analyserDataBuffer);
+
+            // Copy the buffer to avoid mutation before processing completes
+            const audioData = new Float32Array(this.analyserDataBuffer);
             try {
                 this.processAudioData(audioData);
             } catch (error) {
-                this.logger?.error('Failed to process audio data from ScriptProcessor', error);
+                this.logger?.error('Failed to process audio data from analyser fallback', error);
             }
+
+            this.analyserFrameRequest = requestAnimationFrame(processFrame);
         };
+
+        this.analyserFrameRequest = requestAnimationFrame(processFrame);
+    }
+
+    private stopAnalyserProcessing(): void {
+        if (this.analyserFrameRequest !== null) {
+            cancelAnimationFrame(this.analyserFrameRequest);
+            this.analyserFrameRequest = null;
+        }
+        this.analyserDataBuffer = null;
     }
 
     private processAudioData(audioData: Float32Array): void {
@@ -559,6 +586,8 @@ export class AudioRecorder extends Disposable {
             this.workletNode = null;
         }
 
+        this.stopAnalyserProcessing();
+
         if (this.visualizer) {
             this.visualizer.stop();
         }
@@ -593,6 +622,11 @@ export class AudioRecorder extends Disposable {
             this.analyserNode = null;
         }
 
+        if (this.processingAnalyserNode) {
+            this.processingAnalyserNode.disconnect();
+            this.processingAnalyserNode = null;
+        }
+
         this.chunks = [];
         this.continuousAudioData = [];
         this.lastSpeechTime = 0;
@@ -622,7 +656,7 @@ export class AudioRecorder extends Disposable {
         this.cleanup();
         
         if (this.visualizer) {
-            this.visualizer.destroy();
+            this.visualizer.dispose();
             this.visualizer = null;
         }
 
@@ -638,7 +672,7 @@ export class AudioRecorder extends Disposable {
         }
 
         if (this.vadProcessor) {
-            this.vadProcessor.destroy();
+            this.vadProcessor.dispose();
             this.vadProcessor = null;
         }
         

@@ -215,7 +215,7 @@ export class AudioVisualizer extends Disposable {
     }
 }
 
-export class SimpleAudioLevelIndicator {
+export class SimpleAudioLevelIndicator extends Disposable {
     private container: HTMLElement;
     private levelBar: HTMLElement;
     private vadIndicator: HTMLElement;
@@ -225,6 +225,7 @@ export class SimpleAudioLevelIndicator {
     private isActive: boolean = false;
 
     constructor(container: HTMLElement) {
+        super();
         this.container = container;
         this.createUI();
     }
@@ -307,8 +308,12 @@ export class SimpleAudioLevelIndicator {
         this.levelBar.style.setProperty('--audio-level-width', `${Math.round(percentage)}%`);
     }
 
-    destroy(): void {
+    protected onDispose(): void {
         this.stop();
         this.container.empty();
+    }
+
+    destroy(): void {
+        this.dispose();
     }
 }
