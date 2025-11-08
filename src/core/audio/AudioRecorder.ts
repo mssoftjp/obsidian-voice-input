@@ -149,9 +149,16 @@ export class AudioRecorder extends Disposable {
             if (!this.audioContext || this.audioContext.state === 'closed') {
                 await this.initialize();
             }
+            const audioContext = this.audioContext;
+            if (!audioContext) {
+                throw new TranscriptionError(
+                    TranscriptionErrorType.AUDIO_INITIALIZATION_FAILED,
+                    'Audio context is not initialized'
+                );
+            }
             // Safariなどでのsuspend対策
-            if (this.audioContext!.state === 'suspended') {
-                await this.audioContext!.resume();
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
             }
 
             // Log recording session start
@@ -205,32 +212,36 @@ export class AudioRecorder extends Disposable {
             }
 
             // Setup audio processing chain with filters
-            if (!this.audioContext) {
+            if (!audioContext) {
                 throw new TranscriptionError(
                     TranscriptionErrorType.AUDIO_INITIALIZATION_FAILED,
                     'Audio context is not initialized'
                 );
             }
-            this.sourceNode = this.audioContext.createMediaStreamSource(this.stream);
-            this.gainNode = this.audioContext!.createGain();
-            this.gainNode.gain.value = DEFAULT_AUDIO_SETTINGS.gain; // デフォルトゲイン
+            this.sourceNode = audioContext.createMediaStreamSource(this.stream);
+            const gainNode = audioContext.createGain();
+            this.gainNode = gainNode;
+            gainNode.gain.value = DEFAULT_AUDIO_SETTINGS.gain; // デフォルトゲイン
             
             // Create BiquadFilters for band-limiting
-            this.highPassFilter = this.audioContext!.createBiquadFilter();
-            this.highPassFilter.type = 'highpass';
-            this.highPassFilter.frequency.value = AUDIO_CONSTANTS.FILTERS.HIGH_PASS_FREQ; // HPF - 低域ノイズ除去
+            const highPassFilter = audioContext.createBiquadFilter();
+            this.highPassFilter = highPassFilter;
+            highPassFilter.type = 'highpass';
+            highPassFilter.frequency.value = AUDIO_CONSTANTS.FILTERS.HIGH_PASS_FREQ; // HPF - 低域ノイズ除去
             
-            this.lowPassFilter = this.audioContext!.createBiquadFilter();
-            this.lowPassFilter.type = 'lowpass';
-            this.lowPassFilter.frequency.value = AUDIO_CONSTANTS.FILTERS.LOW_PASS_FREQ; // LPF - 音声帯域に制限
+            const lowPassFilter = audioContext.createBiquadFilter();
+            this.lowPassFilter = lowPassFilter;
+            lowPassFilter.type = 'lowpass';
+            lowPassFilter.frequency.value = AUDIO_CONSTANTS.FILTERS.LOW_PASS_FREQ; // LPF - 音声帯域に制限
             
-            this.analyserNode = this.audioContext!.createAnalyser();
+            const analyserNode = audioContext.createAnalyser();
+            this.analyserNode = analyserNode;
             
             // Connect: source -> gain -> HPF -> LPF -> analyser
-            this.sourceNode.connect(this.gainNode);
-            this.gainNode.connect(this.highPassFilter);
-            this.highPassFilter.connect(this.lowPassFilter);
-            this.lowPassFilter.connect(this.analyserNode);
+            this.sourceNode.connect(gainNode);
+            gainNode.connect(highPassFilter);
+            highPassFilter.connect(lowPassFilter);
+            lowPassFilter.connect(analyserNode);
 
             // Connect visualizer
             if (this.visualizer) {
@@ -284,6 +295,11 @@ export class AudioRecorder extends Disposable {
 
     private async startContinuousProcessing(): Promise<void> {
         if (!this.audioContext || !this.sourceNode) return;
+        const lowPassFilter = this.lowPassFilter;
+        if (!lowPassFilter) {
+            this.logger?.warn('Low-pass filter not initialized; skipping continuous processing setup');
+            return;
+        }
 
         if (this.workletReady) {
             // Use AudioWorklet (preferred)
@@ -311,7 +327,7 @@ export class AudioRecorder extends Disposable {
                 };
 
                 // Connect nodes: lowPassFilter (end of chain) -> worklet
-                this.lowPassFilter!.connect(this.workletNode);
+                lowPassFilter.connect(this.workletNode);
                 this.workletNode.connect(this.audioContext.destination);
             } catch (error) {
                 this.logger?.warn('Failed to use AudioWorklet, falling back to ScriptProcessor', error);
@@ -329,8 +345,12 @@ export class AudioRecorder extends Disposable {
 
         const bufferSize = AUDIO_CONSTANTS.BUFFER_SIZE;
         const scriptProcessor = this.audioContext.createScriptProcessor(bufferSize, 1, 1);
-        
-        this.lowPassFilter!.connect(scriptProcessor);
+        const lowPassFilter = this.lowPassFilter;
+        if (!lowPassFilter) {
+            this.logger?.warn('Low-pass filter not initialized; cannot start legacy audio processing');
+            return;
+        }
+        lowPassFilter.connect(scriptProcessor);
         scriptProcessor.connect(this.audioContext.destination);
 
         scriptProcessor.onaudioprocess = async (event) => {
@@ -444,6 +464,7 @@ export class AudioRecorder extends Disposable {
 
         // Check if we should auto-stop due to silence (only in VAD mode)
         if (this.options.useVAD && this.lastSpeechTime > 0 && !this.silenceTimer) {
+            const autoStopDuration = this.options.autoStopSilenceDuration ?? DEFAULT_AUDIO_SETTINGS.autoStopSilenceDuration;
             this.silenceTimer = setTimeout(async () => {
                 if (this.isRecording) {
                     const audioBlob = await this.stopRecording();
@@ -451,13 +472,17 @@ export class AudioRecorder extends Disposable {
                         this.options.onSpeechEnd(audioBlob);
                     }
                 }
-            }, this.options.useVAD ? this.options.autoStopSilenceDuration! : 0);
+            }, this.options.useVAD ? autoStopDuration : 0);
         }
     }
 
     async stopRecording(): Promise<Blob | null> {
         this.throwIfDisposed();
-        if (!this.isRecording || !this.mediaRecorder) {
+        if (!this.isRecording) {
+            return null;
+        }
+        const recorder = this.mediaRecorder;
+        if (!recorder) {
             return null;
         }
         
@@ -480,7 +505,7 @@ export class AudioRecorder extends Disposable {
         this.isRecording = false;
 
         return new Promise((resolve) => {
-            this.mediaRecorder!.onstop = () => {
+            recorder.onstop = () => {
                 const audioBlob = new Blob(this.chunks, { type: 'audio/webm' });
                 
                 this.cleanup();
@@ -490,7 +515,7 @@ export class AudioRecorder extends Disposable {
                 resolve(audioBlob);
             };
 
-            this.mediaRecorder!.stop();
+            recorder.stop();
         });
     }
 

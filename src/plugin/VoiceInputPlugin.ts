@@ -406,11 +406,11 @@ export default class VoiceInputPlugin extends Plugin {
         // 言語連動が無効な場合: advanced.transcriptionLanguage を優先
         if (this.settings.advanced?.languageLinkingEnabled === false) {
             const advancedLang = this.settings.advanced?.transcriptionLanguage;
-            return (advancedLang ?? this.detectPluginLanguage()) as 'ja' | 'zh' | 'ko' | 'en';
+            return advancedLang ?? this.detectPluginLanguage();
         }
         // 言語連動が有効: 通常の transcriptionLanguage を使用
         const baseLang = this.settings.transcriptionLanguage;
-        return (baseLang ?? this.detectPluginLanguage()) as 'ja' | 'zh' | 'ko' | 'en';
+        return baseLang ?? this.detectPluginLanguage();
     }
 
     async saveSettings() {

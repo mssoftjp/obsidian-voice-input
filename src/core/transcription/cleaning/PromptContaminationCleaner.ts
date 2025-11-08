@@ -275,9 +275,9 @@ export class PromptContaminationCleaner implements TextCleaner {
         const compiled: RegExp[] = [];
         for (const p of contextPatterns) {
             try {
-                const m = p.match(/^\/(.*)\/([gimsuy]*)$/);
-                if (m) {
-                    const [, body, flags] = m as RegExpMatchArray;
+                const match = p.match(/^\/(.*)\/([gimsuy]*)$/);
+                if (match) {
+                    const [, body, flags] = match;
                     compiled.push(new RegExp(body, flags || 'g'));
                 }
             } catch {

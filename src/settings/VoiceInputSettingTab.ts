@@ -7,6 +7,7 @@ import {
 } from 'obsidian';
 import VoiceInputPlugin from '../plugin';
 import { DEFAULT_SETTINGS } from '../interfaces';
+import type { VoiceInputSettings } from '../interfaces';
 import { DICTIONARY_CONSTANTS, UI_CONSTANTS } from '../config';
 import { CorrectionEntry } from '../interfaces';
 import { SecurityUtils } from '../security';
@@ -17,6 +18,15 @@ import { VIEW_TYPE_VOICE_INPUT } from '../views';
 import { Logger, hasLocalVadAssets, getLocalVadInstructionsPath, getLocalVadAssetPath } from '../utils';
 import { patternsToString, stringToPatterns, migrateCorrectionEntries } from '../utils';
 import { DeferredViewHelper } from '../utils';
+
+type TranscriptionModelOption = VoiceInputSettings['transcriptionModel'];
+type VadModeOption = VoiceInputSettings['vadMode'];
+
+const isTranscriptionModel = (value: string): value is TranscriptionModelOption =>
+    value === 'gpt-4o-transcribe' || value === 'gpt-4o-mini-transcribe';
+
+const isVadMode = (value: string): value is VadModeOption =>
+    value === 'server' || value === 'local' || value === 'disabled';
 
 export class VoiceInputSettingTab extends PluginSettingTab {
     plugin: VoiceInputPlugin;
@@ -57,7 +67,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 ))
                 .setValue(this.plugin.settings.pluginLanguage)
                 .onChange(async (value: Locale) => {
-                    const transcriptionLocale = value as 'ja' | 'en' | 'zh' | 'ko';
+                    const transcriptionLocale: VoiceInputSettings['transcriptionLanguage'] = value;
                     this.plugin.settings.pluginLanguage = value;
 
                     // Keep transcription language synchronized while linking remains enabled
@@ -231,7 +241,11 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 .addOption('gpt-4o-mini-transcribe', this.i18n.t('ui.options.modelMini'))
                 .setValue(this.plugin.settings.transcriptionModel)
                 .onChange(async (value) => {
-                    this.plugin.settings.transcriptionModel = value as 'gpt-4o-transcribe' | 'gpt-4o-mini-transcribe';
+                    if (!isTranscriptionModel(value)) {
+                        this.logger.warn(`Unknown transcription model: ${value}`);
+                        return;
+                    }
+                    this.plugin.settings.transcriptionModel = value;
                     await this.plugin.saveSettings();
                 }));
 
@@ -249,88 +263,104 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                     .addOption('local', this.i18n.t('ui.options.vadLocal'))
                     .setValue(initialVadMode)
                     .onChange(async (value) => {
-                        const mode = value as 'server' | 'local' | 'disabled';
-                        this.plugin.settings.vadMode = mode;
+                        if (!isVadMode(value)) {
+                            this.logger.warn(`Unknown VAD mode: ${value}`);
+                            return;
+                        }
+                        this.plugin.settings.vadMode = value;
                         await this.plugin.saveSettings();
-                        const hasLocal = await refreshVadUI(mode);
-                        if (mode === 'local' && !hasLocal) {
+                        const hasLocal = await refreshVadUI(value);
+                        if (value === 'local' && !hasLocal) {
                             new Notice(this.i18n.t('notification.warning.localVadMissing', { path: vadInstructionsPath }));
                         }
                     });
             });
 
-        const infoEl = vadModeSetting.settingEl.querySelector('.setting-item-info') as HTMLElement | null;
-        const helperContainer = infoEl?.createDiv({ cls: 'voice-input-vad-helper' }) as HTMLDivElement | null;
+        const infoEl = vadModeSetting.settingEl.querySelector('.setting-item-info');
+        let helperContainer: HTMLDivElement | null = null;
         let helperNote: HTMLDivElement | null = null;
         let helperButton: HTMLButtonElement | null = null;
 
-        if (helperContainer) {
-            helperNote = helperContainer.createDiv({ cls: 'setting-item-description' }) as HTMLDivElement;
-            helperButton = helperContainer.createEl('button', { text: this.i18n.t('ui.settings.vadModeInstallButton') }) as HTMLButtonElement;
-            helperButton.classList.add('mod-cta');
-            helperContainer.style.display = 'none';
+        if (infoEl instanceof HTMLElement) {
+            helperContainer = infoEl.createDiv({ cls: 'voice-input-vad-helper' });
+            helperNote = helperContainer.createDiv({ cls: 'setting-item-description' });
+            const buttonElement = helperContainer.createEl('button', { text: this.i18n.t('ui.settings.vadModeInstallButton') });
 
-            helperButton.addEventListener('click', async () => {
-                try {
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.accept = '.wasm,.js,application/wasm';
-                    input.multiple = true;
-                    input.onchange = async () => {
-                        const files = input.files ? Array.from(input.files) : [];
-                        const wasmFile = files.find(file => file.name === wasmFileName);
-                        const jsFile = files.find(file => file.name === loaderFileName);
+            if (buttonElement instanceof HTMLButtonElement) {
+                helperButton = buttonElement;
+                helperButton.classList.add('mod-cta');
+                helperContainer.style.display = 'none';
 
-                        if (!wasmFile) {
-                            new Notice(this.i18n.t('ui.settings.vadModeInstallInvalidName'));
-                            return;
-                        }
+                helperButton.addEventListener('click', async () => {
+                    try {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = '.wasm,.js,application/wasm';
+                        input.multiple = true;
+                        input.onchange = async () => {
+                            const files = input.files ? Array.from(input.files) : [];
+                            const wasmFile = files.find(file => file.name === wasmFileName);
+                            const jsFile = files.find(file => file.name === loaderFileName);
 
-                        const wasmBytes = new Uint8Array(await wasmFile.arrayBuffer());
-                        if (wasmBytes.length < 8 || wasmBytes[0] !== 0x00 || wasmBytes[1] !== 0x61 || wasmBytes[2] !== 0x73 || wasmBytes[3] !== 0x6d) {
-                            new Notice(this.i18n.t('ui.settings.vadModeInstallInvalidType'));
-                            return;
-                        }
+                            if (!wasmFile) {
+                                new Notice(this.i18n.t('ui.settings.vadModeInstallInvalidName'));
+                                return;
+                            }
 
-                        try {
-                            const adapter = this.app.vault.adapter;
-                            if (!(await adapter.exists(vadInstructionsPath))) {
-                                try {
-                                    await adapter.mkdir(vadInstructionsPath);
-                                } catch (_) {
-                                    // Ignore errors when directory already exists or cannot be created
+                            const wasmBytes = new Uint8Array(await wasmFile.arrayBuffer());
+                            if (wasmBytes.length < 8 ||
+                                wasmBytes[0] !== 0x00 ||
+                                wasmBytes[1] !== 0x61 ||
+                                wasmBytes[2] !== 0x73 ||
+                                wasmBytes[3] !== 0x6d) {
+                                new Notice(this.i18n.t('ui.settings.vadModeInstallInvalidType'));
+                                return;
+                            }
+
+                            try {
+                                const adapter = this.app.vault.adapter;
+                                if (!(await adapter.exists(vadInstructionsPath))) {
+                                    try {
+                                        await adapter.mkdir(vadInstructionsPath);
+                                    } catch (_) {
+                                        // Ignore errors when directory already exists or cannot be created
+                                    }
                                 }
+
+                                const wasmTarget = getLocalVadAssetPath(this.app, wasmFileName);
+                                await adapter.writeBinary(wasmTarget, wasmBytes);
+
+                                let loaderPresent = await adapter.exists(getLocalVadAssetPath(this.app, loaderFileName));
+                                if (jsFile) {
+                                    const loaderContent = await jsFile.text();
+                                    const loaderTarget = getLocalVadAssetPath(this.app, loaderFileName);
+                                    await adapter.write(loaderTarget, loaderContent);
+                                    loaderPresent = true;
+                                }
+
+                                if (!loaderPresent) {
+                                    new Notice(this.i18n.t('ui.settings.vadModeInstallJsMissing'));
+                                } else {
+                                    new Notice(this.i18n.t('ui.settings.vadModeInstallSuccess'));
+                                }
+                            } catch (error) {
+                                console.error(error);
+                                new Notice(this.i18n.t('notification.error.fileWrite'));
                             }
 
-                            const wasmTarget = getLocalVadAssetPath(this.app, wasmFileName);
-                            await adapter.writeBinary(wasmTarget, wasmBytes);
-
-                            let loaderPresent = await adapter.exists(getLocalVadAssetPath(this.app, loaderFileName));
-                            if (jsFile) {
-                                const loaderContent = await jsFile.text();
-                                const loaderTarget = getLocalVadAssetPath(this.app, loaderFileName);
-                                await adapter.write(loaderTarget, loaderContent);
-                                loaderPresent = true;
-                            }
-
-                            if (!loaderPresent) {
-                                new Notice(this.i18n.t('ui.settings.vadModeInstallJsMissing'));
-                            } else {
-                                new Notice(this.i18n.t('ui.settings.vadModeInstallSuccess'));
-                            }
-
+                            const hasLocal = await hasLocalVadAssets(this.app);
                             await refreshVadUI('local');
-                        } catch (error) {
-                            const message = error instanceof Error ? error.message : String(error);
-                            new Notice(this.i18n.t('ui.settings.vadModeInstallWriteError', { error: message }));
-                        }
-                    };
-                    input.click();
-                } catch (error) {
-                    const message = error instanceof Error ? error.message : String(error);
-                    new Notice(this.i18n.t('ui.settings.vadModeInstallWriteError', { error: message }));
-                }
-            });
+                            if (hasLocal) {
+                                new Notice(this.i18n.t('notification.success.vadInstallComplete'));
+                            }
+                        };
+                        input.click();
+                    } catch (error) {
+                        console.error(error);
+                        new Notice(this.i18n.t('notification.error.fileRead'));
+                    }
+                });
+            }
         }
 
         const createVadDescription = (includeMissing: boolean, includeLocal: boolean): DocumentFragment => {
@@ -361,7 +391,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
             return fragment;
         };
 
-        const refreshVadUI = async (mode: 'server' | 'local' | 'disabled'): Promise<boolean> => {
+        const refreshVadUI = async (mode: VadModeOption): Promise<boolean> => {
             const hasLocal = await hasLocalVadAssets(this.app);
             const includeMissing = mode === 'local' && !hasLocal;
             const includeLocal = mode === 'local' && hasLocal;
