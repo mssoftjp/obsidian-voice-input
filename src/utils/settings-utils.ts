@@ -4,6 +4,9 @@
 
 import { VoiceInputSettings } from '../interfaces';
 
+type LegacySettingsKey = 'interfaceLanguage' | 'language';
+export type ExtendedSettingsKey = keyof VoiceInputSettings | LegacySettingsKey;
+
 /**
  * Type-safe function to merge settings objects
  */
@@ -25,8 +28,8 @@ export function mergeSettings(
  */
 export function hasSettingsKey(
     obj: unknown,
-    key: keyof VoiceInputSettings | string
-): obj is Record<string, unknown> {
+    key: ExtendedSettingsKey
+): obj is Record<ExtendedSettingsKey, unknown> {
     return typeof obj === 'object' && obj !== null && key in obj;
 }
 

@@ -42,43 +42,43 @@ export const en: TranslationResource = {
         }
     },
     status: {
-        idle: 'Status: idle',
-        memoCleared: 'Status: memo cleared',
-        clipboardCopied: 'Status: copied to clipboard',
-        noteInserted: 'Status: inserted into note',
-        noteAppended: 'Status: appended to end of note',
-        cleanupInProgress: 'Status: processing...',
-        cleanupCompleted: 'Status: processing completed',
-        draftRestored: 'Status: previous draft restored',
+        idle: 'Status: Idle',
+        memoCleared: 'Status: Memo cleared',
+        clipboardCopied: 'Status: Copied to clipboard',
+        noteInserted: 'Status: Inserted into note',
+        noteAppended: 'Status: Appended to end of note',
+        cleanupInProgress: 'Status: Processing...',
+        cleanupCompleted: 'Status: Processing completed',
+        draftRestored: 'Status: Previous draft restored',
         recording: {
-            preparing: 'Status: preparing to record...',
-            micInit: 'Status: initializing microphone...',
-            recording: 'Status: recording...',
-            stopped: 'Status: stopped',
-            cancelled: 'Status: cancelled',
-            vadSpeech: 'Status: speech detected',
-            vadSilence: 'Status: silence detected'
+            preparing: 'Status: Preparing to record...',
+            micInit: 'Status: Initializing microphone...',
+            recording: 'Status: Recording...',
+            stopped: 'Status: Stopped',
+            cancelled: 'Status: Cancelled',
+            vadSpeech: 'Status: Speech detected',
+            vadSilence: 'Status: Silence detected'
         },
         processing: {
-            transcribing: 'Status: transcribing...',
-            correcting: 'Status: correcting...',
-            completed: 'Status: completed',
-            waiting: 'waiting'
+            transcribing: 'Status: Transcribing...',
+            correcting: 'Status: Correcting...',
+            completed: 'Status: Completed',
+            waiting: 'Status: Waiting'
         },
         transcription: {
-            vadAutoStopped: 'Status: auto-stopped due to silence',
-            maxDurationReached: 'Status: maximum duration reached',
-            audioTooShort: 'Status: audio is too short',
-            noAudioDetected: 'Status: no audio detected'
+            vadAutoStopped: 'Status: Auto-stopped due to silence',
+            maxDurationReached: 'Status: Maximum duration reached',
+            audioTooShort: 'Status: Audio is too short',
+            noAudioDetected: 'Status: No audio detected'
         },
         warning: {
-            noTextToClear: 'Status: no text to clear',
-            noTextToCopy: 'Status: no text to copy',
-            noTextToCleanup: 'Status: no text to process',
-            noTextToInsert: 'Status: no text to insert',
-            clearConfirm: 'Status: press again to clear'
+            noTextToClear: 'Status: No text to clear',
+            noTextToCopy: 'Status: No text to copy',
+            noTextToCleanup: 'Status: No text to process',
+            noTextToInsert: 'Status: No text to insert',
+            clearConfirm: 'Status: Press again to clear'
         },
-        error: 'Status: error'
+        error: 'Status: Error'
     },
     notification: {
         success: {

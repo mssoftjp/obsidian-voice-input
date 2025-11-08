@@ -66,37 +66,39 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                     ])
                 ))
                 .setValue(this.plugin.settings.pluginLanguage)
-                .onChange(async (value: Locale) => {
-                    const transcriptionLocale: VoiceInputSettings['transcriptionLanguage'] = value;
-                    this.plugin.settings.pluginLanguage = value;
+                .onChange((value: Locale) => {
+                    this.runAsync(async () => {
+                        const transcriptionLocale: VoiceInputSettings['transcriptionLanguage'] = value;
+                        this.plugin.settings.pluginLanguage = value;
 
-                    // Keep transcription language synchronized while linking remains enabled
-                    if (this.plugin.settings.advanced?.languageLinkingEnabled !== false) {
-                        this.plugin.settings.transcriptionLanguage = transcriptionLocale;
-                        if (!this.plugin.settings.advanced) {
-                            this.plugin.settings.advanced = {
-                                languageLinkingEnabled: true,
-                                transcriptionLanguage: transcriptionLocale
-                            };
-                        } else {
-                            this.plugin.settings.advanced.transcriptionLanguage = transcriptionLocale;
+                        // Keep transcription language synchronized while linking remains enabled
+                        if (this.plugin.settings.advanced?.languageLinkingEnabled !== false) {
+                            this.plugin.settings.transcriptionLanguage = transcriptionLocale;
+                            if (!this.plugin.settings.advanced) {
+                                this.plugin.settings.advanced = {
+                                    languageLinkingEnabled: true,
+                                    transcriptionLanguage: transcriptionLocale
+                                };
+                            } else {
+                                this.plugin.settings.advanced.transcriptionLanguage = transcriptionLocale;
+                            }
                         }
-                    }
 
-                    await this.plugin.saveSettings();
-                    this.i18n.setLocale(value);
+                        await this.plugin.saveSettings();
+                        this.i18n.setLocale(value);
 
-                    // Refresh all open Voice Input views to show new language
-                    const refreshPromises = this.app.workspace.getLeavesOfType(VIEW_TYPE_VOICE_INPUT).map(async leaf => {
-                        const view = await DeferredViewHelper.safeGetVoiceInputView(leaf);
-                        if (view) {
-                            view.refreshUI();
-                        }
-                    });
-                    await Promise.all(refreshPromises);
+                        // Refresh all open Voice Input views to show new language
+                        const refreshPromises = this.app.workspace.getLeavesOfType(VIEW_TYPE_VOICE_INPUT).map(async leaf => {
+                            const view = await DeferredViewHelper.safeGetVoiceInputView(leaf);
+                            if (view) {
+                                view.refreshUI();
+                            }
+                        });
+                        await Promise.all(refreshPromises);
 
-                    // Refresh the settings tab to show new language
-                    this.display();
+                        // Refresh the settings tab to show new language
+                        this.display();
+                    }, 'Failed to update plugin language');
                 }));
 
         // Advanced Language Settings
@@ -105,19 +107,21 @@ export class VoiceInputSettingTab extends PluginSettingTab {
             .setDesc(this.i18n.t('ui.settings.languageLinkingDesc'))
             .addToggle(toggle => toggle
                 .setValue(this.plugin.settings.advanced?.languageLinkingEnabled !== false)
-                .onChange(async (value) => {
-                    // Initialize advanced object if it doesn't exist
-                    if (!this.plugin.settings.advanced) {
-                        this.plugin.settings.advanced = {
-                            languageLinkingEnabled: value,
-                            transcriptionLanguage: this.plugin.getResolvedLanguage()
-                        };
-                    } else {
-                        this.plugin.settings.advanced.languageLinkingEnabled = value;
-                    }
-                    await this.plugin.saveSettings();
-                    // Refresh the UI to show/hide the advanced transcription language setting
-                    this.display();
+                .onChange((value) => {
+                    this.runAsync(async () => {
+                        // Initialize advanced object if it doesn't exist
+                        if (!this.plugin.settings.advanced) {
+                            this.plugin.settings.advanced = {
+                                languageLinkingEnabled: value,
+                                transcriptionLanguage: this.plugin.getResolvedLanguage()
+                            };
+                        } else {
+                            this.plugin.settings.advanced.languageLinkingEnabled = value;
+                        }
+                        await this.plugin.saveSettings();
+                        // Refresh the UI to show/hide the advanced transcription language setting
+                        this.display();
+                    }, 'Failed to toggle language linking');
                 }));
 
         // Advanced Transcription Language Setting (only shown when linking is disabled)
@@ -131,16 +135,18 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                     .addOption('zh', this.i18n.t('ui.options.languageZh'))
                     .addOption('ko', this.i18n.t('ui.options.languageKo'))
                     .setValue(this.plugin.settings.advanced.transcriptionLanguage ?? this.plugin.getResolvedLanguage())
-                    .onChange(async (value: 'ja' | 'en' | 'zh' | 'ko') => {
-                        if (!this.plugin.settings.advanced) {
-                            this.plugin.settings.advanced = {
-                                languageLinkingEnabled: false,
-                                transcriptionLanguage: value
-                            };
-                        } else {
-                            this.plugin.settings.advanced.transcriptionLanguage = value;
-                        }
-                        await this.plugin.saveSettings();
+                    .onChange((value: 'ja' | 'en' | 'zh' | 'ko') => {
+                        this.runAsync(async () => {
+                            if (!this.plugin.settings.advanced) {
+                                this.plugin.settings.advanced = {
+                                    languageLinkingEnabled: false,
+                                    transcriptionLanguage: value
+                                };
+                            } else {
+                                this.plugin.settings.advanced.transcriptionLanguage = value;
+                            }
+                            await this.plugin.saveSettings();
+                        }, 'Failed to update advanced transcription language');
                     }));
         }
 
@@ -156,20 +162,8 @@ export class VoiceInputSettingTab extends PluginSettingTab {
             const textComponent = text
                 .setPlaceholder(this.i18n.t('ui.placeholders.apiKey'))
                 .setValue(decryptedApiKey ? SecurityUtils.maskAPIKey(decryptedApiKey) : '')
-                .onChange(async (value) => {
-                    // マスクされた値は無視
-                    if (value && !value.includes('*')) {
-                        if (!SecurityUtils.validateOpenAIAPIKey(value)) {
-                            apiKeySetting.descEl.addClass('voice-input-setting-error');
-                            apiKeySetting.setDesc(this.i18n.t('error.api.invalidKeyDetail'));
-                        } else {
-                            apiKeySetting.descEl.removeClass('voice-input-setting-error');
-                            apiKeySetting.setDesc(this.i18n.t('ui.settings.apiKeyDesc'));
-                            // Store API key (will be encrypted on save)
-                            this.plugin.settings.openaiApiKey = value;
-                            await this.plugin.saveSettings();
-                        }
-                    }
+                .onChange((value) => {
+                    this.handleApiKeyInputChange(value, apiKeySetting);
                 });
 
             // Store input element reference
@@ -191,45 +185,48 @@ export class VoiceInputSettingTab extends PluginSettingTab {
         })
             .addButton(button => button
                 .setButtonText(this.i18n.t('ui.buttons.connectionTest'))
-                .onClick(async () => {
+                .onClick(() => {
                     const decryptedApiKey = this.plugin.settings.openaiApiKey;
                     if (!decryptedApiKey) {
                         new Notice(this.i18n.t('notification.warning.enterApiKey'));
                         return;
                     }
 
-                    button.setButtonText(this.i18n.t('ui.buttons.testing'));
-                    button.setDisabled(true);
+                    this.runAsync(async () => {
+                        button.setButtonText(this.i18n.t('ui.buttons.testing'));
+                        button.setDisabled(true);
 
-                    try {
-                        const result = await SecurityUtils.testOpenAIAPIKey(decryptedApiKey);
+                        try {
+                            const result = await SecurityUtils.testOpenAIAPIKey(decryptedApiKey);
 
-                        if (result.valid) {
-                            new Notice(this.i18n.t('notification.success.apiKeyValid'));
-                            button.setButtonText(this.i18n.t('ui.buttons.testSuccess'));
-                            button.setCta();
+                            if (result.valid) {
+                                new Notice(this.i18n.t('notification.success.apiKeyValid'));
+                                button.setButtonText(this.i18n.t('ui.buttons.testSuccess'));
+                                button.setCta();
 
-                            // 3秒後に元に戻す
-                            setTimeout(() => {
-                                button.setButtonText(this.i18n.t('ui.buttons.connectionTest'));
-                                button.removeCta();
-                                button.setDisabled(false);
-                            }, 3000);
-                        } else {
-                            new Notice(`${result.error || this.i18n.t('notification.error.apiKeyInvalid')}`);
-                            button.setButtonText(this.i18n.t('ui.buttons.testFailed'));
+                                // 3秒後に元に戻す
+                                setTimeout(() => {
+                                    button.setButtonText(this.i18n.t('ui.buttons.connectionTest'));
+                                    button.removeCta();
+                                    button.setDisabled(false);
+                                }, 3000);
+                            } else {
+                                new Notice(`${result.error || this.i18n.t('notification.error.apiKeyInvalid')}`);
+                                button.setButtonText(this.i18n.t('ui.buttons.testFailed'));
 
-                            // 3秒後に元に戻す
-                            setTimeout(() => {
-                                button.setButtonText(this.i18n.t('ui.buttons.connectionTest'));
-                                button.setDisabled(false);
-                            }, 3000);
+                                // 3秒後に元に戻す
+                                setTimeout(() => {
+                                    button.setButtonText(this.i18n.t('ui.buttons.connectionTest'));
+                                    button.setDisabled(false);
+                                }, 3000);
+                            }
+                        } catch (error) {
+                            new Notice(this.i18n.t('notification.error.testError'));
+                            button.setButtonText(this.i18n.t('ui.buttons.connectionTest'));
+                            button.setDisabled(false);
+                            throw error;
                         }
-                    } catch (error) {
-                        new Notice(this.i18n.t('notification.error.testError'));
-                        button.setButtonText(this.i18n.t('ui.buttons.connectionTest'));
-                        button.setDisabled(false);
-                    }
+                    }, 'Failed to test API key');
                 }));
 
         // Transcription Model
@@ -240,13 +237,15 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 .addOption('gpt-4o-transcribe', this.i18n.t('ui.options.modelFull'))
                 .addOption('gpt-4o-mini-transcribe', this.i18n.t('ui.options.modelMini'))
                 .setValue(this.plugin.settings.transcriptionModel)
-                .onChange(async (value) => {
-                    if (!isTranscriptionModel(value)) {
-                        this.logger.warn(`Unknown transcription model: ${value}`);
-                        return;
-                    }
-                    this.plugin.settings.transcriptionModel = value;
-                    await this.plugin.saveSettings();
+                .onChange((value) => {
+                    this.runAsync(async () => {
+                        if (!isTranscriptionModel(value)) {
+                            this.logger.warn(`Unknown transcription model: ${value}`);
+                            return;
+                        }
+                        this.plugin.settings.transcriptionModel = value;
+                        await this.plugin.saveSettings();
+                    }, 'Failed to update transcription model in settings');
                 }));
 
         const FVAD_DOWNLOAD_URL = 'https://github.com/echogarden-project/fvad-wasm';
@@ -262,17 +261,19 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                     .addOption('server', this.i18n.t('ui.options.vadServer'))
                     .addOption('local', this.i18n.t('ui.options.vadLocal'))
                     .setValue(initialVadMode)
-                    .onChange(async (value) => {
-                        if (!isVadMode(value)) {
-                            this.logger.warn(`Unknown VAD mode: ${value}`);
-                            return;
-                        }
-                        this.plugin.settings.vadMode = value;
-                        await this.plugin.saveSettings();
-                        const hasLocal = await refreshVadUI(value);
-                        if (value === 'local' && !hasLocal) {
-                            new Notice(this.i18n.t('notification.warning.localVadMissing', { path: vadInstructionsPath }));
-                        }
+                    .onChange((value) => {
+                        this.runAsync(async () => {
+                            if (!isVadMode(value)) {
+                                this.logger.warn(`Unknown VAD mode: ${value}`);
+                                return;
+                            }
+                            this.plugin.settings.vadMode = value;
+                            await this.plugin.saveSettings();
+                            const hasLocal = await refreshVadUI(value);
+                            if (value === 'local' && !hasLocal) {
+                                new Notice(this.i18n.t('notification.warning.localVadMissing', { path: vadInstructionsPath }));
+                            }
+                        }, 'Failed to update VAD mode');
                     });
             });
 
@@ -289,76 +290,76 @@ export class VoiceInputSettingTab extends PluginSettingTab {
             if (buttonElement instanceof HTMLButtonElement) {
                 helperButton = buttonElement;
                 helperButton.classList.add('mod-cta');
-                helperContainer.style.display = 'none';
+                helperContainer.classList.add('voice-input-hidden');
 
-                helperButton.addEventListener('click', async () => {
-                    try {
+                helperButton.addEventListener('click', () => {
+                    this.runAsync(async () => {
                         const input = document.createElement('input');
                         input.type = 'file';
                         input.accept = '.wasm,.js,application/wasm';
                         input.multiple = true;
-                        input.onchange = async () => {
-                            const files = input.files ? Array.from(input.files) : [];
-                            const wasmFile = files.find(file => file.name === wasmFileName);
-                            const jsFile = files.find(file => file.name === loaderFileName);
+                        input.onchange = () => {
+                            this.runAsync(async () => {
+                                const files = input.files ? Array.from(input.files) : [];
+                                const wasmFile = files.find(file => file.name === wasmFileName);
+                                const jsFile = files.find(file => file.name === loaderFileName);
 
-                            if (!wasmFile) {
-                                new Notice(this.i18n.t('ui.settings.vadModeInstallInvalidName'));
-                                return;
-                            }
+                                if (!wasmFile) {
+                                    new Notice(this.i18n.t('ui.settings.vadModeInstallInvalidName'));
+                                    return;
+                                }
 
-                            const wasmBytes = new Uint8Array(await wasmFile.arrayBuffer());
-                            if (wasmBytes.length < 8 ||
-                                wasmBytes[0] !== 0x00 ||
-                                wasmBytes[1] !== 0x61 ||
-                                wasmBytes[2] !== 0x73 ||
-                                wasmBytes[3] !== 0x6d) {
-                                new Notice(this.i18n.t('ui.settings.vadModeInstallInvalidType'));
-                                return;
-                            }
+                                const wasmBytes = new Uint8Array(await wasmFile.arrayBuffer());
+                                if (wasmBytes.length < 8 ||
+                                    wasmBytes[0] !== 0x00 ||
+                                    wasmBytes[1] !== 0x61 ||
+                                    wasmBytes[2] !== 0x73 ||
+                                    wasmBytes[3] !== 0x6d) {
+                                    new Notice(this.i18n.t('ui.settings.vadModeInstallInvalidType'));
+                                    return;
+                                }
 
-                            try {
-                                const adapter = this.app.vault.adapter;
-                                if (!(await adapter.exists(vadInstructionsPath))) {
-                                    try {
-                                        await adapter.mkdir(vadInstructionsPath);
-                                    } catch (_) {
-                                        // Ignore errors when directory already exists or cannot be created
+                                try {
+                                    const adapter = this.app.vault.adapter;
+                                    if (!(await adapter.exists(vadInstructionsPath))) {
+                                        try {
+                                            await adapter.mkdir(vadInstructionsPath);
+                                        } catch (_) {
+                                            // Ignore errors when directory already exists or cannot be created
+                                        }
                                     }
+
+                                    const wasmTarget = getLocalVadAssetPath(this.app, wasmFileName);
+                                    await adapter.writeBinary(wasmTarget, wasmBytes);
+
+                                    let loaderPresent = await adapter.exists(getLocalVadAssetPath(this.app, loaderFileName));
+                                    if (jsFile) {
+                                        const loaderContent = await jsFile.text();
+                                        const loaderTarget = getLocalVadAssetPath(this.app, loaderFileName);
+                                        await adapter.write(loaderTarget, loaderContent);
+                                        loaderPresent = true;
+                                    }
+
+                                    if (!loaderPresent) {
+                                        new Notice(this.i18n.t('ui.settings.vadModeInstallJsMissing'));
+                                    } else {
+                                        new Notice(this.i18n.t('ui.settings.vadModeInstallSuccess'));
+                                    }
+                                } catch (error) {
+                                    console.error(error);
+                                    new Notice(this.i18n.t('notification.error.fileWrite'));
+                                    throw error;
                                 }
 
-                                const wasmTarget = getLocalVadAssetPath(this.app, wasmFileName);
-                                await adapter.writeBinary(wasmTarget, wasmBytes);
-
-                                let loaderPresent = await adapter.exists(getLocalVadAssetPath(this.app, loaderFileName));
-                                if (jsFile) {
-                                    const loaderContent = await jsFile.text();
-                                    const loaderTarget = getLocalVadAssetPath(this.app, loaderFileName);
-                                    await adapter.write(loaderTarget, loaderContent);
-                                    loaderPresent = true;
+                                const hasLocal = await hasLocalVadAssets(this.app);
+                                await refreshVadUI('local');
+                                if (hasLocal) {
+                                    new Notice(this.i18n.t('notification.success.vadInstallComplete'));
                                 }
-
-                                if (!loaderPresent) {
-                                    new Notice(this.i18n.t('ui.settings.vadModeInstallJsMissing'));
-                                } else {
-                                    new Notice(this.i18n.t('ui.settings.vadModeInstallSuccess'));
-                                }
-                            } catch (error) {
-                                console.error(error);
-                                new Notice(this.i18n.t('notification.error.fileWrite'));
-                            }
-
-                            const hasLocal = await hasLocalVadAssets(this.app);
-                            await refreshVadUI('local');
-                            if (hasLocal) {
-                                new Notice(this.i18n.t('notification.success.vadInstallComplete'));
-                            }
+                            }, 'Failed to process VAD asset upload');
                         };
                         input.click();
-                    } catch (error) {
-                        console.error(error);
-                        new Notice(this.i18n.t('notification.error.fileRead'));
-                    }
+                    }, 'Failed to initiate VAD asset upload');
                 });
             }
         }
@@ -399,7 +400,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
 
             if (helperContainer && helperNote && helperButton) {
                 const shouldShowHelper = !Platform.isMobileApp && mode === 'local' && !hasLocal;
-                helperContainer.style.display = shouldShowHelper ? '' : 'none';
+                helperContainer.classList.toggle('voice-input-hidden', !shouldShowHelper);
                 while (helperNote.firstChild) {
                     helperNote.removeChild(helperNote.firstChild);
                 }
@@ -428,9 +429,11 @@ export class VoiceInputSettingTab extends PluginSettingTab {
             .setDesc(this.i18n.t('ui.settings.aiPostProcessingDesc'))
             .addToggle(toggle => toggle
                 .setValue(this.plugin.settings.enableTranscriptionCorrection)
-                .onChange(async (value) => {
-                    this.plugin.settings.enableTranscriptionCorrection = value;
-                    await this.plugin.saveSettings();
+                .onChange((value) => {
+                    this.runAsync(async () => {
+                        this.plugin.settings.enableTranscriptionCorrection = value;
+                        await this.plugin.saveSettings();
+                    }, 'Failed to toggle AI post-processing');
                 }));
 
         // Maximum Recording Duration
@@ -449,18 +452,22 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 .setLimits(UI_CONSTANTS.RECORDING_SECONDS_MIN, UI_CONSTANTS.RECORDING_SECONDS_MAX, UI_CONSTANTS.RECORDING_SECONDS_STEP) // 30秒〜10分、定数に基づく刻み
                 .setValue(this.plugin.settings.maxRecordingSeconds)
                 .setDynamicTooltip()
-                .onChange(async (value) => {
+                .onChange((value) => {
                     this.plugin.settings.maxRecordingSeconds = value;
                     durationText.setText(this.formatDuration(value));
-                    await this.plugin.saveSettings();
+                    this.runAsync(async () => {
+                        await this.plugin.saveSettings();
+                    }, 'Failed to update max recording duration');
                 }))
             .addExtraButton(button => button
                 .setIcon('reset')
                 .setTooltip(this.i18n.t('ui.buttons.reset'))
-                .onClick(async () => {
+                .onClick(() => {
                     this.plugin.settings.maxRecordingSeconds = DEFAULT_SETTINGS.maxRecordingSeconds;
-                    await this.plugin.saveSettings();
-                    this.display(); // Refresh UI
+                    this.runAsync(async () => {
+                        await this.plugin.saveSettings();
+                        this.display(); // Refresh UI
+                    }, 'Failed to reset max recording duration');
                 }));
 
         // Dictionary (Unified table editor) - Show for all languages
@@ -472,7 +479,9 @@ export class VoiceInputSettingTab extends PluginSettingTab {
         const tableContainer = containerEl.createDiv('voice-input-dictionary-table-container');
 
         // Definite Corrections Section
-        tableContainer.createEl('h4', { text: this.i18n.t('ui.settings.dictionaryDefinite', { max: DICTIONARY_CONSTANTS.MAX_DEFINITE_CORRECTIONS }) });
+        new Setting(tableContainer)
+            .setHeading()
+            .setName(this.i18n.t('ui.settings.dictionaryDefinite', { max: DICTIONARY_CONSTANTS.MAX_DEFINITE_CORRECTIONS }));
         tableContainer.createEl('div', {
             cls: 'setting-item-description',
             text: this.i18n.t('ui.help.dictionaryFromComma')
@@ -528,6 +537,31 @@ export class VoiceInputSettingTab extends PluginSettingTab {
         //             }));
         // }
 
+    }
+
+    /**
+	 * Utility to run async handlers without returning promises to the caller
+	 */
+    private runAsync(task: () => Promise<void>, context: string): void {
+        void task().catch((error) => {
+            this.logger.error(context, error);
+        });
+    }
+
+    private handleApiKeyInputChange(value: string, apiKeySetting: Setting): void {
+        if (value && !value.includes('*')) {
+            if (!SecurityUtils.validateOpenAIAPIKey(value)) {
+                apiKeySetting.descEl.addClass('voice-input-setting-error');
+                apiKeySetting.setDesc(this.i18n.t('error.api.invalidKeyDetail'));
+            } else {
+                apiKeySetting.descEl.removeClass('voice-input-setting-error');
+                apiKeySetting.setDesc(this.i18n.t('ui.settings.apiKeyDesc'));
+                this.plugin.settings.openaiApiKey = value;
+                this.runAsync(async () => {
+                    await this.plugin.saveSettings();
+                }, 'Failed to save API key');
+            }
+        }
     }
 
     hide() {
@@ -600,7 +634,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 const newEntry = { from: [''], to: '' };
                 entries.push(newEntry);
                 this.renderTableRows(tbody, entries, isContextual, isReadOnly);
-                this.saveDictionary();
+                void this.saveDictionary();
             };
         }
 
@@ -628,7 +662,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 });
                 fromInput.onchange = () => {
                     entry.from = stringToPatterns(fromInput.value);
-                    this.saveDictionary();
+                    void this.saveDictionary();
                 };
             }
 
@@ -644,7 +678,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 });
                 toInput.onchange = () => {
                     entry.to = toInput.value;
-                    this.saveDictionary();
+                    void this.saveDictionary();
                 };
             }
 
@@ -658,7 +692,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 deleteButton.onclick = () => {
                     entries.splice(index, 1);
                     this.renderTableRows(tbody, entries, isContextual, isReadOnly);
-                    this.saveDictionary();
+                    void this.saveDictionary();
                 };
             }
         });
@@ -733,36 +767,37 @@ export class VoiceInputSettingTab extends PluginSettingTab {
         input.type = 'file';
         input.accept = '.json';
 
-        input.onchange = async (e) => {
-            const file = (e.target as HTMLInputElement).files?.[0];
-            if (!file) return;
+        input.onchange = (e) => {
+            this.runAsync(async () => {
+                const file = (e.target as HTMLInputElement).files?.[0];
+                if (!file) return;
 
-            try {
-                const text = await file.text();
-                const data = JSON.parse(text);
+                try {
+                    const text = await file.text();
+                    const data = JSON.parse(text);
 
-                // Validate structure
-                if (!data.definiteCorrections || !Array.isArray(data.definiteCorrections)) {
-                    throw new Error('Invalid dictionary format: missing definiteCorrections');
+                    // Validate structure
+                    if (!data.definiteCorrections || !Array.isArray(data.definiteCorrections)) {
+                        throw new Error('Invalid dictionary format: missing definiteCorrections');
+                    }
+
+                    // Migrate to new format
+                    const migratedEntries = migrateCorrectionEntries(data.definiteCorrections);
+
+                    // Update settings with migrated data
+                    this.plugin.settings.customDictionary = {
+                        definiteCorrections: migratedEntries
+                    };
+
+                    await this.plugin.saveSettings();
+                    this.display(); // Refresh UI
+
+                    new Notice(this.i18n.t('notification.success.dictionaryImported'));
+                } catch (error) {
+                    new Notice(this.i18n.t('notification.error.dictionaryImportFailed') + error.message);
+                    throw error;
                 }
-
-                // Map old categories to new ones (no longer needed, but kept for reference)
-
-                // Migrate to new format
-                const migratedEntries = migrateCorrectionEntries(data.definiteCorrections);
-
-                // Update settings with migrated data
-                this.plugin.settings.customDictionary = {
-                    definiteCorrections: migratedEntries
-                };
-
-                await this.plugin.saveSettings();
-                this.display(); // Refresh UI
-
-                new Notice(this.i18n.t('notification.success.dictionaryImported'));
-            } catch (error) {
-                new Notice(this.i18n.t('notification.error.dictionaryImportFailed') + error.message);
-            }
+            }, 'Failed to import dictionary');
         };
 
         input.click();
