@@ -168,8 +168,8 @@ export class DraftManager {
             const draftPath = this.getDraftPath(app);
             const draftFile = app.vault.getFileByPath(draftPath);
             if (draftFile) {
-                await app.vault.delete(draftFile);
-                this.logger?.info('Draft cleared successfully');
+                await app.fileManager.trashFile(draftFile);
+                this.logger?.info('Draft cleared successfully via file manager');
                 return;
             }
 
