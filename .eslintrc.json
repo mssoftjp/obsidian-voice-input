@@ -22,7 +22,7 @@
         "@typescript-eslint/explicit-function-return-type": "off",
         "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
         "@typescript-eslint/no-non-null-assertion": "warn",
-        "no-console": ["warn", { "allow": ["warn", "error", "log"] }],
+        "no-console": ["warn", { "allow": ["warn", "error", "debug"] }],
         "semi": ["error", "always"],
         "quotes": ["error", "single", { "avoidEscape": true }],
         "comma-dangle": ["error", "never"],

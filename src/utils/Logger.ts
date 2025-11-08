@@ -37,7 +37,7 @@ export class Logger {
     /**
 	 * Get or create the singleton logger instance
 	 */
-    static getInstance(config?: Partial<LoggerConfig>): Logger {
+    static getInstance(this: void, config?: Partial<LoggerConfig>): Logger {
         if (!Logger.instance) {
             Logger.instance = new Logger(config);
         } else if (config) {
@@ -49,7 +49,7 @@ export class Logger {
     /**
 	 * Create a logger for a specific module/component
 	 */
-    static getLogger(moduleName: string): Logger {
+    static getLogger(this: void, moduleName: string): Logger {
         const mainLogger = Logger.getInstance();
         const existing = mainLogger.moduleLoggers.get(moduleName);
         if (!existing) {
@@ -108,6 +108,38 @@ export class Logger {
     }
 
     /**
+	 * Emit console output with allowed methods only
+	 */
+    private emitConsole(method: 'warn' | 'error' | 'debug', message: string, data?: unknown): void {
+        if (data !== undefined) {
+            switch (method) {
+                case 'warn':
+                    console.warn(message, data);
+                    break;
+                case 'error':
+                    console.error(message, data);
+                    break;
+                case 'debug':
+                    console.debug(message, data);
+                    break;
+            }
+            return;
+        }
+
+        switch (method) {
+            case 'warn':
+                console.warn(message);
+                break;
+            case 'error':
+                console.error(message);
+                break;
+            case 'debug':
+                console.debug(message);
+                break;
+        }
+    }
+
+    /**
 	 * Log an error message
 	 */
     error(message: string, error?: unknown): void {
@@ -132,9 +164,9 @@ export class Logger {
         if (this.shouldLog(LogLevel.WARN)) {
             const formattedMsg = this.formatMessage(LogLevel.WARN, message);
             if (data !== undefined) {
-                console.warn(formattedMsg, data);
+                this.emitConsole('warn', formattedMsg, data);
             } else {
-                console.warn(formattedMsg);
+                this.emitConsole('warn', formattedMsg);
             }
         }
     }
@@ -146,9 +178,9 @@ export class Logger {
         if (this.shouldLog(LogLevel.INFO)) {
             const formattedMsg = this.formatMessage(LogLevel.INFO, message);
             if (data !== undefined) {
-                console.log(formattedMsg, data);
+                this.emitConsole('debug', formattedMsg, data);
             } else {
-                console.log(formattedMsg);
+                this.emitConsole('debug', formattedMsg);
             }
         }
     }
@@ -160,9 +192,9 @@ export class Logger {
         if (this.shouldLog(LogLevel.DEBUG)) {
             const formattedMsg = this.formatMessage(LogLevel.DEBUG, message);
             if (data !== undefined) {
-                console.log(formattedMsg, data);
+                this.emitConsole('debug', formattedMsg, data);
             } else {
-                console.log(formattedMsg);
+                this.emitConsole('debug', formattedMsg);
             }
         }
     }
@@ -174,9 +206,9 @@ export class Logger {
         if (this.shouldLog(LogLevel.TRACE)) {
             const formattedMsg = this.formatMessage(LogLevel.TRACE, message);
             if (data !== undefined) {
-                console.log(formattedMsg, data);
+                this.emitConsole('debug', formattedMsg, data);
             } else {
-                console.log(formattedMsg);
+                this.emitConsole('debug', formattedMsg);
             }
         }
     }
