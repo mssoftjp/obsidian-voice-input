@@ -41,7 +41,11 @@ export class VoiceInputView extends ItemView {
         return 'microphone';
     }
 
-    async onOpen() {
+    onOpen(): void {
+        void this.handleOpen();
+    }
+
+    private async handleOpen(): Promise<void> {
         const containerElement = this.containerEl.children[1];
         if (containerElement instanceof HTMLElement) {
             const container = containerElement;
@@ -55,7 +59,7 @@ export class VoiceInputView extends ItemView {
             this.actions = new VoiceInputViewActions(this, this.plugin);
 
             // Initialize services
-            await this.actions.initializeServices();
+            this.actions.initializeServices();
 
             // Create UI
             this.ui.createUI();
@@ -78,7 +82,11 @@ export class VoiceInputView extends ItemView {
         }
     }
 
-    async onClose() {
+    onClose(): void {
+        void this.handleClose();
+    }
+
+    private async handleClose(): Promise<void> {
         // Clear any pending auto-save timeout
         if (this.autoSaveTimeout) {
             clearTimeout(this.autoSaveTimeout);
@@ -182,9 +190,9 @@ export class VoiceInputView extends ItemView {
         }
 
         // Create and store the handler
-        this.blurHandler = async () => {
+        this.blurHandler = () => {
             if (this.ui?.textArea?.value) {
-                await DraftManager.saveDraft(this.app, this.ui.textArea.value, 'focus-lost');
+                void DraftManager.saveDraft(this.app, this.ui.textArea.value, 'focus-lost');
             }
         };
 
@@ -218,15 +226,15 @@ export class VoiceInputView extends ItemView {
         }
 
         // Set up periodic save every 5 seconds
-        this.periodicSaveInterval = setInterval(async () => {
+        this.periodicSaveInterval = setInterval(() => {
             if (this.ui?.textArea) {
                 const content = this.ui.textArea.value;
                 if (content.trim()) {
                     // Save the content
-                    await DraftManager.saveDraft(this.app, content, 'periodic-save');
+                    void DraftManager.saveDraft(this.app, content, 'periodic-save');
                 } else {
                     // Clear the draft when content is empty (handles cleared text)
-                    await DraftManager.clearDraft(this.app);
+                    void DraftManager.clearDraft(this.app);
                 }
             }
         }, VoiceInputView.PERIODIC_SAVE_INTERVAL);
@@ -242,14 +250,14 @@ export class VoiceInputView extends ItemView {
         }
 
         // Set new timeout for auto-save (for responsiveness, keeps existing behavior)
-        this.autoSaveTimeout = setTimeout(async () => {
+        this.autoSaveTimeout = setTimeout(() => {
             if (this.ui?.textArea) {
                 const content = this.ui.textArea.value;
                 if (content.trim()) {
-                    await DraftManager.saveDraft(this.app, content, 'auto-save');
+                    void DraftManager.saveDraft(this.app, content, 'auto-save');
                 } else {
                     // Clear saved draft if textarea is empty
-                    await DraftManager.clearDraft(this.app);
+                    void DraftManager.clearDraft(this.app);
                 }
             }
         }, VoiceInputView.AUTO_SAVE_DELAY);

@@ -120,7 +120,9 @@ export class VoiceInputViewUI {
             text: this.i18n.t('ui.buttons.copy')
         });
         this.clipboardButton.setAttribute('aria-label', this.i18n.t('ui.tooltips.copy'));
-        this.clipboardButton.addEventListener('click', () => this.view.actions.copyToClipboard());
+        this.clipboardButton.addEventListener('click', () => {
+            void this.view.actions.copyToClipboard();
+        });
 
         // Clear button
         this.clearButton = this.firstRowContainer.createEl('button', {
@@ -147,7 +149,9 @@ export class VoiceInputViewUI {
             text: this.i18n.t('ui.buttons.insertAtCursor')
         });
         this.insertAtCursorButton.setAttribute('aria-label', this.i18n.t('ui.tooltips.insertAtCursor'));
-        this.insertAtCursorButton.addEventListener('click', () => this.view.actions.insertToNote());
+        this.insertAtCursorButton.addEventListener('click', () => {
+            void this.view.actions.insertToNote();
+        });
 
         // Append button
         this.appendButton = this.secondRowContainer.createEl('button', {
@@ -158,7 +162,9 @@ export class VoiceInputViewUI {
             text: this.i18n.t('ui.buttons.append')
         });
         this.appendButton.setAttribute('aria-label', this.i18n.t('ui.tooltips.append'));
-        this.appendButton.addEventListener('click', () => this.view.actions.appendToNote());
+        this.appendButton.addEventListener('click', () => {
+            void this.view.actions.appendToNote();
+        });
 
         // Keep the old insertButton for backward compatibility (set to hidden)
         /**
@@ -172,7 +178,7 @@ export class VoiceInputViewUI {
             cls: 'voice-input-cancel-button-full voice-input-hidden'
         });
         this.cancelButton.addEventListener('click', () => {
-            this.view.actions.cancelRecording();
+            void this.view.actions.cancelRecording();
         });
 
         // Second row - Record button container
@@ -212,10 +218,15 @@ export class VoiceInputViewUI {
                     .addOption('gpt-4o-transcribe', this.i18n.t('ui.options.modelFull'))
                     .addOption('gpt-4o-mini-transcribe', this.i18n.t('ui.options.modelMini'))
                     .setValue(this.plugin.settings.transcriptionModel)
-                    .onChange(async (value) => {
+                    .onChange((value) => {
                         this.plugin.settings.transcriptionModel = value as 'gpt-4o-transcribe' | 'gpt-4o-mini-transcribe';
-                        await this.plugin.saveSettings();
-                        this.view.actions.updateTranscriptionService();
+                        void this.plugin.saveSettings()
+                            .then(() => {
+                                this.view.actions.updateTranscriptionService();
+                            })
+                            .catch((error) => {
+                                console.error('Failed to update transcription model', error);
+                            });
                     });
             });
 
@@ -227,10 +238,15 @@ export class VoiceInputViewUI {
                 this.correctionToggle = toggle;
                 toggle
                     .setValue(this.plugin.settings.enableTranscriptionCorrection)
-                    .onChange(async (value) => {
+                    .onChange((value) => {
                         this.plugin.settings.enableTranscriptionCorrection = value;
-                        await this.plugin.saveSettings();
-                        this.view.actions.updateTranscriptionService();
+                        void this.plugin.saveSettings()
+                            .then(() => {
+                                this.view.actions.updateTranscriptionService();
+                            })
+                            .catch((error) => {
+                                console.error('Failed to toggle transcription correction', error);
+                            });
                     });
             });
     }
@@ -251,7 +267,7 @@ export class VoiceInputViewUI {
                 return;
             }
 
-            this.view.actions.toggleRecording();
+            void this.view.actions.toggleRecording();
         };
 
         // Push-to-talk functionality with delayed start
@@ -287,7 +303,9 @@ export class VoiceInputViewUI {
             // If push-to-talk was active, stop recording
             if (isPushToTalk && this.view.actions.audioRecorder && this.view.actions.audioRecorder.isActive()) {
                 this.view.actions.recordingState.isPushToTalkMode = false;
-                this.view.actions.stopRecording();
+                void this.view.actions.stopRecording().catch((error) => {
+                    console.error('Failed to stop recording after push-to-talk', error);
+                });
                 // Keep isPushToTalk true to prevent click handler
                 setTimeout(() => { isPushToTalk = false; }, UI_CONSTANTS.PUSH_TO_TALK_RESET_DELAY);
             }

@@ -51,7 +51,7 @@ export class VoiceInputViewActions {
     /**
 	 * Initialize services
 	 */
-    async initializeServices() {
+    initializeServices(): void {
         // Initialize transcription service
         const decryptedApiKey = this.plugin.settings.openaiApiKey;
         this.transcriptionService = new TranscriptionService(
@@ -81,7 +81,7 @@ export class VoiceInputViewActions {
     /**
 	 * Update transcription service settings
 	 */
-    async updateTranscriptionService() {
+    updateTranscriptionService(): void {
         if (this.transcriptionService) {
             const decryptedApiKey = this.plugin.settings.openaiApiKey;
             this.transcriptionService.updateApiKey(decryptedApiKey);
@@ -512,7 +512,7 @@ export class VoiceInputViewActions {
 
         // Ensure transcription service is initialized
         if (!this.transcriptionService) {
-            await this.initializeServices();
+            this.initializeServices();
 
             // Re-validate after async initialization
             if (!this.transcriptionService) {
@@ -643,7 +643,7 @@ export class VoiceInputViewActions {
 
         // Ensure transcription service is initialized
         if (!this.transcriptionService) {
-            await this.initializeServices();
+            this.initializeServices();
         }
 
         if (!this.transcriptionService) {

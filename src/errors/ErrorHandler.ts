@@ -13,6 +13,7 @@ import { TranscriptionError, TranscriptionErrorType } from './TranscriptionError
 import type { IDisposable } from '../interfaces';
 import { getI18n } from '../services';
 import type { I18nService } from '../interfaces';
+import { Logger } from '../utils';
 
 /**
  * エラーの重要度レベル
@@ -90,6 +91,7 @@ export class ErrorHandler implements IDisposable {
     private unhandledRejectionHandler?: (event: PromiseRejectionEvent) => void;
     private errorHandler?: (event: ErrorEvent) => void;
     private i18n?: I18nService;
+    private logger: Logger;
 
     private constructor(options: Partial<ErrorHandlerOptions> = {}) {
         this.options = {
@@ -99,6 +101,7 @@ export class ErrorHandler implements IDisposable {
             retryBaseDelay: 1000,
             ...options
         };
+        this.logger = Logger.getLogger('ErrorHandler');
 
         // i18n service might not be available yet during initialization
         try {
@@ -136,7 +139,7 @@ export class ErrorHandler implements IDisposable {
                 !errorString.includes('voice-input')) {
                 // Log in development mode only
                 if (this.options.isDevelopment) {
-                    console.debug('[VoiceInput] Ignored external error:', error);
+                    this.logger.debug('[VoiceInput] Ignored external error', error);
                 }
                 return;
             }
@@ -282,7 +285,7 @@ export class ErrorHandler implements IDisposable {
         };
 
         if (this.options.isDevelopment) {
-            console.debug(
+            this.logger.debug(
                 `[${severity.toUpperCase()}] ${context.component}.${context.operation}`,
                 detailedLog
             );
@@ -296,10 +299,10 @@ export class ErrorHandler implements IDisposable {
                 console.error(`[${context.component}] ${error.message}`, logData);
                 break;
             case ErrorSeverity.WARNING:
-                console.warn(`[${context.component}] ${error.message}`, logData);
+                this.logger.warn(`[${context.component}] ${error.message}`, logData);
                 break;
             case ErrorSeverity.INFO:
-                console.debug(`[${context.component}] ${error.message}`, logData);
+                this.logger.debug(`[${context.component}] ${error.message}`, logData);
                 break;
         }
     }
@@ -309,7 +312,7 @@ export class ErrorHandler implements IDisposable {
      */
     private logRetry(attempt: number, error: Error, context: ErrorContext): void {
         if (this.options.isDevelopment) {
-            console.warn(
+            this.logger.warn(
                 `[RETRY] Attempt ${attempt}/${this.options.maxRetries} for ${context.component}.${context.operation}`,
                 { error: error.message }
             );

@@ -236,7 +236,7 @@ export class Logger {
                 : Date.now();
             const duration = now - start;
             this.performanceTimers.delete(timerKey);
-            console.debug(`${timerKey} ${duration.toFixed(2)}ms`);
+            this.debug(`${timerKey} ${duration.toFixed(2)}ms`);
         }
     }
 

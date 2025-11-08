@@ -17,7 +17,15 @@ export default class VoiceInputPlugin extends Plugin {
     private errorHandler: ErrorHandler;
     private logger: Logger;
 
-    async onload() {
+    onload(): void {
+        void this.initializePlugin().catch((error) => {
+            if (typeof console !== 'undefined' && console.error) {
+                console.error('Voice Input Plugin failed to load', error);
+            }
+        });
+    }
+
+    private async initializePlugin(): Promise<void> {
         // 初期化順序の依存関係:
         // 1. ServiceLocatorに基本サービスを登録
         // 2. ErrorHandlerとLoggerの初期化
@@ -80,7 +88,6 @@ export default class VoiceInputPlugin extends Plugin {
                     timestamp: new Date()
                 }
             );
-            throw error;
         }
     }
 
@@ -109,10 +116,10 @@ export default class VoiceInputPlugin extends Plugin {
 
             // Add command
             this.addCommand({
-                id: 'open-voice-input',
+                id: 'open-view',
                 name: i18n.t('ui.commands.openView'),
                 callback: () => {
-                    this.logger.debug('Command executed: open-voice-input');
+                    this.logger.debug('Command executed: open-view');
                     this.viewManager.activateVoiceInputView();
                 }
             });
@@ -137,7 +144,11 @@ export default class VoiceInputPlugin extends Plugin {
         }
     }
 
-    async onunload() {
+    onunload(): void {
+        void this.teardownPlugin();
+    }
+
+    private async teardownPlugin(): Promise<void> {
         // Logger might not be initialized if onload failed
         if (this.logger) {
             this.logger.info('Voice Input Plugin unloading...');
