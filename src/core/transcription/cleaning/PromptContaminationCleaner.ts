@@ -6,11 +6,12 @@
 
 import { CleaningResult, TextCleaner, CleaningContext } from './interfaces';
 import { CLEANING_CONFIG } from '../../../config/CleaningConfig';
+import { createServiceLogger } from '../../../services';
 
 // Simple logger interface for tests
 interface SimpleLogger {
-    debug: (message: string, metadata?: any) => void;
-    warn: (message: string, metadata?: any) => void;
+    debug: (message: string, metadata?: Record<string, unknown>) => void;
+    warn: (message: string, metadata?: Record<string, unknown>) => void;
 }
 
 // Fallback logger for test environments
@@ -26,8 +27,6 @@ export class PromptContaminationCleaner implements TextCleaner {
     
     constructor() {
         try {
-            // Try to use the real logger
-            const { createServiceLogger } = require('../../../services');
             this.logger = createServiceLogger('PromptContaminationCleaner');
         } catch {
             // Fall back to no-op logger for tests
@@ -85,8 +84,8 @@ export class PromptContaminationCleaner implements TextCleaner {
         // This catches cases where punctuation or line breaks prevented earlier head-only removal.
         for (const pattern of instructionPatterns) {
             try {
-                const escaped = pattern.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-                const anywhere = new RegExp(`${escaped}(?:[\u3002\.：:])?`, 'gi');
+                const escaped = pattern.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+                const anywhere = new RegExp(`${escaped}(?:[\u3002.:：])?`, 'gi');
                 cleaned = cleaned.replace(anywhere, '');
             } catch {
                 // ignore
@@ -162,9 +161,9 @@ export class PromptContaminationCleaner implements TextCleaner {
         let cutIndex = 0;
 
         // Build quick regexes for instructions and context labels across languages
-        const escapedInstructions = instructionPatterns.map(p => p.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
+        const escapedInstructions = instructionPatterns.map(p => p.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&'));
         // Identify a line as instruction if it STARTS with an instruction phrase (rest of line may include more prompts)
-        const instructionRegexes = escapedInstructions.map(e => new RegExp(`^\s*${e}`, 'i'));
+        const instructionRegexes = escapedInstructions.map(e => new RegExp(`^\\s*${e}`, 'i'));
         const contextRegexes: RegExp[] = [
             /^\s*Output\s*format\s*:?\s*$/i,
             /^\s*Format\s*:?\s*$/i,
@@ -204,9 +203,9 @@ export class PromptContaminationCleaner implements TextCleaner {
         while (changed) {
             changed = false;
             for (const pattern of instructionPatterns) {
-                const escaped = pattern.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                const escaped = pattern.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
                 // Match at start of string or start of any line (multiline), forgiving trailing punctuation
-                const reg = new RegExp(`^\\s*${escaped}(?:[\u3002\.：:])?\\s*`, 'im');
+                const reg = new RegExp(`^\\s*${escaped}(?:[\u3002.:：])?\\s*`, 'im');
                 const before = cleaned;
                 cleaned = cleaned.replace(reg, '');
                 if (cleaned !== before) {

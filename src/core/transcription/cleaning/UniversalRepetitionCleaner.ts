@@ -6,10 +6,11 @@
 
 import { CleaningResult, TextCleaner, CleaningContext } from './interfaces';
 import { CLEANING_CONFIG } from '../../../config/CleaningConfig';
+import { createServiceLogger } from '../../../services';
 
 // Simple logger interface for tests
 interface SimpleLogger {
-    debug: (message: string, metadata?: any) => void;
+    debug: (message: string, metadata?: Record<string, unknown>) => void;
 }
 
 // Fallback logger for test environments
@@ -24,8 +25,6 @@ export class UniversalRepetitionCleaner implements TextCleaner {
     
     constructor() {
         try {
-            // Try to use the real logger
-            const { createServiceLogger } = require('../../../services');
             this.logger = createServiceLogger('UniversalRepetitionCleaner');
         } catch {
             // Fall back to no-op logger for tests
@@ -133,7 +132,7 @@ export class UniversalRepetitionCleaner implements TextCleaner {
             { pattern: /[-—–]{6,}/g, replacement: '—', description: 'dashes' },
             { pattern: /[•·・]{6,}/g, replacement: '・', description: 'bullets' },
             { pattern: /[,，]{4,}/g, replacement: ',,', description: 'commas' },
-            { pattern: /[\s]{4,}/g, replacement: '   ', description: 'spaces' }
+            { pattern: /\s{4,}/g, replacement: '   ', description: 'spaces' }
         ];
         
         for (const { pattern, replacement } of patterns) {

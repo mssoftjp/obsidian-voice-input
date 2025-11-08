@@ -1,7 +1,5 @@
 
-import { CorrectionRule, DictionaryCorrectorOptions, ITextCorrector, SimpleCorrectionDictionary, CorrectionEntry } from '../../interfaces';
-import { TranscriptionError, TranscriptionErrorType } from '../../errors';
-import { API_CONSTANTS, DICTIONARY_CONSTANTS } from '../../config';
+import { CorrectionRule, ITextCorrector, SimpleCorrectionDictionary, CorrectionEntry } from '../../interfaces';
 
 /**
  * 辞書修正設定
@@ -34,20 +32,20 @@ export class DictionaryCorrector implements ITextCorrector {
         };
     }
 
-    async correct(text: string): Promise<string> {
+    correct(text: string): Promise<string> {
         if (!this.settings.enabled) {
-            return text;
+            return Promise.resolve(text);
         }
         
         // 空文字または短すぎるテキストは処理しない
         if (!text || text.trim().length < 2) {
-            return text;
+            return Promise.resolve(text);
         }
 
         // Apply rule-based corrections
         const correctedText = this.applyRules(text);
         
-        return correctedText;
+        return Promise.resolve(correctedText);
     }
 
     private applyRules(text: string): string {

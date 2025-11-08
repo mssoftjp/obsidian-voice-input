@@ -5,13 +5,14 @@
 
 import { CleaningPipeline, CleaningContext, TextCleaner, SafetyCheckResult } from './interfaces';
 import { CLEANING_CONFIG } from '../../../config/CleaningConfig';
+import { createServiceLogger } from '../../../services';
 
 // Simple logger interface for tests
 interface SimpleLogger {
-    info: (message: string, metadata?: any) => void;
-    debug: (message: string, metadata?: any) => void;
-    warn: (message: string, metadata?: any) => void;
-    error: (message: string, error?: any) => void;
+    info: (message: string, metadata?: Record<string, unknown>) => void;
+    debug: (message: string, metadata?: Record<string, unknown>) => void;
+    warn: (message: string, metadata?: Record<string, unknown>) => void;
+    error: (message: string, error?: unknown) => void;
 }
 
 // Fallback logger for test environments
@@ -28,8 +29,6 @@ export class StandardCleaningPipeline implements CleaningPipeline {
     
     constructor(private cleaners: TextCleaner[] = []) {
         try {
-            // Try to use the real logger
-            const { createServiceLogger } = require('../../../services');
             this.logger = createServiceLogger('StandardCleaningPipeline');
         } catch {
             // Fall back to no-op logger for tests

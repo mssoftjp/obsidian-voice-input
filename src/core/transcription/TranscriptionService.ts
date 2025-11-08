@@ -636,7 +636,7 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
     /**
      * Convert audio blob to WAV format if needed
      */
-    private async convertToWav(audioBlob: Blob): Promise<Blob> {
+    private convertToWav(audioBlob: Blob): Blob {
         // If already WAV, return as-is
         if (audioBlob.type === 'audio/wav') {
             return audioBlob;
