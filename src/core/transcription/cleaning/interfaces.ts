@@ -41,7 +41,7 @@ export interface TextCleaner {
     readonly name: string;
     /** Whether this cleaner is enabled */
     readonly enabled: boolean;
-    
+
     /**
      * Clean the given text
      * @param text Text to clean
@@ -58,7 +58,7 @@ export interface TextCleaner {
 export interface CleaningPipeline {
     /** Unique name for this pipeline */
     readonly name: string;
-    
+
     /**
      * Execute the complete cleaning pipeline
      * @param text Text to clean

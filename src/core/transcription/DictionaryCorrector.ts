@@ -3,7 +3,7 @@ import { CorrectionRule, ITextCorrector, SimpleCorrectionDictionary, CorrectionE
 
 /**
  * 辞書修正設定
- * 
+ *
  * CLAUDE.mdの哲学に従った設計:
  * - シンプルな固定置換のみをサポート
  */
@@ -16,7 +16,7 @@ export interface DictionarySettings {
 export class DictionaryCorrector implements ITextCorrector {
     private settings: DictionarySettings;
     private correctionDictionary: SimpleCorrectionDictionary;
-    
+
     // Common Japanese transcription errors (empty by default - users can add their own)
     private defaultRules: CorrectionRule[] = [];
 
@@ -36,7 +36,7 @@ export class DictionaryCorrector implements ITextCorrector {
         if (!this.settings.enabled) {
             return Promise.resolve(text);
         }
-        
+
         // 空文字または短すぎるテキストは処理しない
         if (!text || text.trim().length < 2) {
             return Promise.resolve(text);
@@ -44,23 +44,23 @@ export class DictionaryCorrector implements ITextCorrector {
 
         // Apply rule-based corrections
         const correctedText = this.applyRules(text);
-        
+
         return Promise.resolve(correctedText);
     }
 
     private applyRules(text: string): string {
         let result = text;
-        
+
         // Apply default rules
         for (const rule of this.defaultRules) {
             result = this.applyRule(result, rule);
         }
-        
+
         // Apply custom rules
         for (const rule of this.settings.customRules) {
             result = this.applyRule(result, rule);
         }
-        
+
         // Apply dictionary corrections
         for (const correction of this.correctionDictionary.definiteCorrections) {
             // Handle multiple patterns per correction
@@ -73,7 +73,7 @@ export class DictionaryCorrector implements ITextCorrector {
                 }
             }
         }
-        
+
         return result;
     }
 
@@ -114,7 +114,7 @@ export class DictionaryCorrector implements ITextCorrector {
     /**
      * Add custom correction entry
      */
-    addCorrectionEntry(entry: CorrectionEntry, contextual: boolean = false): void {
+    addCorrectionEntry(entry: CorrectionEntry, _contextual: boolean = false): void {
         // Contextual corrections are not yet implemented
         // For now, all corrections are added as definite corrections
         this.correctionDictionary.definiteCorrections.push(entry);

@@ -28,6 +28,12 @@ const isTranscriptionModel = (value: string): value is TranscriptionModelOption 
 const isVadMode = (value: string): value is VadModeOption =>
     value === 'server' || value === 'local' || value === 'disabled';
 
+interface DictionaryExportData {
+    version: string;
+    definiteCorrections: CorrectionEntry[];
+    exportedAt?: string;
+}
+
 export class VoiceInputSettingTab extends PluginSettingTab {
     plugin: VoiceInputPlugin;
     private i18n: I18nService;
@@ -774,12 +780,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
 
                 try {
                     const text = await file.text();
-                    const data = JSON.parse(text);
-
-                    // Validate structure
-                    if (!data.definiteCorrections || !Array.isArray(data.definiteCorrections)) {
-                        throw new Error('Invalid dictionary format: missing definiteCorrections');
-                    }
+                    const data = this.parseDictionaryExport(text);
 
                     // Migrate to new format
                     const migratedEntries = migrateCorrectionEntries(data.definiteCorrections);
@@ -794,12 +795,29 @@ export class VoiceInputSettingTab extends PluginSettingTab {
 
                     new Notice(this.i18n.t('notification.success.dictionaryImported'));
                 } catch (error) {
-                    new Notice(this.i18n.t('notification.error.dictionaryImportFailed') + error.message);
+                    const message = error instanceof Error ? error.message : String(error);
+                    new Notice(this.i18n.t('notification.error.dictionaryImportFailed') + message);
                     throw error;
                 }
             }, 'Failed to import dictionary');
         };
 
         input.click();
+    }
+
+    private parseDictionaryExport(contents: string): DictionaryExportData {
+        const parsed = JSON.parse(contents) as unknown;
+        if (!this.isDictionaryExportData(parsed)) {
+            throw new Error('Invalid dictionary format: missing definiteCorrections');
+        }
+        return parsed;
+    }
+
+    private isDictionaryExportData(value: unknown): value is DictionaryExportData {
+        if (typeof value !== 'object' || value === null) {
+            return false;
+        }
+        const record = value as Record<string, unknown>;
+        return Array.isArray(record.definiteCorrections);
     }
 }

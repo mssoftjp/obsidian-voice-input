@@ -26,7 +26,7 @@ const createFallbackLogger = (): SimpleLogger => ({
 export class StandardCleaningPipeline implements CleaningPipeline {
     readonly name = 'StandardCleaningPipeline';
     private logger: SimpleLogger;
-    
+
     constructor(private cleaners: TextCleaner[] = []) {
         try {
             this.logger = createServiceLogger('StandardCleaningPipeline');
@@ -35,25 +35,25 @@ export class StandardCleaningPipeline implements CleaningPipeline {
             this.logger = createFallbackLogger();
         }
     }
-    
+
     async execute(text: string, language: string, context?: CleaningContext) {
         const startTime = performance.now();
         const originalLength = text.length;
-        
+
         const fullContext: CleaningContext = {
             language,
             originalLength,
             startTime,
             ...context
         };
-        
+
         this.logger.info('Starting cleaning pipeline', {
             originalLength,
             language,
             cleanerCount: this.cleaners.length,
             enabledCleaners: this.cleaners.filter(c => c.enabled).length
         });
-        
+
         let currentText = text;
         const cleanerResults: Array<{
             cleanerName: string;
@@ -61,33 +61,33 @@ export class StandardCleaningPipeline implements CleaningPipeline {
             processingTime: number;
             issues: string[];
         }> = [];
-        
+
         // Execute each cleaner in sequence
         for (const cleaner of this.cleaners) {
             if (!cleaner.enabled) {
                 this.logger.debug(`Skipping disabled cleaner: ${cleaner.name}`);
                 continue;
             }
-            
+
             const cleanerStartTime = performance.now();
             const textBeforeCleaner = currentText;
-            
+
             try {
                 this.logger.debug(`Executing cleaner: ${cleaner.name}`, {
                     inputLength: textBeforeCleaner.length
                 });
-                
+
                 const result = await Promise.resolve(
                     cleaner.clean(textBeforeCleaner, language, fullContext)
                 );
-                
+
                 // Safety check
                 const safetyCheck = this.performSafetyCheck(
                     textBeforeCleaner,
                     result.cleanedText,
                     cleaner.name
                 );
-                
+
                 if (safetyCheck.action === 'rollback') {
                     this.logger.warn(`Rolling back cleaner ${cleaner.name}`, {
                         reason: safetyCheck.reason,
@@ -103,26 +103,26 @@ export class StandardCleaningPipeline implements CleaningPipeline {
                     // Apply the cleaned text
                     currentText = result.cleanedText;
                 }
-                
+
                 const processingTime = performance.now() - cleanerStartTime;
-                const reductionRatio = textBeforeCleaner.length > 0 
-                    ? (textBeforeCleaner.length - currentText.length) / textBeforeCleaner.length 
+                const reductionRatio = textBeforeCleaner.length > 0
+                    ? (textBeforeCleaner.length - currentText.length) / textBeforeCleaner.length
                     : 0;
-                
+
                 cleanerResults.push({
                     cleanerName: cleaner.name,
                     reductionRatio,
                     processingTime,
                     issues: result.issues
                 });
-                
+
                 this.logger.debug(`Completed cleaner: ${cleaner.name}`, {
                     outputLength: currentText.length,
                     reductionRatio: reductionRatio.toFixed(3),
                     processingTime: `${processingTime.toFixed(2)}ms`,
                     issueCount: result.issues.length
                 });
-                
+
                 // Log warnings for significant changes
                 if (reductionRatio > CLEANING_CONFIG.safety.warningThreshold) {
                     this.logger.warn(`High reduction ratio in ${cleaner.name}`, {
@@ -130,7 +130,7 @@ export class StandardCleaningPipeline implements CleaningPipeline {
                         threshold: CLEANING_CONFIG.safety.warningThreshold
                     });
                 }
-                
+
             } catch (error) {
                 this.logger.error(`Error in cleaner ${cleaner.name}`, error);
                 cleanerResults.push({
@@ -142,12 +142,12 @@ export class StandardCleaningPipeline implements CleaningPipeline {
                 // Continue with the original text if a cleaner fails
             }
         }
-        
+
         const totalProcessingTime = performance.now() - startTime;
-        const totalReductionRatio = originalLength > 0 
-            ? (originalLength - currentText.length) / originalLength 
+        const totalReductionRatio = originalLength > 0
+            ? (originalLength - currentText.length) / originalLength
             : 0;
-        
+
         // Final safety check for the entire pipeline
         const finalSafetyCheck = this.performSafetyCheck(text, currentText, 'Pipeline');
         if (finalSafetyCheck.action === 'rollback') {
@@ -157,7 +157,7 @@ export class StandardCleaningPipeline implements CleaningPipeline {
             });
             currentText = text;
         }
-        
+
         this.logger.info('Cleaning pipeline completed', {
             originalLength,
             finalLength: currentText.length,
@@ -165,7 +165,7 @@ export class StandardCleaningPipeline implements CleaningPipeline {
             totalProcessingTime: `${totalProcessingTime.toFixed(2)}ms`,
             cleanersExecuted: cleanerResults.length
         });
-        
+
         return {
             finalText: currentText,
             metadata: {
@@ -176,7 +176,7 @@ export class StandardCleaningPipeline implements CleaningPipeline {
             }
         };
     }
-    
+
     /**
      * Perform safety checks on cleaning results
      */
@@ -187,11 +187,11 @@ export class StandardCleaningPipeline implements CleaningPipeline {
     ): SafetyCheckResult {
         const originalLength = originalText.length;
         const cleanedLength = cleanedText.length;
-        
+
         if (originalLength === 0) {
             return { isSafe: true, action: 'proceed', reductionRatio: 0 };
         }
-        
+
         const reductionRatio = (originalLength - cleanedLength) / originalLength;
 
         // Relax safety thresholds for structural cleaners that may legitimately
@@ -204,7 +204,7 @@ export class StandardCleaningPipeline implements CleaningPipeline {
         const singleCleanerThreshold = isStructuralCleaner
             ? Math.max(0.9, CLEANING_CONFIG.safety.singleCleanerMaxReduction)
             : CLEANING_CONFIG.safety.singleCleanerMaxReduction;
-        
+
         // Check against emergency fallback threshold
         if (reductionRatio > emergencyThreshold) {
             return {
@@ -214,7 +214,7 @@ export class StandardCleaningPipeline implements CleaningPipeline {
                 reductionRatio
             };
         }
-        
+
         // Check against single cleaner threshold
         if (reductionRatio > singleCleanerThreshold) {
             return {
@@ -224,17 +224,17 @@ export class StandardCleaningPipeline implements CleaningPipeline {
                 reductionRatio
             };
         }
-        
+
         return { isSafe: true, action: 'proceed', reductionRatio };
     }
-    
+
     /**
      * Add a cleaner to the pipeline
      */
     addCleaner(cleaner: TextCleaner): void {
         this.cleaners.push(cleaner);
     }
-    
+
     /**
      * Remove a cleaner from the pipeline
      */
@@ -246,7 +246,7 @@ export class StandardCleaningPipeline implements CleaningPipeline {
         }
         return false;
     }
-    
+
     /**
      * Get all cleaners in the pipeline
      */

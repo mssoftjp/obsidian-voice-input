@@ -24,7 +24,7 @@ export class PromptContaminationCleaner implements TextCleaner {
     readonly name = 'PromptContaminationCleaner';
     readonly enabled = true;
     private logger: SimpleLogger;
-    
+
     constructor() {
         try {
             this.logger = createServiceLogger('PromptContaminationCleaner');
@@ -33,24 +33,24 @@ export class PromptContaminationCleaner implements TextCleaner {
             this.logger = createFallbackLogger();
         }
     }
-    
+
     clean(text: string, language: string, context?: CleaningContext): CleaningResult {
         const original = text;
         const startTime = performance.now();
         let cleaned = text;
         const issues: string[] = [];
         let patternsMatched = 0;
-        
-        const { instructionPatterns, contextPatterns, promptSnippetLengths } = 
+
+        const { instructionPatterns, contextPatterns, promptSnippetLengths } =
             CLEANING_CONFIG.contamination;
-        
+
         // Step 1: Handle XML tags (highest priority)
         cleaned = this.removeXmlTags(cleaned);
         if (cleaned !== text) {
             patternsMatched++;
             this.logger.debug('XML tags removed');
         }
-        
+
         // Step 2: Remove leading prompt block (multi-line instructions at the very beginning)
         const beforeInstructions = cleaned;
         cleaned = this.removeLeadingPromptBlock(cleaned, instructionPatterns);
@@ -60,7 +60,7 @@ export class PromptContaminationCleaner implements TextCleaner {
             patternsMatched++;
             this.logger.debug('Instruction patterns removed');
         }
-        
+
         // Step 3: Remove snippet matches (conservative)
         const beforeSnippets = cleaned;
         cleaned = this.removeSnippetPatterns(cleaned, instructionPatterns, promptSnippetLengths);
@@ -68,7 +68,7 @@ export class PromptContaminationCleaner implements TextCleaner {
             patternsMatched++;
             this.logger.debug('Snippet patterns removed');
         }
-        
+
         // Step 4: Apply context patterns
         const beforeContext = cleaned;
         cleaned = this.removeContextPatterns(cleaned, contextPatterns);
@@ -76,7 +76,7 @@ export class PromptContaminationCleaner implements TextCleaner {
             patternsMatched++;
             this.logger.debug('Context patterns removed');
         }
-        
+
         // Step 5: Clean up excessive whitespace
         cleaned = this.normalizeWhitespace(cleaned);
 
@@ -92,15 +92,15 @@ export class PromptContaminationCleaner implements TextCleaner {
             }
         }
         cleaned = this.normalizeWhitespace(cleaned);
-        
+
         const processingTime = performance.now() - startTime;
         const reductionRatio = original.length > 0 ? (original.length - cleaned.length) / original.length : 0;
-        
+
         // Add warnings for significant changes
         if (reductionRatio > CLEANING_CONFIG.safety.warningThreshold) {
             issues.push(`High reduction ratio: ${Math.round(reductionRatio * 100)}%`);
         }
-        
+
         if (context?.enableDetailedLogging) {
             this.logger.debug('Prompt contamination cleaning completed', {
                 originalLength: original.length,
@@ -110,7 +110,7 @@ export class PromptContaminationCleaner implements TextCleaner {
                 processingTime: `${processingTime.toFixed(2)}ms`
             });
         }
-        
+
         return {
             cleanedText: cleaned,
             issues,
@@ -122,13 +122,13 @@ export class PromptContaminationCleaner implements TextCleaner {
             }
         };
     }
-    
+
     /**
      * Remove XML tags using fixed patterns for TRANSCRIPT tags
      */
     private removeXmlTags(text: string): string {
         let cleaned = text;
-        
+
         // First: Extract content from complete TRANSCRIPT tags (highest priority)
         const completeTagMatch = cleaned.match(/<TRANSCRIPT[^>]*>\s*([\s\S]*?)\s*<\/TRANSCRIPT>/);
         if (completeTagMatch) {
@@ -140,16 +140,16 @@ export class PromptContaminationCleaner implements TextCleaner {
                 cleaned = openingMatch[1].trim();
             }
         }
-        
+
         // Third: Remove any remaining XML-like tags
         cleaned = cleaned.replace(/<\/?TRANSCRIPT[^>]*>/g, '');
         cleaned = cleaned.replace(/<\/?transcript[^>]*>/gi, '');
         cleaned = cleaned.replace(/<\/?TRANSCRIPTION[^>]*>/gi, '');
-        
+
         // Remove standalone tags and empty XML tags
         cleaned = cleaned.replace(/<[^>]*\/>/g, '');
         cleaned = cleaned.replace(/<\w+[^>]*>\s*<\/\w+>/g, '');
-        
+
         return cleaned;
     }
 
@@ -192,7 +192,7 @@ export class PromptContaminationCleaner implements TextCleaner {
 
         return lines.slice(cutIndex).join('\n');
     }
-    
+
     /**
      * Remove instruction patterns from the beginning of text
      */
@@ -215,7 +215,7 @@ export class PromptContaminationCleaner implements TextCleaner {
         }
         return cleaned;
     }
-    
+
     /**
      * Remove snippet patterns (partial matches with context)
      */
@@ -225,7 +225,7 @@ export class PromptContaminationCleaner implements TextCleaner {
         const MAX_SNIPPET_SEARCH_CHARS = 300;
         const head = cleaned.slice(0, MAX_SNIPPET_SEARCH_CHARS);
         let headMut = head;
-        
+
         // Multilingual suffix lexicon for enhanced snippet detection (added JA)
         const suffixLexicon = [
             /\b(please|do\s*not\s*include|only|content|output\s*format)\b/gi, // EN
@@ -233,15 +233,15 @@ export class PromptContaminationCleaner implements TextCleaner {
             /(해주세요|하지\s*마세요|포함하지\s*마세요|만|내용|출력\s*형식)/g,            // KO
             /(この指示文|指示文|出力形式|形式|内容|話者|のみ|含めないでください|含めないで)$/g // JA
         ];
-        
+
         for (const pattern of instructionPatterns) {
             for (const length of snippetLengths) {
                 if (pattern.length < length) continue;
-                
+
                 const snippet = pattern.slice(0, length);
                 // Escape special regex characters
                 const escapedSnippet = snippet.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
-                
+
                 // Enhanced multilingual contextual matching (head region only)
                 for (const suffixPattern of suffixLexicon) {
                     const contextRegex = new RegExp(
@@ -250,7 +250,7 @@ export class PromptContaminationCleaner implements TextCleaner {
                     );
                     headMut = headMut.replace(contextRegex, '');
                 }
-                
+
                 // Legacy pattern for Japanese (apply once within head)
                 const legacyJapaneseRegex = new RegExp(
                     `${escapedSnippet}[^。.!?！？\\n]{0,50}(?:ください|してください|です|ます)(?![\u3041-\u3096\u30A1-\u30FA\u4E00-\u9FFF])`,
@@ -263,7 +263,7 @@ export class PromptContaminationCleaner implements TextCleaner {
         cleaned = headMut + cleaned.slice(head.length);
         return cleaned;
     }
-    
+
     /**
      * Apply context patterns for general cleanup
      */
@@ -306,7 +306,7 @@ export class PromptContaminationCleaner implements TextCleaner {
 
         return cleaned;
     }
-    
+
     /**
      * Normalize whitespace while preserving structure
      */

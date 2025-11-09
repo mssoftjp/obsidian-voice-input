@@ -66,7 +66,7 @@ export class TranscriptionService implements ITranscriptionProvider {
         this.corrector = new DictionaryCorrector({
             correctionDictionary: dictionary
         });
-        
+
         // Initialize the new cleaning pipeline
         this.cleaningPipeline = new StandardCleaningPipeline([
             new PromptContaminationCleaner(),
@@ -81,7 +81,7 @@ export class TranscriptionService implements ITranscriptionProvider {
     async transcribeAudio(audioBlob: Blob, language: string): Promise<TranscriptionResult> {
         const startTime = Date.now();
         const perfStartTime = performance.now();
-        
+
         this.logger.info('Starting transcription', {
             audioBlobSize: audioBlob.size,
             audioType: audioBlob.type,
@@ -89,7 +89,7 @@ export class TranscriptionService implements ITranscriptionProvider {
             model: this.model,
             enableTranscriptionCorrection: this.enableTranscriptionCorrection
         });
-        
+
         try {
             // Convert audio blob to proper format for API
             const formData = new FormData();
@@ -97,7 +97,7 @@ export class TranscriptionService implements ITranscriptionProvider {
             formData.append('model', this.model);
             formData.append('response_format', 'json');
             formData.append('temperature', String(API_CONSTANTS.PARAMETERS.TRANSCRIPTION_TEMPERATURE)); // Deterministic output
-            
+
             // Language setting (auto 廃止のため常に明示指定)
             formData.append('language', language);
 
@@ -105,38 +105,26 @@ export class TranscriptionService implements ITranscriptionProvider {
             if (prompt) {
                 formData.append('prompt', prompt);
             }
-
-            
             // IMPORTANT: OpenAI Audio API implementation
             // この部分を変更する場合は、必ずOpenAI APIの仕様を確認すること
             // 参照: https://platform.openai.com/docs/api-reference/audio/createTranscription
-            // 
+            //
             // 要件:
             // - multipart/form-data形式
             // - fileフィールドは音声ファイル（Blob）
             // - modelフィールドは必須
             // - boundary設定が必要
-            
+
             // Send multipart request via centralized HTTP client
-            const { status, json: responseData } = await ObsidianHttpClient.postFormData(
+            const { status, json: rawResponse } = await ObsidianHttpClient.postFormData(
                 API_CONSTANTS.ENDPOINTS.TRANSCRIPTION,
                 formData,
                 { 'Authorization': `Bearer ${this.apiKey}` }
             );
 
             if (status >= 400) {
-                const errorData = responseData as Record<string, unknown> | undefined;
-                let errorMessage = `HTTP ${status}`;
-                
-                if (errorData && typeof errorData === 'object' && 'error' in errorData 
-                    && typeof errorData.error === 'object' && errorData.error 
-                    && 'message' in errorData.error) {
-                    const errorObj = errorData.error as Record<string, unknown>;
-                    if (typeof errorObj.message === 'string') {
-                        errorMessage = errorObj.message;
-                    }
-                }
-                
+                const errorMessage = this.extractErrorMessage(rawResponse, status);
+
                 // Determine error type based on status and message
                 let errorType = TranscriptionErrorType.TRANSCRIPTION_FAILED;
                 if (status === 401) {
@@ -146,54 +134,46 @@ export class TranscriptionService implements ITranscriptionProvider {
                 } else if (status >= 500) {
                     errorType = TranscriptionErrorType.NETWORK_ERROR;
                 }
-                
+
                 throw new TranscriptionError(errorType, errorMessage);
             }
-            
-            
             // Extract text from response
-            let originalText = '';
-            if (responseData.text) {
-                originalText = responseData.text;
-            } else if (typeof responseData === 'string') {
-                originalText = responseData;
-            }
+            const normalizedResponse = this.normalizeTranscriptionResponse(rawResponse);
+            let originalText = normalizedResponse.text;
 
             // Clean up GPT-4o specific artifacts
             originalText = await this.cleanGPT4oResponse(originalText, language);
-            
-            
             // プロンプトエラーの検出（音声が無音の場合にプロンプトが返される問題）
             if (this.isPromptErrorDetected(originalText, language)) {
                 // 音声がない場合は空文字を返す
                 originalText = '';
             }
-            
+
             // 空文字の場合は後処理をスキップして早期リターン
             if (!originalText || originalText.trim() === '') {
                 const duration = Date.now() - startTime;
                 const elapsedTime = performance.now() - perfStartTime;
-                this.logger.info('Transcription completed (empty result)', { 
+                this.logger.info('Transcription completed (empty result)', {
                     elapsedTime: `${elapsedTime.toFixed(2)}ms`,
-                    duration 
+                    duration
                 });
                 return {
                     text: '',
                     originalText: '',
                     duration,
                     model: this.model,
-                    language: responseData.language || language
+                    language: normalizedResponse.language || language
                 };
             }
-            
+
             // Apply corrections if enabled
             const correctedText = this.enableTranscriptionCorrection
                 ? await this.corrector.correct(originalText)
                 : originalText;
-            
+
             const duration = Date.now() - startTime;
             const elapsedTime = performance.now() - perfStartTime;
-            
+
             this.logger.info('Transcription completed', {
                 originalLength: originalText.length,
                 correctedLength: correctedText.length,
@@ -204,21 +184,21 @@ export class TranscriptionService implements ITranscriptionProvider {
                 inputSize: audioBlob.size,
                 outputLength: correctedText.length
             });
-            
+
             return {
                 text: correctedText,
                 originalText,
                 duration,
                 model: this.model,
-                language: responseData.language || language
+                language: normalizedResponse.language || language
             };
         } catch (error) {
             this.logger.error('Transcription error', error);
-            
+
             if (error instanceof TranscriptionError) {
                 throw error;
             }
-            
+
             throw TranscriptionError.fromError(error, TranscriptionErrorType.TRANSCRIPTION_FAILED);
         }
     }
@@ -228,9 +208,9 @@ export class TranscriptionService implements ITranscriptionProvider {
      */
     private buildTranscriptionPrompt(language: string): string {
         // auto は廃止済み
-        
+
         const normalizedLang = this.normalizeLanguage(language);
-        
+
         switch (normalizedLang) {
             case 'ja':
                 return `${PROMPT_CONSTANTS.JAPANESE.INSTRUCTION_1}
@@ -240,7 +220,7 @@ ${PROMPT_CONSTANTS.JAPANESE.OUTPUT_FORMAT}
 <TRANSCRIPT>
 ${PROMPT_CONSTANTS.JAPANESE.SPEAKER_ONLY}
 </TRANSCRIPT>`;
-            
+
             case 'en':
                 return `${PROMPT_CONSTANTS.ENGLISH.INSTRUCTION_1}
 ${PROMPT_CONSTANTS.ENGLISH.INSTRUCTION_2}
@@ -249,7 +229,7 @@ ${PROMPT_CONSTANTS.ENGLISH.OUTPUT_FORMAT}
 <TRANSCRIPT>
 ${PROMPT_CONSTANTS.ENGLISH.SPEAKER_ONLY}
 </TRANSCRIPT>`;
-            
+
             case 'zh':
                 return `${PROMPT_CONSTANTS.CHINESE.INSTRUCTION_1}
 ${PROMPT_CONSTANTS.CHINESE.INSTRUCTION_2}
@@ -258,7 +238,7 @@ ${PROMPT_CONSTANTS.CHINESE.OUTPUT_FORMAT}
 <TRANSCRIPT>
 ${PROMPT_CONSTANTS.CHINESE.SPEAKER_ONLY}
 </TRANSCRIPT>`;
-            
+
             case 'ko':
                 return `${PROMPT_CONSTANTS.KOREAN.INSTRUCTION_1}
 ${PROMPT_CONSTANTS.KOREAN.INSTRUCTION_2}
@@ -267,7 +247,7 @@ ${PROMPT_CONSTANTS.KOREAN.OUTPUT_FORMAT}
 <TRANSCRIPT>
 ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
 </TRANSCRIPT>`;
-            
+
             default:
                 // For any other language, return empty string
                 return '';
@@ -280,11 +260,11 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
      */
     private async cleanGPT4oResponse(text: string, language: string): Promise<string> {
         const normalizedLang = this.normalizeLanguage(language);
-        
+
         // 1) 先に機械的にTRANSCRIPTタグ等の構造ラッパーを除去してから
         //    パイプラインに渡す（安全判定の基準長もラッパー除去後にする）
         const preStripped = this.preStripTranscriptWrappers(text);
-        
+
         try {
             // Use the new cleaning pipeline
             const result = await this.cleaningPipeline.execute(preStripped, normalizedLang, {
@@ -292,9 +272,9 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
                 originalLength: preStripped.length,
                 enableDetailedLogging: false
             });
-            
+
             return result.finalText.trim().replace(/\n{3,}/g, '\n\n');
-            
+
         } catch (error) {
             // Fall back to legacy cleaning if pipeline fails
             this.logger.warn('Cleaning pipeline failed, falling back to legacy cleaning', error);
@@ -308,22 +288,22 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
     private legacyCleanGPT4oResponse(text: string, language: string): string {
         // Normalize language for processing
         const normalizedLang = this.normalizeLanguage(language);
-        
+
         // 先に構造ラッパー（TRANSCRIPTタグ）を機械的に除去
         text = this.preStripTranscriptWrappers(text);
-        
+
         // Apply language-specific cleaning
         text = this.applyLanguageSpecificCleaning(text, normalizedLang);
 
         // Apply generic cleaning (only colon-based patterns to prevent over-removal)
         text = this.applyGenericCleaning(text);
-        
+
         // Clean up extra whitespace and empty lines
         text = text.trim();
         text = text.replace(/\n{3,}/g, '\n\n');
         text = text.replace(/^\s*\n/gm, ''); // Remove lines with only whitespace
         text = text.trim();
-        
+
         return text;
     }
 
@@ -385,7 +365,7 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
 
     /**
      * Enhanced position guard check - determines if a line should be cleaned based on position
-     * Beginning content: first 3 lines or immediately after <TRANSCRIPT> 
+     * Beginning content: first 3 lines or immediately after <TRANSCRIPT>
      * End content: last 2 lines
      */
     private shouldCleanLine(index: number, totalLines: number, lines: string[], isEndHallucination: boolean = false): boolean {
@@ -393,12 +373,12 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
         if (isEndHallucination) {
             return index >= Math.max(0, totalLines - 2);
         }
-        
+
         // For beginning patterns, check first 3 lines
         if (index < 3) {
             return true;
         }
-        
+
         // Check if line comes immediately after <TRANSCRIPT> tag
         if (index > 0 && index < totalLines) {
             const previousLine = lines[index - 1].trim();
@@ -406,7 +386,7 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -417,11 +397,11 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
         // Split into lines for exact line matching
         const lines = text.split('\n');
         const cleanedLines = [];
-        
+
         for (let index = 0; index < lines.length; index++) {
             const line = lines[index];
             const trimmedLine = line.trim();
-            
+
             // Only remove lines that exactly match prompt instructions AND are in protected position
             if (this.shouldCleanLine(index, lines.length, lines) && (
                 trimmedLine === PROMPT_CONSTANTS.JAPANESE.INSTRUCTION_1 ||
@@ -433,13 +413,13 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
                 // Skip this line - don't add to cleanedLines
                 continue;
             }
-            
+
             // Apply phrase removal only to protected positions
             let cleanedLine = line;
             if (this.shouldCleanLine(index, lines.length, lines)) {
                 cleanedLine = cleanedLine.replace(new RegExp(PROMPT_CONSTANTS.JAPANESE.SPEAKER_ONLY.replace(/[()（）]/g, '\\$&'), 'g'), '');
             }
-            
+
             cleanedLines.push(cleanedLine);
         }
 
@@ -453,11 +433,11 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
         // Split into lines for exact line matching
         const lines = text.split('\n');
         const cleanedLines = [];
-        
+
         for (let index = 0; index < lines.length; index++) {
             const line = lines[index];
             const trimmedLine = line.trim();
-            
+
             // Only remove lines that exactly match prompt instructions AND are in protected position
             if (this.shouldCleanLine(index, lines.length, lines) && (
                 trimmedLine === PROMPT_CONSTANTS.ENGLISH.INSTRUCTION_1 ||
@@ -473,14 +453,14 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
                 // Skip this line - don't add to cleanedLines
                 continue;
             }
-            
+
             // Apply phrase removal only to protected positions
             let cleanedLine = line;
             if (this.shouldCleanLine(index, lines.length, lines)) {
                 cleanedLine = cleanedLine.replace(/\(Speaker content only\)/g, '');
                 cleanedLine = cleanedLine.replace(/\(SPEAKER CONTENT ONLY\)/g, '');
             }
-            
+
             cleanedLines.push(cleanedLine);
         }
 
@@ -494,11 +474,11 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
         // Split into lines for exact line matching
         const lines = text.split('\n');
         const cleanedLines = [];
-        
+
         for (let index = 0; index < lines.length; index++) {
             const line = lines[index];
             const trimmedLine = line.trim();
-            
+
             // Only remove lines that exactly match prompt instructions AND are in protected position
             if (this.shouldCleanLine(index, lines.length, lines) && (
                 trimmedLine === PROMPT_CONSTANTS.CHINESE.INSTRUCTION_1 ||
@@ -510,13 +490,13 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
                 // Skip this line - don't add to cleanedLines
                 continue;
             }
-            
+
             // Apply phrase removal only to protected positions
             let cleanedLine = line;
             if (this.shouldCleanLine(index, lines.length, lines)) {
                 cleanedLine = cleanedLine.replace(/（仅说话者内容）/g, '');
             }
-            
+
             cleanedLines.push(cleanedLine);
         }
 
@@ -530,11 +510,11 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
         // Split into lines for exact line matching
         const lines = text.split('\n');
         const cleanedLines = [];
-        
+
         for (let index = 0; index < lines.length; index++) {
             const line = lines[index];
             const trimmedLine = line.trim();
-            
+
             // Only remove lines that exactly match prompt instructions AND are in protected position
             if (this.shouldCleanLine(index, lines.length, lines) && (
                 trimmedLine === PROMPT_CONSTANTS.KOREAN.INSTRUCTION_1 ||
@@ -546,13 +526,13 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
                 // Skip this line - don't add to cleanedLines
                 continue;
             }
-            
+
             // Apply phrase removal only to protected positions
             let cleanedLine = line;
             if (this.shouldCleanLine(index, lines.length, lines)) {
                 cleanedLine = cleanedLine.replace(/（화자 발언만）/g, '');
             }
-            
+
             cleanedLines.push(cleanedLine);
         }
 
@@ -566,11 +546,11 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
         // Split into lines for exact line matching
         const lines = text.split('\n');
         const cleanedLines = [];
-        
+
         for (let index = 0; index < lines.length; index++) {
             const line = lines[index];
             const trimmedLine = line.trim();
-            
+
             // Only remove lines that exactly match generic format instructions AND are in protected position
             if (this.shouldCleanLine(index, lines.length, lines) && (
                 trimmedLine === PROMPT_CONSTANTS.GENERIC.OUTPUT_FORMAT ||
@@ -580,7 +560,7 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
                 // Skip this line - don't add to cleanedLines
                 continue;
             }
-            
+
             cleanedLines.push(line);
         }
 
@@ -592,10 +572,10 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
      */
     private isPromptErrorDetected(text: string, language: string): boolean {
         const normalizedLang = this.normalizeLanguage(language);
-        
+
         switch (normalizedLang) {
             case 'ja':
-                return text.includes('この指示文は出力に含めないでください') || 
+                return text.includes('この指示文は出力に含めないでください') ||
                        text.includes(PROMPT_CONSTANTS.JAPANESE.INSTRUCTION_2) ||
                        text === PROMPT_CONSTANTS.JAPANESE.SPEAKER_ONLY ||
                        text.trim() === '話者の発言のみ';
@@ -614,7 +594,7 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
                        text.trim() === PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY;
             default:
                 // For auto and other languages, use Japanese patterns as fallback
-                return text.includes('この指示文は出力に含めないでください') || 
+                return text.includes('この指示文は出力に含めないでください') ||
                        text.includes(PROMPT_CONSTANTS.JAPANESE.INSTRUCTION_2) ||
                        text === PROMPT_CONSTANTS.JAPANESE.SPEAKER_ONLY ||
                        text.trim() === '話者の発言のみ';
@@ -626,10 +606,10 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
      */
     estimateCost(audioLengthSeconds: number): number {
         const audioLengthMinutes = audioLengthSeconds / 60;
-        
+
         // Get cost per minute from configuration
         const costPerMinute = TRANSCRIPTION_MODEL_COSTS[this.model];
-        
+
         return audioLengthMinutes * costPerMinute;
     }
 
@@ -656,7 +636,7 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
             enabled: settings.enabled
         });
     }
-    
+
     /**
      * Set transcription correction enabled/disabled
      */
@@ -685,7 +665,6 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
         this.model = model;
     }
 
-
     /**
      * Update custom correction dictionary
      */
@@ -700,4 +679,29 @@ ${PROMPT_CONSTANTS.KOREAN.SPEAKER_ONLY}
         return this.corrector;
     }
 
+    private normalizeTranscriptionResponse(data: unknown): { text: string; language?: string } {
+        if (typeof data === 'string') {
+            return { text: data };
+        }
+        if (this.isRecord(data)) {
+            const text = typeof data.text === 'string' ? data.text : '';
+            const language = typeof data.language === 'string' ? data.language : undefined;
+            return { text, language };
+        }
+        return { text: '' };
+    }
+
+    private extractErrorMessage(data: unknown, status: number): string {
+        if (this.isRecord(data)) {
+            const rawError = data.error;
+            if (this.isRecord(rawError) && typeof rawError.message === 'string') {
+                return rawError.message;
+            }
+        }
+        return `HTTP ${status}`;
+    }
+
+    private isRecord(value: unknown): value is Record<string, unknown> {
+        return typeof value === 'object' && value !== null;
+    }
 }
