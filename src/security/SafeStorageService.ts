@@ -34,6 +34,16 @@ const isElectronWindow = (win: Window): win is ElectronWindow => {
     return 'require' in win && typeof (win as ElectronWindow).require === 'function';
 };
 
+const resolveElectronRenderer = (): ElectronRenderer | null => {
+    if (isElectronWindow(window) && typeof (window as ElectronWindow).require === 'function') {
+        return (window as ElectronWindow).require('electron') ?? null;
+    }
+    if ((window as ElectronWindow).electron) {
+        return (window as ElectronWindow).electron ?? null;
+    }
+    return (globalThis as ElectronGlobal).electron ?? null;
+};
+
 export class SafeStorageService {
     private static safeStorage: ElectronSafeStorage | null = null;
     private static logger: Logger = getLogger('SafeStorageService');
@@ -53,15 +63,10 @@ export class SafeStorageService {
                 this.logger.debug(`window.require exists: ${'require' in window}`);
                 this.logger.debug(`window.require is function: ${typeof (window as ElectronWindow).require === 'function'}`);
 
-                const electron = isElectronWindow(window) ? window.require?.('electron') : null;
+                const electron = resolveElectronRenderer();
 
                 if (!electron) {
-                    // Alternative access method
-                    const globalElectron = (window as ElectronWindow).electron || (global as ElectronGlobal).electron;
-                    if (globalElectron) {
-                        this.logger.debug('Found electron via global access');
-                        this.safeStorage = globalElectron.remote?.safeStorage || globalElectron.safeStorage || null;
-                    }
+                    this.logger.debug('Electron renderer not available');
                 } else {
                     this.logger.debug(`Electron object exists: ${!!electron}`);
                     this.logger.debug(`Electron.remote exists: ${!!electron?.remote}`);

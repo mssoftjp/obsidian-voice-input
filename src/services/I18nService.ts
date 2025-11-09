@@ -127,8 +127,10 @@ export class I18nServiceImpl implements I18nService {
    * Supports {paramName} syntax
    */
     private substituteParams(translation: string, params: Record<string, string | number>): string {
-        return translation.replace(/{(\w+)}/g, (match, paramName) => {
-            return params[paramName]?.toString() || match;
+        return translation.replace(/{(\w+)}/g, (match, captured) => {
+            const paramKey = captured as keyof typeof params;
+            const value = params[paramKey];
+            return value !== undefined ? value.toString() : match;
         });
     }
 

@@ -20,7 +20,8 @@ export class ObsidianHttpClient {
     }): Promise<{ status: number; json: unknown; text: string }> {
         const { url, method = 'GET', headers = {}, body } = opts;
         const res = await requestUrl({ url, method, headers, body, throw: false });
-        return { status: res.status, json: res.json, text: res.text };
+        const jsonBody: unknown = res.json;
+        return { status: res.status, json: jsonBody, text: res.text };
     }
 
     /**
@@ -43,7 +44,8 @@ export class ObsidianHttpClient {
             body: JSON.stringify(data),
             throw: false
         });
-        return { status: res.status, json: res.json };
+        const jsonBody: unknown = res.json;
+        return { status: res.status, json: jsonBody };
     }
 
     /**
@@ -63,8 +65,8 @@ export class ObsidianHttpClient {
             body,
             throw: false
         });
-
-        return { status: response.status, json: response.json };
+        const jsonBody: unknown = response.json;
+        return { status: response.status, json: jsonBody };
     }
 
     /**

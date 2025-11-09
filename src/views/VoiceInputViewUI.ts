@@ -33,8 +33,8 @@ export class VoiceInputViewUI {
     secondRowContainer: HTMLElement;
 
     // Settings controls
-    correctionToggle: ToggleComponent;
-    transcriptionModelDropdown: DropdownComponent;
+    correctionToggle: ToggleComponent | null = null;
+    transcriptionModelDropdown: DropdownComponent | null = null;
 
     // Event handlers
     private clickHandler: ((e: MouseEvent) => void) | null = null;

@@ -106,7 +106,7 @@ export class ErrorHandler implements IDisposable {
         // i18n service might not be available yet during initialization
         try {
             this.i18n = getI18n();
-        } catch (_error) {
+        } catch {
             // i18n service will be available later
         }
 
@@ -130,22 +130,21 @@ export class ErrorHandler implements IDisposable {
         // Unhandled promise rejections
         this.unhandledRejectionHandler = (event: PromiseRejectionEvent) => {
             // Filter out errors that are not from our plugin
-            const error = event.reason;
-            const errorString = error?.toString?.() || String(error);
+            const reasonSummary = this.describeReason(event.reason);
 
             // Ignore errors from other plugins/sources
-            if (errorString.includes('inputEl') ||
-                errorString.includes('Cannot read properties of undefined') ||
-                !errorString.includes('voice-input')) {
+            if (reasonSummary.includes('inputEl') ||
+                reasonSummary.includes('Cannot read properties of undefined') ||
+                !reasonSummary.includes('voice-input')) {
                 // Log in development mode only
                 if (this.options.isDevelopment) {
-                    this.logger.debug('[VoiceInput] Ignored external error', error);
+                    this.logger.debug('[VoiceInput] Ignored external error', { reason: reasonSummary });
                 }
                 return;
             }
 
             this.handleError(
-                new Error(`Unhandled Promise Rejection: ${event.reason}`),
+                new Error(`Unhandled Promise Rejection: ${reasonSummary}`),
                 {
                     component: 'Global',
                     operation: 'UnhandledRejection',
@@ -159,8 +158,9 @@ export class ErrorHandler implements IDisposable {
 
         // Global error events
         this.errorHandler = (event: ErrorEvent) => {
+            const eventError = event.error instanceof Error ? event.error : new Error(event.message);
             this.handleError(
-                event.error || new Error(event.message),
+                eventError,
                 {
                     component: 'Global',
                     operation: 'UncaughtError',
@@ -247,7 +247,7 @@ export class ErrorHandler implements IDisposable {
         let contextSummary: string;
         try {
             contextSummary = JSON.stringify(context);
-        } catch (_error) {
+        } catch {
             contextSummary = '[Unserializable context]';
         }
         throw lastError || new Error(`Retry operation failed after ${this.options.maxRetries} attempts in context: ${contextSummary}`);
@@ -319,6 +319,20 @@ export class ErrorHandler implements IDisposable {
         }
     }
 
+    private describeReason(reason: unknown): string {
+        if (typeof reason === 'string') {
+            return reason;
+        }
+        if (reason instanceof Error) {
+            return reason.message || reason.name;
+        }
+        try {
+            return JSON.stringify(reason);
+        } catch {
+            return String(reason);
+        }
+    }
+
     /**
      * ユーザーに通知
      */
@@ -343,7 +357,7 @@ export class ErrorHandler implements IDisposable {
         if (!this.i18n) {
             try {
                 this.i18n = getI18n();
-            } catch (_error) {
+            } catch {
                 // Fallback to English messages
                 switch (severity) {
                     case ErrorSeverity.FATAL:

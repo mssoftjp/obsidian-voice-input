@@ -11,6 +11,14 @@ import { serviceLocator, ServiceKeys, getI18nService } from '../services';
 import { getObsidianLocale } from '../types';
 import { SafeStorageService } from '../security';
 
+type LegacyVoiceInputSettings = Partial<VoiceInputSettings> & {
+    language?: string;
+    interfaceLanguage?: string;
+    recordingMode?: string;
+    autoStopSilenceDuration?: number;
+    minSpeechDuration?: number;
+};
+
 export default class VoiceInputPlugin extends Plugin {
     settings: VoiceInputSettings;
     private viewManager: ViewManager;
@@ -110,7 +118,7 @@ export default class VoiceInputPlugin extends Plugin {
             // Add ribbon icon
             this.addRibbonIcon('microphone', i18n.t('ui.titles.main'), () => {
                 this.logger.debug('Ribbon icon clicked');
-                this.viewManager.activateVoiceInputView();
+                void this.viewManager.activateVoiceInputView();
             });
             this.logger.debug('Ribbon icon added');
 
@@ -120,7 +128,7 @@ export default class VoiceInputPlugin extends Plugin {
                 name: i18n.t('ui.commands.openView'),
                 callback: () => {
                     this.logger.debug('Command executed: open-view');
-                    this.viewManager.activateVoiceInputView();
+                    void this.viewManager.activateVoiceInputView();
                 }
             });
             this.logger.debug('Commands registered');
@@ -212,7 +220,7 @@ export default class VoiceInputPlugin extends Plugin {
     }
 
     async loadSettings() {
-        const data = await this.loadData();
+        const data = this.parseStoredSettings(await this.loadData());
 
         // まずデフォルト設定から開始
         this.settings = { ...DEFAULT_SETTINGS };
@@ -474,5 +482,12 @@ export default class VoiceInputPlugin extends Plugin {
 	 */
     getLogger(): Logger | null {
         return this.logger;
+    }
+
+    private parseStoredSettings(data: unknown): LegacyVoiceInputSettings | null {
+        if (typeof data === 'object' && data !== null) {
+            return data as LegacyVoiceInputSettings;
+        }
+        return null;
     }
 }
