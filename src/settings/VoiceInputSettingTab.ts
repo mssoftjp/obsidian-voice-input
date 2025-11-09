@@ -299,73 +299,71 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 helperContainer.classList.add('voice-input-hidden');
 
                 helperButton.addEventListener('click', () => {
-                    this.runAsync(async () => {
-                        const input = document.createElement('input');
-                        input.type = 'file';
-                        input.accept = '.wasm,.js,application/wasm';
-                        input.multiple = true;
-                        input.onchange = () => {
-                            this.runAsync(async () => {
-                                const files = input.files ? Array.from(input.files) : [];
-                                const wasmFile = files.find(file => file.name === wasmFileName);
-                                const jsFile = files.find(file => file.name === loaderFileName);
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.wasm,.js,application/wasm';
+                    input.multiple = true;
+                    input.onchange = () => {
+                        this.runAsync(async () => {
+                            const files = input.files ? Array.from(input.files) : [];
+                            const wasmFile = files.find(file => file.name === wasmFileName);
+                            const jsFile = files.find(file => file.name === loaderFileName);
 
-                                if (!wasmFile) {
-                                    new Notice(this.i18n.t('ui.settings.vadModeInstallInvalidName'));
-                                    return;
-                                }
+                            if (!wasmFile) {
+                                new Notice(this.i18n.t('ui.settings.vadModeInstallInvalidName'));
+                                return;
+                            }
 
-                                const wasmBytes = new Uint8Array(await wasmFile.arrayBuffer());
-                                if (wasmBytes.length < 8 ||
-                                    wasmBytes[0] !== 0x00 ||
-                                    wasmBytes[1] !== 0x61 ||
-                                    wasmBytes[2] !== 0x73 ||
-                                    wasmBytes[3] !== 0x6d) {
-                                    new Notice(this.i18n.t('ui.settings.vadModeInstallInvalidType'));
-                                    return;
-                                }
+                            const wasmBytes = new Uint8Array(await wasmFile.arrayBuffer());
+                            if (wasmBytes.length < 8 ||
+                                wasmBytes[0] !== 0x00 ||
+                                wasmBytes[1] !== 0x61 ||
+                                wasmBytes[2] !== 0x73 ||
+                                wasmBytes[3] !== 0x6d) {
+                                new Notice(this.i18n.t('ui.settings.vadModeInstallInvalidType'));
+                                return;
+                            }
 
-                                try {
-                                    const adapter = this.app.vault.adapter;
-                                    if (!(await adapter.exists(vadInstructionsPath))) {
-                                        try {
-                                            await adapter.mkdir(vadInstructionsPath);
-                                        } catch {
-                                            // Ignore errors when directory already exists or cannot be created
-                                        }
+                            try {
+                                const adapter = this.app.vault.adapter;
+                                if (!(await adapter.exists(vadInstructionsPath))) {
+                                    try {
+                                        await adapter.mkdir(vadInstructionsPath);
+                                    } catch {
+                                        // Ignore errors when directory already exists or cannot be created
                                     }
-
-                                    const wasmTarget = getLocalVadAssetPath(this.app, wasmFileName);
-                                    await adapter.writeBinary(wasmTarget, wasmBytes);
-
-                                    let loaderPresent = await adapter.exists(getLocalVadAssetPath(this.app, loaderFileName));
-                                    if (jsFile) {
-                                        const loaderContent = await jsFile.text();
-                                        const loaderTarget = getLocalVadAssetPath(this.app, loaderFileName);
-                                        await adapter.write(loaderTarget, loaderContent);
-                                        loaderPresent = true;
-                                    }
-
-                                    if (!loaderPresent) {
-                                        new Notice(this.i18n.t('ui.settings.vadModeInstallJsMissing'));
-                                    } else {
-                                        new Notice(this.i18n.t('ui.settings.vadModeInstallSuccess'));
-                                    }
-                                } catch (error) {
-                                    console.error(error);
-                                    new Notice(this.i18n.t('notification.error.fileWrite'));
-                                    throw error;
                                 }
 
-                                const hasLocal = await hasLocalVadAssets(this.app);
-                                await refreshVadUI('local');
-                                if (hasLocal) {
-                                    new Notice(this.i18n.t('notification.success.vadInstallComplete'));
+                                const wasmTarget = getLocalVadAssetPath(this.app, wasmFileName);
+                                await adapter.writeBinary(wasmTarget, wasmBytes);
+
+                                let loaderPresent = await adapter.exists(getLocalVadAssetPath(this.app, loaderFileName));
+                                if (jsFile) {
+                                    const loaderContent = await jsFile.text();
+                                    const loaderTarget = getLocalVadAssetPath(this.app, loaderFileName);
+                                    await adapter.write(loaderTarget, loaderContent);
+                                    loaderPresent = true;
                                 }
-                            }, 'Failed to process VAD asset upload');
-                        };
-                        input.click();
-                    }, 'Failed to initiate VAD asset upload');
+
+                                if (!loaderPresent) {
+                                    new Notice(this.i18n.t('ui.settings.vadModeInstallJsMissing'));
+                                } else {
+                                    new Notice(this.i18n.t('ui.settings.vadModeInstallSuccess'));
+                                }
+                            } catch (error) {
+                                console.error(error);
+                                new Notice(this.i18n.t('notification.error.fileWrite'));
+                                throw error;
+                            }
+
+                            const hasLocal = await hasLocalVadAssets(this.app);
+                            await refreshVadUI('local');
+                            if (hasLocal) {
+                                new Notice(this.i18n.t('notification.success.vadInstallComplete'));
+                            }
+                        }, 'Failed to process VAD asset upload');
+                    };
+                    input.click();
                 });
             }
         }
@@ -640,7 +638,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 const newEntry = { from: [''], to: '' };
                 entries.push(newEntry);
                 this.renderTableRows(tbody, entries, isContextual, isReadOnly);
-                void this.saveDictionary();
+                this.runAsync(() => this.saveDictionary(), 'Failed to save dictionary changes');
             };
         }
 
@@ -668,7 +666,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 });
                 fromInput.onchange = () => {
                     entry.from = stringToPatterns(fromInput.value);
-                    void this.saveDictionary();
+                    this.runAsync(() => this.saveDictionary(), 'Failed to save dictionary changes');
                 };
             }
 
@@ -684,7 +682,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 });
                 toInput.onchange = () => {
                     entry.to = toInput.value;
-                    void this.saveDictionary();
+                    this.runAsync(() => this.saveDictionary(), 'Failed to save dictionary changes');
                 };
             }
 
@@ -698,7 +696,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 deleteButton.onclick = () => {
                     entries.splice(index, 1);
                     this.renderTableRows(tbody, entries, isContextual, isReadOnly);
-                    void this.saveDictionary();
+                    this.runAsync(() => this.saveDictionary(), 'Failed to save dictionary changes');
                 };
             }
         });
