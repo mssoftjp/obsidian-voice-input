@@ -37,7 +37,7 @@ export class TranscriptionError extends Error {
 
         try {
             i18n = getI18n();
-        } catch (error) {
+        } catch (_error) {
             // Fallback to original message if i18n is not available
             return this.message;
         }

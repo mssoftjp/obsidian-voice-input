@@ -206,14 +206,14 @@ export class VoiceInputViewActions {
             this.view.ui.setButtonsEnabled(false);
             this.view.ui.showCancelButton(true); // Show cancel button
 
-            const handleSpeechEnd = async (audioBlob: Blob) => {
+            const handleSpeechEnd = (audioBlob: Blob) => {
                 this.recordingState.isRecording = false;
                 const reasonType: StopReason['type'] = (this.recordingState.activeVadMode === 'local' && this.pendingVadAutoStop)
                     ? 'vad-auto'
                     : 'max-duration';
                 this.pendingVadAutoStop = false;
                 this.updateUIAfterStop();
-                await this.processRecordedAudio(audioBlob, { type: reasonType });
+                void this.processRecordedAudio(audioBlob, { type: reasonType });
             };
 
             const handleMicrophoneStatusChange = (status: 'initializing' | 'ready' | 'error') => {
@@ -406,7 +406,7 @@ export class VoiceInputViewActions {
 
         // Process queue if not already processing
         if (!this.isProcessingAudio) {
-            this.processQueue();
+            void this.processQueue();
         }
     }
 
@@ -451,7 +451,9 @@ export class VoiceInputViewActions {
         // Check if new items were added while processing
         if (this.recordingState.processingQueue.length > 0) {
             // Use setTimeout to avoid potential stack overflow
-            setTimeout(() => this.processQueue(), 0);
+            setTimeout(() => {
+                void this.processQueue();
+            }, 0);
         }
     }
 
@@ -548,7 +550,7 @@ export class VoiceInputViewActions {
                 this.view.ui.textArea.scrollTop = this.view.ui.textArea.scrollHeight;
 
                 // Auto-save draft after successful transcription
-                this.saveDraft();
+                await this.saveDraft();
 
                 // Show success status briefly
                 this.setStatusWithTimeout(this.i18n.t('status.processing.completed'));

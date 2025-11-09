@@ -106,7 +106,7 @@ export class ErrorHandler implements IDisposable {
         // i18n service might not be available yet during initialization
         try {
             this.i18n = getI18n();
-        } catch (error) {
+        } catch (_error) {
             // i18n service will be available later
         }
 
@@ -247,7 +247,7 @@ export class ErrorHandler implements IDisposable {
         let contextSummary: string;
         try {
             contextSummary = JSON.stringify(context);
-        } catch (e) {
+        } catch (_error) {
             contextSummary = '[Unserializable context]';
         }
         throw lastError || new Error(`Retry operation failed after ${this.options.maxRetries} attempts in context: ${contextSummary}`);
@@ -343,7 +343,7 @@ export class ErrorHandler implements IDisposable {
         if (!this.i18n) {
             try {
                 this.i18n = getI18n();
-            } catch (error) {
+            } catch (_error) {
                 // Fallback to English messages
                 switch (severity) {
                     case ErrorSeverity.FATAL:

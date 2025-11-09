@@ -50,7 +50,7 @@ export class AudioRecorder extends Disposable {
         // Loggerの遅延初期化（ServiceLocatorから取得）
         try {
             this.logger = createServiceLogger('AudioRecorder');
-        } catch (error) {
+        } catch (_error) {
             // ServiceLocatorがまだ初期化されていない場合は後で初期化
             this.logger = null;
         }
@@ -115,7 +115,7 @@ export class AudioRecorder extends Disposable {
                 await this.audioContext.audioWorklet.addModule(this.workletBlobURL);
                 this.workletReady = true;
                 this.logger?.info('AudioWorklet initialized successfully using blob URL');
-            } catch (error) {
+            } catch (_error) {
                 this.logger?.info('AudioWorklet not available, using ScriptProcessor fallback');
                 this.workletReady = false;
                 // Clean up blob URL if it was created

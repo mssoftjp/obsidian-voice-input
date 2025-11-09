@@ -21,7 +21,7 @@ export class ViewManager extends Disposable {
         // ServiceLocatorからLoggerを取得
         try {
             this.logger = createServiceLogger('ViewManager');
-        } catch (error) {
+        } catch (_error) {
             // フォールバック: ServiceLocatorが初期化されていない場合
             // 基本のLoggerインスタンスを作成
             this.logger = Logger.getLogger('ViewManager');
