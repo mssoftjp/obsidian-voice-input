@@ -34,6 +34,31 @@ export {
     COST_DISPLAY
 } from './costs';
 
+const mergeSettingsWithDefaults = <T extends Record<string, unknown>>(
+    userSettings: Partial<T>,
+    defaults: T
+): T => {
+    return {
+        ...defaults,
+        ...userSettings,
+        // ネストされたオブジェクトも再帰的にマージ
+        ...Object.keys(defaults).reduce((acc, key) => {
+            if (
+                typeof defaults[key] === 'object' &&
+                defaults[key] !== null &&
+                !Array.isArray(defaults[key]) &&
+                userSettings[key]
+            ) {
+                (acc as Record<string, unknown>)[key] = mergeSettingsWithDefaults(
+                    userSettings[key] as Record<string, unknown>,
+                    defaults[key] as Record<string, unknown>
+                );
+            }
+            return acc;
+        }, {} as Partial<T>)
+    };
+};
+
 /**
  * 設定ヘルパー関数
  * @deprecated 現在未使用 - 将来の拡張用に保持
@@ -49,22 +74,7 @@ export const ConfigHelper = {
         userSettings: Partial<T>,
         defaults: T
     ): T {
-        return {
-            ...defaults,
-            ...userSettings,
-            // ネストされたオブジェクトも再帰的にマージ
-            ...Object.keys(defaults).reduce((acc, key) => {
-                if (
-                    typeof defaults[key] === 'object' &&
-          defaults[key] !== null &&
-          !Array.isArray(defaults[key]) &&
-          userSettings[key]
-                ) {
-                    (acc as Record<string, unknown>)[key] = this.mergeWithDefaults(userSettings[key], defaults[key]);
-                }
-                return acc;
-            }, {} as Partial<T>)
-        };
+        return mergeSettingsWithDefaults(userSettings, defaults);
     },
 
     /**
