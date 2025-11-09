@@ -24,7 +24,7 @@ export class AudioRingBuffer {
      */
     write(data: Float32Array): void {
         const dataLength = data.length;
-        
+
         // If data is larger than buffer, only keep the latest samples
         if (dataLength >= this.maxSamples) {
             this.buffer.set(data.slice(dataLength - this.maxSamples));
@@ -36,7 +36,7 @@ export class AudioRingBuffer {
 
         // Calculate available space
         const remainingSpace = this.maxSamples - this.writePos;
-        
+
         if (dataLength <= remainingSpace) {
             // Data fits in remaining space
             this.buffer.set(data, this.writePos);
@@ -65,7 +65,7 @@ export class AudioRingBuffer {
         }
 
         const result = new Float32Array(availableSamples);
-        
+
         if (this.filled) {
             // Buffer has wrapped, read from readPos to end, then from start to writePos
             const endSamples = this.maxSamples - this.readPos;
@@ -78,7 +78,7 @@ export class AudioRingBuffer {
 
         // Reset after reading
         this.clear();
-        
+
         return result;
     }
 
@@ -108,7 +108,7 @@ export class AudioRingBuffer {
         const used = this.getAvailableSamples();
         const total = this.maxSamples;
         const percentage = (used / total) * 100;
-        
+
         return { used, total, percentage };
     }
 }

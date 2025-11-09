@@ -8,11 +8,11 @@ export const AUDIO_WORKLET_SOURCE = `
 class AudioProcessorWorklet extends AudioWorkletProcessor {
     constructor() {
         super();
-        
+
         this.bufferSize = 4096;
         this.audioBuffer = [];
         this.isRecording = false;
-        
+
         // Listen for messages from main thread
         this.port.onmessage = (event) => {
             this.handleMessage(event.data);
@@ -28,7 +28,7 @@ class AudioProcessorWorklet extends AudioWorkletProcessor {
                 this.isRecording = true;
                 this.audioBuffer = [];
                 break;
-                
+
             case 'stop':
                 this.isRecording = false;
                 // Send any remaining buffered audio
@@ -36,7 +36,7 @@ class AudioProcessorWorklet extends AudioWorkletProcessor {
                     this.sendAudioData();
                 }
                 break;
-                
+
             case 'configure':
                 if (data.bufferSize) {
                     this.bufferSize = data.bufferSize;
@@ -50,7 +50,7 @@ class AudioProcessorWorklet extends AudioWorkletProcessor {
      */
     process(inputs, outputs, parameters) {
         const input = inputs[0];
-        
+
         if (!this.isRecording || !input || input.length === 0) {
             return true; // Keep processor alive
         }
@@ -84,7 +84,7 @@ class AudioProcessorWorklet extends AudioWorkletProcessor {
         // Combine all buffers into one
         const totalLength = this.audioBuffer.reduce((sum, buffer) => sum + buffer.length, 0);
         const combinedBuffer = new Float32Array(totalLength);
-        
+
         let offset = 0;
         for (const buffer of this.audioBuffer) {
             combinedBuffer.set(buffer, offset);

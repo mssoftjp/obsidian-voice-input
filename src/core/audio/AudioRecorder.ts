@@ -10,6 +10,16 @@ import { Logger } from '../../utils';
 import { createServiceLogger } from '../../services';
 import { WindowWithWebkitAudio } from '../../types';
 
+type AudioProcessorMessage =
+    | {
+        type: 'audio';
+        data: Float32Array;
+    }
+    | {
+        type: 'log';
+        message: string;
+    };
+
 export class AudioRecorder extends Disposable {
     private mediaRecorder: MediaRecorder | null = null;
     private audioContext: AudioContext | null = null;
@@ -46,15 +56,15 @@ export class AudioRecorder extends Disposable {
     constructor(options: AudioRecorderOptions) {
         super();
         this.options = options;
-        
+
         // Loggerの遅延初期化（ServiceLocatorから取得）
         try {
             this.logger = createServiceLogger('AudioRecorder');
-        } catch (_error) {
+        } catch {
             // ServiceLocatorがまだ初期化されていない場合は後で初期化
             this.logger = null;
         }
-        
+
         // 型ガードでVADの使用を判定
         if (options.useVAD) {
             // TypeScriptの型推論により、ここではoptions.appが必須であることが保証される
@@ -66,7 +76,7 @@ export class AudioRecorder extends Disposable {
             });
         }
         // VADを使用しない場合は、vadProcessorはnullのまま
-        
+
         // Initialize ring buffer with max recording duration
         const maxSeconds = this.options.maxRecordingSeconds || AUDIO_CONSTANTS.MAX_RECORDING_SECONDS;
         this.audioRingBuffer = new AudioRingBuffer(maxSeconds, this.sampleRate);
@@ -74,7 +84,7 @@ export class AudioRecorder extends Disposable {
 
     async initialize(): Promise<void> {
         this.throwIfDisposed();
-        
+
         // 既にAudioContextが有効なら再初期化はスキップ
         if (this.audioContext && this.audioContext.state !== 'closed') {
             // まだビジュアライザー未生成ならここで生成
@@ -89,11 +99,11 @@ export class AudioRecorder extends Disposable {
         if (this.options.useVAD && this.vadProcessor) {
             await this.vadProcessor.initialize();
         }
-        
+
         // Create audio context with configured sample rate and low latency hint
         const WindowWithWebkit = window as WindowWithWebkitAudio;
         const AudioContextConstructor = window.AudioContext || WindowWithWebkit.webkitAudioContext;
-        
+
         if (!AudioContextConstructor) {
             throw new TranscriptionError(
                 TranscriptionErrorType.AUDIO_INITIALIZATION_FAILED,
@@ -101,7 +111,7 @@ export class AudioRecorder extends Disposable {
             );
         }
 
-        this.audioContext = new AudioContextConstructor({ 
+        this.audioContext = new AudioContextConstructor({
             sampleRate: AUDIO_CONSTANTS.SAMPLE_RATE,
             latencyHint: AUDIO_CONSTANTS.LATENCY_HINT // Low latency mode for faster initialization
         });
@@ -115,7 +125,7 @@ export class AudioRecorder extends Disposable {
                 await this.audioContext.audioWorklet.addModule(this.workletBlobURL);
                 this.workletReady = true;
                 this.logger?.info('AudioWorklet initialized successfully using blob URL');
-            } catch (_error) {
+            } catch {
                 this.logger?.info('AudioWorklet not available, using ScriptProcessor fallback');
                 this.workletReady = false;
                 // Clean up blob URL if it was created
@@ -137,7 +147,7 @@ export class AudioRecorder extends Disposable {
                 this.visualizer = new AudioVisualizer(this.options.visualizerContainer);
             }
         }
-        
+
     }
 
     async startRecording(): Promise<void> {
@@ -177,16 +187,16 @@ export class AudioRecorder extends Disposable {
             if (this.options.onMicrophoneStatusChange) {
                 this.options.onMicrophoneStatusChange('initializing');
             }
-            
+
             // Get microphone access with optimized settings for transcription
-            this.stream = await navigator.mediaDevices.getUserMedia({ 
+            this.stream = await navigator.mediaDevices.getUserMedia({
                 audio: {
                     sampleRate: AUDIO_CONSTANTS.SAMPLE_RATE,     // Optimal for speech recognition
                     channelCount: DEFAULT_AUDIO_SETTINGS.channelCount,  // Mono audio
                     echoCancellation: DEFAULT_AUDIO_SETTINGS.echoCancellation,
                     noiseSuppression: DEFAULT_AUDIO_SETTINGS.noiseSuppression,
                     autoGainControl: DEFAULT_AUDIO_SETTINGS.autoGainControl
-                } 
+                }
             });
 
             // Monitor stream tracks for mute state
@@ -196,13 +206,13 @@ export class AudioRecorder extends Disposable {
                 if (audioTrack.muted) {
                     this.logger?.warn('Microphone track is muted, waiting for unmute...');
                 }
-                
+
                 // Listen for mute state changes
                 audioTrack.addEventListener('mute', () => {
                     this.logger?.debug('Microphone muted');
                     this.microphoneReady = false;
                 });
-                
+
                 audioTrack.addEventListener('unmute', () => {
                     this.logger?.debug('Microphone unmuted');
                     if (!this.microphoneReady && this.audioDataReceived) {
@@ -225,25 +235,25 @@ export class AudioRecorder extends Disposable {
             const gainNode = audioContext.createGain();
             this.gainNode = gainNode;
             gainNode.gain.value = DEFAULT_AUDIO_SETTINGS.gain; // デフォルトゲイン
-            
+
             // Create BiquadFilters for band-limiting
             const highPassFilter = audioContext.createBiquadFilter();
             this.highPassFilter = highPassFilter;
             highPassFilter.type = 'highpass';
             highPassFilter.frequency.value = AUDIO_CONSTANTS.FILTERS.HIGH_PASS_FREQ; // HPF - 低域ノイズ除去
-            
+
             const lowPassFilter = audioContext.createBiquadFilter();
             this.lowPassFilter = lowPassFilter;
             lowPassFilter.type = 'lowpass';
             lowPassFilter.frequency.value = AUDIO_CONSTANTS.FILTERS.LOW_PASS_FREQ; // LPF - 音声帯域に制限
-            
+
             const analyserNode = audioContext.createAnalyser();
             this.analyserNode = analyserNode;
 
             const processingAnalyserNode = audioContext.createAnalyser();
             processingAnalyserNode.fftSize = AUDIO_CONSTANTS.BUFFER_SIZE;
             this.processingAnalyserNode = processingAnalyserNode;
-            
+
             // Connect: source -> gain -> HPF -> LPF -> analyser
             this.sourceNode.connect(gainNode);
             gainNode.connect(highPassFilter);
@@ -292,7 +302,7 @@ export class AudioRecorder extends Disposable {
 
             // Start continuous audio processing for VAD
             this.startContinuousProcessing();
-            
+
             this.logger?.debug('Recording started successfully', {
                 mimeType: AUDIO_CONSTANTS.WEBM_CODEC,
                 timeslice: AUDIO_CONSTANTS.RECORDER_TIMESLICE
@@ -335,13 +345,15 @@ export class AudioRecorder extends Disposable {
                 this.workletNode.port.postMessage({ type: 'start' });
 
                 // Handle audio data from worklet
-                this.workletNode.port.onmessage = (event) => {
+                this.workletNode.port.onmessage = (event: MessageEvent<AudioProcessorMessage>) => {
                     if (event.data.type === 'audio' && this.isRecording) {
                         try {
                             this.processAudioData(event.data.data);
                         } catch (error) {
                             this.logger?.error('Failed to process audio data from AudioWorklet', error);
                         }
+                    } else if (event.data.type === 'log') {
+                        this.logger?.debug(event.data.message);
                     }
                 };
 
@@ -407,18 +419,18 @@ export class AudioRecorder extends Disposable {
         if (!this.isRecording) {
             return;
         }
-        
+
         // Write to ring buffer to prevent unlimited memory growth
         this.audioRingBuffer.write(audioData);
-        
+
         // Check for actual audio data to confirm microphone is working
         const audioLevel = Math.max(...audioData.map(Math.abs));
-        
+
         // If we haven't marked microphone as ready yet, check for non-zero audio data
         if (!this.microphoneReady && audioLevel > AUDIO_CONSTANTS.MIC_DETECTION_THRESHOLD) {
             this.audioDataReceived = true;
             const audioTrack = this.stream?.getAudioTracks()[0];
-            
+
             // Check if track is not muted and we have actual audio data
             if (audioTrack && !audioTrack.muted) {
                 this.microphoneReady = true;
@@ -428,8 +440,6 @@ export class AudioRecorder extends Disposable {
                 }
             }
         }
-        
-        
         if (this.options.useVAD) {
             // VADモード: 音声区間を自動検出
             this.continuousAudioData.push(audioData);
@@ -438,11 +448,9 @@ export class AudioRecorder extends Disposable {
             if (this.continuousAudioData.length >= VAD_CONSTANTS.VAD_ACCUMULATION_THRESHOLD) { // Process when enough frames accumulated
                 const combinedData = this.combineAudioData(this.continuousAudioData);
                 this.continuousAudioData = [];
-                
-
                 // Process with VAD
                 const segments = this.vadProcessor ? this.vadProcessor.detectSpeechSegments(combinedData) : [];
-                
+
                 if (segments.length > 0) {
                     this.handleSpeechDetected();
                 } else {
@@ -467,18 +475,18 @@ export class AudioRecorder extends Disposable {
         const totalLength = arrays.reduce((sum, arr) => sum + arr.length, 0);
         const result = new Float32Array(totalLength);
         let offset = 0;
-        
+
         for (const arr of arrays) {
             result.set(arr, offset);
             offset += arr.length;
         }
-        
+
         return result;
     }
 
     private handleSpeechDetected(): void {
         this.lastSpeechTime = Date.now();
-        
+
         if (this.silenceTimer) {
             clearTimeout(this.silenceTimer);
             this.silenceTimer = null;
@@ -531,13 +539,13 @@ export class AudioRecorder extends Disposable {
         if (!recorder) {
             return null;
         }
-        
+
         // Clear maximum recording timer
         if (this.maxRecordingTimer) {
             clearTimeout(this.maxRecordingTimer);
             this.maxRecordingTimer = null;
         }
-        
+
         // Log recording session end
         if (this.recordingStartTime) {
             const duration = (Date.now() - this.recordingStartTime) / 1000;
@@ -553,11 +561,11 @@ export class AudioRecorder extends Disposable {
         return new Promise((resolve) => {
             recorder.onstop = () => {
                 const audioBlob = new Blob(this.chunks, { type: 'audio/webm' });
-                
+
                 this.cleanup();
-                
+
                 // Do not call onSpeechEnd here - it will be called by specific stop handlers
-                
+
                 resolve(audioBlob);
             };
 
@@ -570,7 +578,7 @@ export class AudioRecorder extends Disposable {
             clearTimeout(this.silenceTimer);
             this.silenceTimer = null;
         }
-        
+
         if (this.maxRecordingTimer) {
             clearTimeout(this.maxRecordingTimer);
             this.maxRecordingTimer = null;
@@ -638,11 +646,11 @@ export class AudioRecorder extends Disposable {
     isActive(): boolean {
         return this.isRecording;
     }
-    
+
     isMicrophoneReady(): boolean {
         return this.microphoneReady;
     }
-    
+
     setAudioGain(gain: number): void {
         if (this.gainNode) {
             this.gainNode.gain.value = gain;
@@ -654,14 +662,16 @@ export class AudioRecorder extends Disposable {
      */
     protected onDispose(): void {
         this.cleanup();
-        
+
         if (this.visualizer) {
             this.visualizer.dispose();
             this.visualizer = null;
         }
 
         if (this.audioContext) {
-            this.audioContext.close();
+            void this.audioContext.close().catch(error => {
+                this.logger?.warn('Failed to close AudioContext cleanly', error);
+            });
             this.audioContext = null;
         }
 
@@ -675,11 +685,11 @@ export class AudioRecorder extends Disposable {
             this.vadProcessor.dispose();
             this.vadProcessor = null;
         }
-        
+
         // Dispose all registered disposables
         this.disposables.dispose();
     }
-    
+
     /**
      * 互換性のためのdestroyメソッド
      * @deprecated dispose()を使用してください

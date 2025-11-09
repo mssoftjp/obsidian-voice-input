@@ -27,7 +27,7 @@ export class AudioVisualizer extends Disposable {
             throw new Error('Failed to get canvas context');
         }
         this.ctx = context;
-        
+
         this.drawEmptyGraph();
     }
 
@@ -95,7 +95,7 @@ export class AudioVisualizer extends Disposable {
 
         // Draw waveform
         this.drawWaveform();
-        
+
         // Draw center line
         this.drawCenterLine();
     }
@@ -141,20 +141,18 @@ export class AudioVisualizer extends Disposable {
 
     private drawCenterLine(): void {
         const centerY = this.canvas.height / 2;
-        
+
         this.ctx.strokeStyle = '#dee2e6';
         this.ctx.lineWidth = 1;
         this.ctx.setLineDash([5, 5]);
-        
+
         this.ctx.beginPath();
         this.ctx.moveTo(0, centerY);
         this.ctx.lineTo(this.canvas.width, centerY);
         this.ctx.stroke();
-        
+
         this.ctx.setLineDash([]);
     }
-
-
     /**
      * Draw waveform path
      */
@@ -178,14 +176,14 @@ export class AudioVisualizer extends Disposable {
         this.waveformHistory = []; // 波形履歴もクリア
         this.drawEmptyGraph();
     }
-    
+
     private drawEmptyGraph(): void {
         // Clear canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
+
         // Draw center line
         this.drawCenterLine();
-        
+
         // Draw flat waveform line
         const centerY = this.canvas.height / 2;
         this.ctx.strokeStyle = '#868e96';
@@ -205,7 +203,7 @@ export class AudioVisualizer extends Disposable {
             this.canvas.parentNode.removeChild(this.canvas);
         }
     }
-    
+
     /**
      * 互換性のためのdestroyメソッド
      * @deprecated dispose()を使用してください
@@ -288,7 +286,7 @@ export class SimpleAudioLevelIndicator extends Disposable {
         this.animationId = requestAnimationFrame(() => this.update());
 
         this.analyser.getByteFrequencyData(this.dataArray);
-        
+
         // Calculate average level with emphasis on lower frequencies (voice range)
         let sum = 0;
         const relevantBins = Math.min(this.dataArray.length / 4, 50); // Focus on voice frequencies
@@ -298,7 +296,7 @@ export class SimpleAudioLevelIndicator extends Disposable {
         const average = sum / relevantBins;
         // Apply scaling for better visibility
         const percentage = Math.min((average / 128) * 100, 100);
-        
+
         this.setLevelBarClass(percentage);
     }
 

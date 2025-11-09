@@ -23,7 +23,7 @@ export interface VADProcessorOptions {
 /**
  * WebRTC VAD プロセッサー
  * Google WebRTC プロジェクトの VAD アルゴリズムを使用した高精度な音声検出
- * 
+ *
  * CLAUDE.md の哲学に従った実装:
  * - 根本的な解決: 実証済みの WebRTC VAD を使用
  * - 汎用的な設計: 将来の拡張を考慮した interface
@@ -37,20 +37,20 @@ export class VADProcessor extends Disposable {
     private readonly frameSize: number = VAD_CONSTANTS.FRAME_SIZE; // 30ms at 16kHz (WebRTC VAD requirement)
     private readonly sampleRate: number = VAD_CONSTANTS.SAMPLE_RATE; // WebRTC VAD requires 16kHz
     private logger: Logger;
-    
+
     // 設定可能なパラメータ
     private vadMode: 0 | 1 | 2 | 3;
     private minSpeechDuration: number; // ms
     private minSilenceDuration: number; // ms
     private speechPadding: number; // ms
-    
+
     // 自動調整用パラメータ
     private autoAdjust: boolean = DEFAULT_VAD_SETTINGS.autoAdjust;
     private noiseLevel: number = 0;
     private recentFalsePositives: number = 0;
     private recentFalseNegatives: number = 0;
     private adjustmentCounter: number = 0;
-    
+
     constructor(
         private app: App,
         options: VADProcessorOptions = {}
@@ -65,12 +65,12 @@ export class VADProcessor extends Disposable {
 
     async initialize(): Promise<void> {
         this.throwIfDisposed();
-        
+
         // App インスタンスの検証
         if (!this.app) {
             throw new Error('App instance is required for WebRTC VAD');
         }
-        
+
         try {
             this.logger.info('Initializing WebRTC VAD processor', {
                 vadMode: this.vadMode,
@@ -79,19 +79,19 @@ export class VADProcessor extends Disposable {
                 frameSize: this.frameSize,
                 sampleRate: this.sampleRate
             });
-            
+
             // WASM ファイルを読み込む
             const wasmBuffer = await this.loadWasmFile();
             this.logger.debug('WASM file loaded', { size: wasmBuffer.byteLength });
-            
+
             // fvad モジュールを初期化
             await this.initializeFvadModule(wasmBuffer);
-            
+
             // VAD インスタンスを作成して設定
             this.createAndConfigureVAD();
-            
+
             this.logger.info('WebRTC VAD processor initialized successfully');
-            
+
         } catch (error) {
             this.logger.error('WebRTC VAD initialization error', error);
             // リソースをクリーンアップ
@@ -107,14 +107,14 @@ export class VADProcessor extends Disposable {
         // スクリプトタグを使用して fvad.js を読み込む
         // これは Obsidian の制限された環境でモジュールを読み込む最も確実な方法
         this.ensureFileSystemAdapter();
-        
+
         // グローバルオブジェクトを準備（型安全に）
         const globalWindow = window as WindowWithFvad;
-        
+
         // fvad.js の内容を読み込んで評価（プラグインルートから）
         const fvadJsPath = this.getPluginAssetPath('fvad.js');
         const fvadJsContent = await this.readPluginTextAsset('fvad.js');
-        
+
         // モジュールを評価するための一時的な環境を作成
         return new Promise((resolve, reject) => {
             // スクリプトタグを作成
@@ -123,41 +123,41 @@ export class VADProcessor extends Disposable {
             script.textContent = `
                 // import.meta.url のポリフィル
                 const importMeta = { url: 'file:///${fvadJsPath}' };
-                
+
                 // fvad モジュールを定義
                 ${fvadJsContent}
-                
+
                 // グローバルに公開
                 window.__fvadModule = fvad;
             `;
-            
+
             // エラーハンドリング
             script.onerror = (error) => {
                 this.logger.error('WebRTC VAD script loading error', error);
                 reject(new Error('Failed to load fvad.js'));
             };
-            
+
             // スクリプトを実行
             document.head.appendChild(script);
-            
+
             // モジュールが読み込まれるのを待つ
             setTimeout(() => {
                 const loadModule = async (): Promise<void> => {
                     if (!hasFvadModule(globalWindow)) {
                         throw new Error('fvad module not found in global scope');
                     }
-                    
+
                     const createModule = globalWindow.__fvadModule;
                     if (!createModule) {
                         throw new Error('fvad module factory is undefined');
                     }
                     this.logger.debug('fvad module loaded from global scope');
-                    
+
                     // WebAssembly モジュールを初期化
                     this.fvadModule = await createModule({
                         wasmBinary: new Uint8Array(wasmBuffer),
                         instantiateWasm: (
-                            imports: WebAssembly.Imports, 
+                            imports: WebAssembly.Imports,
                             successCallback: (instance: WebAssembly.Instance) => void
                         ) => {
                             WebAssembly.instantiate(new Uint8Array(wasmBuffer), imports)
@@ -171,7 +171,7 @@ export class VADProcessor extends Disposable {
                             return {};
                         }
                     });
-                    
+
                     // クリーンアップ
                     document.head.removeChild(script);
                     delete globalWindow.__fvadModule;
@@ -193,26 +193,26 @@ export class VADProcessor extends Disposable {
         if (!this.fvadModule) {
             throw new Error('fvad module not initialized');
         }
-        
+
         // VAD インスタンスを作成
         this.vadInstance = this.fvadModule._fvad_new();
         if (!this.vadInstance) {
             throw new Error('Failed to create VAD instance');
         }
         this.logger.debug('VAD instance created');
-        
+
         // サンプルレートを設定（16kHz 固定）
         const sampleRateResult = this.fvadModule._fvad_set_sample_rate(this.vadInstance, this.sampleRate);
         if (sampleRateResult !== 0) {
             throw new Error('Failed to set sample rate');
         }
-        
+
         // VAD モードを設定
         const modeResult = this.fvadModule._fvad_set_mode(this.vadInstance, this.vadMode);
         if (modeResult !== 0) {
             throw new Error(`Failed to set VAD mode: ${this.vadMode}`);
         }
-        
+
         // 処理用バッファを事前確保
         this.bufferPtr = this.fvadModule._malloc(this.frameSize * 2); // 2 bytes per sample (Int16)
         if (!this.bufferPtr) {
@@ -279,22 +279,22 @@ export class VADProcessor extends Disposable {
      */
     private analyzeAndAdjustVAD(audioData: Float32Array): void {
         if (!this.autoAdjust) return;
-        
+
         // RMS (Root Mean Square) でノイズレベルを計算
         let sum = 0;
         for (let i = 0; i < audioData.length; i++) {
             sum += audioData[i] * audioData[i];
         }
         const rms = Math.sqrt(sum / audioData.length);
-        
+
         // 指数移動平均でノイズレベルを更新
         this.noiseLevel = this.noiseLevel * VAD_CONSTANTS.NOISE_LEVEL_EMA.PREVIOUS + rms * VAD_CONSTANTS.NOISE_LEVEL_EMA.CURRENT;
-        
+
         // 調整カウンターをインクリメント
         this.adjustmentCounter++;
         if (this.adjustmentCounter >= VAD_CONSTANTS.ADJUSTMENT_INTERVAL) {
             this.adjustmentCounter = 0;
-            
+
             // ノイズレベルに基づいて VAD モードを調整
             if (this.noiseLevel > VAD_CONSTANTS.NOISE_THRESHOLDS.NOISY) {
                 // 騒音が多い環境 → 低感度
@@ -306,7 +306,7 @@ export class VADProcessor extends Disposable {
                 // 静かな環境 → 高感度
                 this.vadMode = 3;
             }
-            
+
             // WebRTC VAD のモードを更新
             if (this.fvadModule && this.vadInstance) {
                 this.fvadModule._fvad_set_mode(this.vadInstance, this.vadMode);
@@ -325,7 +325,7 @@ export class VADProcessor extends Disposable {
 
         // 自動調整を実行
         this.analyzeAndAdjustVAD(audioData);
-        
+
         // 48kHz → 16kHz にリサンプリング（必要な場合）
         const resampledAudio = this.resampleAudio(audioData, VAD_CONSTANTS.INPUT_SAMPLE_RATE, this.sampleRate);
         this.logger.trace('Audio resampled', {
@@ -334,42 +334,40 @@ export class VADProcessor extends Disposable {
             inputLength: audioData.length,
             outputLength: resampledAudio.length
         });
-        
+
         // Float32 → Int16 に変換
         const int16Audio = this.float32ToInt16(resampledAudio);
-        
+
         // VAD でフレームごとに処理
         const frameDuration = (this.frameSize / this.sampleRate) * 1000; // ms
         const frameCount = Math.floor(int16Audio.length / this.frameSize);
-        
+
         // 音声区間の検出結果を格納
-        const vadResults: boolean[] = new Array(frameCount);
-        
+        const vadResults: boolean[] = Array.from({ length: frameCount }, () => false);
+
         // フレームごとに VAD を実行
         for (let i = 0; i < frameCount; i++) {
             const frameStart = i * this.frameSize;
             const frame = int16Audio.slice(frameStart, frameStart + this.frameSize);
-            
+
             // バッファにコピー
             const bufferView = new Int16Array(this.fvadModule.HEAP16.buffer, this.bufferPtr, this.frameSize);
             bufferView.set(frame);
-            
+
             // VAD 判定（1 = 音声, 0 = 無音）
             const isSpeech = this.fvadModule._fvad_process(this.vadInstance, this.bufferPtr, this.frameSize) === 1;
             vadResults[i] = isSpeech;
         }
-        
-        
         // 後処理: セグメントの統合とフィルタリング
         const processedSegments = this.postProcessSegments(vadResults, frameDuration, resampledAudio);
-        
+
         this.logger.debug('VAD processing completed', {
             inputDuration: (audioData.length / this.sampleRate * 1000).toFixed(1),
             totalFrames: vadResults.length,
             speechFrames: vadResults.filter(v => v).length,
             segments: processedSegments.length
         });
-        
+
         return processedSegments;
     }
 
@@ -386,20 +384,20 @@ export class VADProcessor extends Disposable {
     ): VADSegment[] {
         const segments: VADSegment[] = [];
         let currentSegment: { start: number; end: number } | null = null;
-        
+
         const minSilenceFrames = Math.ceil(this.minSilenceDuration / frameDuration);
         const minSpeechFrames = Math.ceil(this.minSpeechDuration / frameDuration);
         const paddingFrames = Math.ceil(this.speechPadding / frameDuration);
-        
+
         let speechFrames = 0;
         let silenceFrames = 0;
-        
+
         for (let i = 0; i < vadResults.length; i++) {
             if (vadResults[i]) {
                 // 音声フレーム
                 speechFrames++;
                 silenceFrames = 0;
-                
+
                 if (!currentSegment && speechFrames >= minSpeechFrames) {
                     // 新しいセグメントの開始
                     const startFrame = Math.max(0, i - speechFrames + 1 - paddingFrames);
@@ -408,7 +406,7 @@ export class VADProcessor extends Disposable {
                         end: 0
                     };
                 }
-                
+
                 if (currentSegment) {
                     // セグメントの終了時間を更新
                     currentSegment.end = Math.min(
@@ -420,7 +418,7 @@ export class VADProcessor extends Disposable {
                 // 無音フレーム
                 silenceFrames++;
                 speechFrames = 0;
-                
+
                 if (currentSegment && silenceFrames >= minSilenceFrames) {
                     // セグメントの終了
                     segments.push(this.createSegment(currentSegment, audioData));
@@ -428,12 +426,12 @@ export class VADProcessor extends Disposable {
                 }
             }
         }
-        
+
         // 最後のセグメントを処理
         if (currentSegment) {
             segments.push(this.createSegment(currentSegment, audioData));
         }
-        
+
         return segments;
     }
 
@@ -443,7 +441,7 @@ export class VADProcessor extends Disposable {
     private createSegment(currentSegment: { start: number; end: number }, audioData: Float32Array): VADSegment {
         const startSample = Math.floor((currentSegment.start / 1000) * this.sampleRate);
         const endSample = Math.floor((currentSegment.end / 1000) * this.sampleRate);
-        
+
         return {
             start: currentSegment.start,
             end: currentSegment.end,
@@ -471,26 +469,26 @@ export class VADProcessor extends Disposable {
         if (fromRate === toRate) {
             return audioData;
         }
-        
+
         const ratio = fromRate / toRate;
         const newLength = Math.floor(audioData.length / ratio);
         const resampled = new Float32Array(newLength);
-        
+
         // 線形補間によるリサンプリング
         for (let i = 0; i < newLength; i++) {
             const srcIndex = i * ratio;
             const srcIndexInt = Math.floor(srcIndex);
             const srcIndexFrac = srcIndex - srcIndexInt;
-            
+
             if (srcIndexInt + 1 < audioData.length) {
                 // 線形補間
-                resampled[i] = audioData[srcIndexInt] * (1 - srcIndexFrac) + 
+                resampled[i] = audioData[srcIndexInt] * (1 - srcIndexFrac) +
                               audioData[srcIndexInt + 1] * srcIndexFrac;
             } else {
                 resampled[i] = audioData[srcIndexInt];
             }
         }
-        
+
         return resampled;
     }
 
@@ -499,7 +497,7 @@ export class VADProcessor extends Disposable {
      */
     setMode(mode: 0 | 1 | 2 | 3): void {
         this.vadMode = mode;
-        
+
         if (this.fvadModule && this.vadInstance) {
             const result = this.fvadModule._fvad_set_mode(this.vadInstance, mode);
             if (result !== 0) {
@@ -525,17 +523,17 @@ export class VADProcessor extends Disposable {
                 this.fvadModule._free(this.bufferPtr);
                 this.bufferPtr = null;
             }
-            
+
             // VAD インスタンスを解放
             if (this.vadInstance !== null) {
                 this.fvadModule._fvad_free(this.vadInstance);
                 this.vadInstance = null;
             }
-            
+
             this.fvadModule = null;
         }
     }
-    
+
     /**
      * 互換性のためのdestroyメソッド
      * @deprecated dispose()を使用してください
