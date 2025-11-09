@@ -118,7 +118,9 @@ export default class VoiceInputPlugin extends Plugin {
             // Add ribbon icon
             this.addRibbonIcon('microphone', i18n.t('ui.titles.main'), () => {
                 this.logger.debug('Ribbon icon clicked');
-                void this.viewManager.activateVoiceInputView();
+                void this.viewManager.activateVoiceInputView().catch((error) => {
+                    this.logger.error('Failed to activate Voice Input view from ribbon', error);
+                });
             });
             this.logger.debug('Ribbon icon added');
 
@@ -128,7 +130,9 @@ export default class VoiceInputPlugin extends Plugin {
                 name: i18n.t('ui.commands.openView'),
                 callback: () => {
                     this.logger.debug('Command executed: open-view');
-                    void this.viewManager.activateVoiceInputView();
+                    void this.viewManager.activateVoiceInputView().catch((error) => {
+                        this.logger.error('Failed to activate Voice Input view from command', error);
+                    });
                 }
             });
             this.logger.debug('Commands registered');
@@ -153,7 +157,13 @@ export default class VoiceInputPlugin extends Plugin {
     }
 
     onunload(): void {
-        void this.teardownPlugin();
+        void this.teardownPlugin().catch((error) => {
+            if (this.logger?.error) {
+                this.logger.error('Voice Input Plugin unload failed', error);
+            } else if (typeof console !== 'undefined' && console.error) {
+                console.error('Voice Input Plugin unload failed', error);
+            }
+        });
     }
 
     private async teardownPlugin(): Promise<void> {

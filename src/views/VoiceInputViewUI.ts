@@ -121,7 +121,7 @@ export class VoiceInputViewUI {
         });
         this.clipboardButton.setAttribute('aria-label', this.i18n.t('ui.tooltips.copy'));
         this.clipboardButton.addEventListener('click', () => {
-            void this.view.actions.copyToClipboard();
+            this.runAction(() => this.view.actions.copyToClipboard(), 'Failed to copy text to clipboard');
         });
 
         // Clear button
@@ -150,7 +150,7 @@ export class VoiceInputViewUI {
         });
         this.insertAtCursorButton.setAttribute('aria-label', this.i18n.t('ui.tooltips.insertAtCursor'));
         this.insertAtCursorButton.addEventListener('click', () => {
-            void this.view.actions.insertToNote();
+            this.runAction(() => this.view.actions.insertToNote(), 'Failed to insert text at cursor');
         });
 
         // Append button
@@ -163,7 +163,7 @@ export class VoiceInputViewUI {
         });
         this.appendButton.setAttribute('aria-label', this.i18n.t('ui.tooltips.append'));
         this.appendButton.addEventListener('click', () => {
-            void this.view.actions.appendToNote();
+            this.runAction(() => this.view.actions.appendToNote(), 'Failed to append text to note');
         });
 
         // Keep the old insertButton for backward compatibility (set to hidden)
@@ -178,7 +178,7 @@ export class VoiceInputViewUI {
             cls: 'voice-input-cancel-button-full voice-input-hidden'
         });
         this.cancelButton.addEventListener('click', () => {
-            void this.view.actions.cancelRecording();
+            this.runAction(() => this.view.actions.cancelRecording(), 'Failed to cancel recording');
         });
 
         // Second row - Record button container
@@ -267,7 +267,7 @@ export class VoiceInputViewUI {
                 return;
             }
 
-            void this.view.actions.toggleRecording();
+            this.runAction(() => this.view.actions.toggleRecording(), 'Failed to toggle recording');
         };
 
         // Push-to-talk functionality with delayed start
@@ -386,13 +386,15 @@ export class VoiceInputViewUI {
 	 */
     updateSettingsUI() {
         // Update correction toggle
-        if (this.correctionToggle) {
-            this.correctionToggle.setValue(this.plugin.settings.enableTranscriptionCorrection);
+        const correctionToggle = this.correctionToggle;
+        if (correctionToggle) {
+            correctionToggle.setValue(this.plugin.settings.enableTranscriptionCorrection);
         }
 
         // Update transcription model dropdown
-        if (this.transcriptionModelDropdown) {
-            this.transcriptionModelDropdown.setValue(this.plugin.settings.transcriptionModel);
+        const transcriptionModelDropdown = this.transcriptionModelDropdown;
+        if (transcriptionModelDropdown) {
+            transcriptionModelDropdown.setValue(this.plugin.settings.transcriptionModel);
         }
 
         // (no additional post-processing UI elements to update)
@@ -414,6 +416,15 @@ export class VoiceInputViewUI {
         this.textArea.addEventListener('input', this.textChangeHandler);
         this.textArea.addEventListener('paste', this.textChangeHandler);
         this.textArea.addEventListener('cut', this.textChangeHandler);
+    }
+
+    /**
+	 * Helper to safely run async view actions without unhandled rejections
+	 */
+    private runAction(task: () => Promise<void>, context: string): void {
+        void task().catch((error) => {
+            console.error(context, error);
+        });
     }
 
     /**

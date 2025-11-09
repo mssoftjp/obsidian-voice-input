@@ -213,7 +213,7 @@ export class VoiceInputViewActions {
                     : 'max-duration';
                 this.pendingVadAutoStop = false;
                 this.updateUIAfterStop();
-                void this.processRecordedAudio(audioBlob, { type: reasonType });
+                this.processRecordedAudio(audioBlob, { type: reasonType });
             };
 
             const handleMicrophoneStatusChange = (status: 'initializing' | 'ready' | 'error') => {
@@ -303,7 +303,7 @@ export class VoiceInputViewActions {
 
             // Process audio for manual stop
             if (audioBlob && audioBlob.size > 0) {
-                await this.processRecordedAudio(audioBlob, stopReason);
+                this.processRecordedAudio(audioBlob, stopReason);
             }
 
         } catch (error) {
@@ -378,7 +378,7 @@ export class VoiceInputViewActions {
     /**
 	 * Process recorded audio with proper notifications
 	 */
-    private async processRecordedAudio(audioBlob: Blob, stopReason: StopReason): Promise<void> {
+    private processRecordedAudio(audioBlob: Blob, stopReason: StopReason): void {
         // Show appropriate status based on stop reason
         if (this.view.ui.statusEl) {
             switch (stopReason.type) {
@@ -406,7 +406,9 @@ export class VoiceInputViewActions {
 
         // Process queue if not already processing
         if (!this.isProcessingAudio) {
-            void this.processQueue();
+            void this.processQueue().catch((error) => {
+                this.logger.error('Failed to process audio queue', error);
+            });
         }
     }
 
@@ -452,7 +454,9 @@ export class VoiceInputViewActions {
         if (this.recordingState.processingQueue.length > 0) {
             // Use setTimeout to avoid potential stack overflow
             setTimeout(() => {
-                void this.processQueue();
+                void this.processQueue().catch((error) => {
+                    this.logger.error('Failed to continue processing audio queue', error);
+                });
             }, 0);
         }
     }

@@ -42,7 +42,9 @@ export class VoiceInputView extends ItemView {
     }
 
     onOpen(): void {
-        void this.handleOpen();
+        void this.handleOpen().catch((error) => {
+            console.error('Failed to open Voice Input view', error);
+        });
     }
 
     private async handleOpen(): Promise<void> {
@@ -83,7 +85,9 @@ export class VoiceInputView extends ItemView {
     }
 
     onClose(): void {
-        void this.handleClose();
+        void this.handleClose().catch((error) => {
+            console.error('Failed to close Voice Input view', error);
+        });
     }
 
     private async handleClose(): Promise<void> {
