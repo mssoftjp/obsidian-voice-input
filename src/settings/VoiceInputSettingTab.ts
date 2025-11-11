@@ -582,14 +582,14 @@ export class VoiceInputSettingTab extends PluginSettingTab {
 	 */
     private formatDuration(seconds: number): string {
         if (seconds < 60) {
-            return `${seconds}${this.i18n.t('ui.units.seconds')}`;
+            return `${seconds} ${this.i18n.t('ui.units.seconds')}`;
         }
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = seconds % 60;
         if (remainingSeconds === 0) {
-            return `${minutes}${this.i18n.t('ui.units.minutes')}`;
+            return `${minutes} ${this.i18n.t('ui.units.minutes')}`;
         }
-        return `${minutes}${this.i18n.t('ui.units.minutes')} ${remainingSeconds}${this.i18n.t('ui.units.seconds')}`;
+        return `${minutes} ${this.i18n.t('ui.units.minutes')} ${remainingSeconds} ${this.i18n.t('ui.units.seconds')}`;
     }
 
     /**
@@ -598,9 +598,9 @@ export class VoiceInputSettingTab extends PluginSettingTab {
     private formatDurationMs(milliseconds: number): string {
         const seconds = milliseconds / 1000;
         if (seconds < 1) {
-            return `${(Math.round(seconds * 10) / 10).toFixed(1)}${this.i18n.t('ui.units.seconds')}`;
+            return `${(Math.round(seconds * 10) / 10).toFixed(1)} ${this.i18n.t('ui.units.seconds')}`;
         }
-        return `${seconds.toFixed(1)}${this.i18n.t('ui.units.seconds')}`;
+        return `${seconds.toFixed(1)} ${this.i18n.t('ui.units.seconds')}`;
     }
 
     /**

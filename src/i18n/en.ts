@@ -145,8 +145,8 @@ export const en: TranslationResource = {
         },
         placeholders: {
             textarea: 'Voice transcription will appear here...',
-            apiKey: 'sk-...',
-            language: 'en'
+            apiKey: 'Starts with sk-...',
+            language: 'Example: en'
         },
         titles: {
             main: 'Voice input',
@@ -183,21 +183,21 @@ export const en: TranslationResource = {
             vadModeDesc: 'Off (default) keeps the raw audio for maximum accuracy. Server VAD can trim silence upstream for quicker turnaround but may slightly affect segmentation accuracy. Local VAD (requires fvad.wasm/fvad.js) stops recording automatically on the desktop.',
             vadModeLocalMissing: 'Local VAD requires fvad.wasm and fvad.js under {path}. Install them before switching.',
             vadModeLocalAvailable: 'Local VAD files found in {path}. Recording will auto-stop on silence.',
-            vadModeDisabledDesc: 'VAD disabled – audio is recorded continuously and sent untouched.',
+            vadModeDisabledDesc: 'Voice activity detection is disabled – audio is recorded continuously and sent untouched.',
             vadModeSummaryServer: 'Cuts silence on the server for faster turnaround (cloud processing).',
             vadModeSummaryLocal: 'Detects silence locally and auto-stops on desktop (requires fvad.wasm/fvad.js).',
             vadModeInstallButton: 'Choose fvad.wasm / fvad.js…',
             vadModeInstallDesc: 'Download fvad.wasm (and fvad.js) from the official WebRTC VAD port, then choose the wasm file to copy it into the plugin folder (desktop only).',
-            vadModeInstallLinkLabel: 'fvad-wasm project',
+            vadModeInstallLinkLabel: 'Visit the fvad-wasm project',
             vadModeInstallInvalidName: 'Please select a file named fvad.wasm.',
             vadModeInstallInvalidType: 'The selected file does not appear to be a WebAssembly module.',
-            vadModeInstallSuccess: 'fvad.wasm installed. Local VAD will be attempted the next time you record.',
+            vadModeInstallSuccess: 'The fvad.wasm file is installed. Local VAD will be attempted the next time you record.',
             vadModeInstallWriteError: 'Failed to install VAD assets: {error}',
             vadModeInstallJsMissing: 'Local VAD also needs fvad.js in the same plugin folder. Please copy it manually if it is not present.'
         },
         options: {
-            modelMini: 'GPT-4o mini Transcribe',
-            modelFull: 'GPT-4o Transcribe',
+            modelMini: 'GPT-4o mini transcribe',
+            modelFull: 'GPT-4o transcribe',
             languageAuto: 'Auto',
             languageJa: 'Japanese',
             languageEn: 'English',
@@ -216,14 +216,14 @@ export const en: TranslationResource = {
             settingsButton: 'Open settings'
         },
         units: {
-            seconds: 's',
-            minutes: 'min'
+            seconds: 'Seconds',
+            minutes: 'Minutes'
         },
         labels: {
             from: 'From',
             fromMultiple: 'From (comma-separated)',
             to: 'To',
-            context: 'Context Keywords'
+            context: 'Context keywords'
         }
     }
 };
