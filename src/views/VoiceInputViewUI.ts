@@ -361,6 +361,8 @@ export class VoiceInputViewUI {
 	 */
     showCancelButton(show: boolean) {
         if (show) {
+            // Ensure cancel button uses the current locale
+            this.cancelButton?.setText(this.i18n.t('ui.buttons.cancel'));
             // Hide button rows
             this.firstRowContainer.classList.add('voice-input-hidden');
             this.firstRowContainer.classList.remove('voice-input-flex');
