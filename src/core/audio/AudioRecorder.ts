@@ -390,10 +390,11 @@ export class AudioRecorder extends Disposable {
                 return;
             }
 
-            this.processingAnalyserNode.getFloatTimeDomainData(this.analyserDataBuffer);
+            const analyserBuffer = this.analyserDataBuffer as Float32Array<ArrayBuffer>;
+            this.processingAnalyserNode.getFloatTimeDomainData(analyserBuffer);
 
             // Copy the buffer to avoid mutation before processing completes
-            const audioData = new Float32Array(this.analyserDataBuffer);
+            const audioData = new Float32Array(analyserBuffer);
             try {
                 this.processAudioData(audioData);
             } catch (error) {

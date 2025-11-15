@@ -35,11 +35,19 @@ const isElectronWindow = (win: Window): win is ElectronWindow => {
 };
 
 const resolveElectronRenderer = (): ElectronRenderer | null => {
-    if (isElectronWindow(window) && typeof (window as ElectronWindow).require === 'function') {
-        return (window as ElectronWindow).require('electron') ?? null;
+    if (isElectronWindow(window)) {
+        const electronWindow = window as ElectronWindow;
+        const requireFn = electronWindow.require;
+        if (typeof requireFn === 'function') {
+            return requireFn('electron') ?? null;
+        }
+        if (electronWindow.electron) {
+            return electronWindow.electron ?? null;
+        }
     }
-    if ((window as ElectronWindow).electron) {
-        return (window as ElectronWindow).electron ?? null;
+    const windowElectron = (window as ElectronWindow).electron;
+    if (windowElectron) {
+        return windowElectron ?? null;
     }
     return (globalThis as ElectronGlobal).electron ?? null;
 };

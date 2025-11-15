@@ -68,15 +68,16 @@ export class AudioVisualizer extends Disposable {
         this.animationId = requestAnimationFrame(() => this.draw());
 
         // Get time domain data (waveform)
-        this.analyser.getByteTimeDomainData(this.dataArray);
+        const waveformArray = this.dataArray as Uint8Array<ArrayBuffer>;
+        this.analyser.getByteTimeDomainData(waveformArray);
 
         // Calculate RMS (Root Mean Square) for current audio level
         let sum = 0;
-        for (let i = 0; i < this.dataArray.length; i++) {
-            const normalized = (this.dataArray[i] - 128) / 128;
+        for (let i = 0; i < waveformArray.length; i++) {
+            const normalized = (waveformArray[i] - 128) / 128;
             sum += normalized * normalized;
         }
-        const rms = Math.sqrt(sum / this.dataArray.length);
+        const rms = Math.sqrt(sum / waveformArray.length);
         this.currentLevel = rms;
 
         // Apply scaling factor to make waveform more visible
@@ -285,13 +286,14 @@ export class SimpleAudioLevelIndicator extends Disposable {
 
         this.animationId = requestAnimationFrame(() => this.update());
 
-        this.analyser.getByteFrequencyData(this.dataArray);
+        const frequencyArray = this.dataArray as Uint8Array<ArrayBuffer>;
+        this.analyser.getByteFrequencyData(frequencyArray);
 
         // Calculate average level with emphasis on lower frequencies (voice range)
         let sum = 0;
-        const relevantBins = Math.min(this.dataArray.length / 4, 50); // Focus on voice frequencies
+        const relevantBins = Math.min(frequencyArray.length / 4, 50); // Focus on voice frequencies
         for (let i = 0; i < relevantBins; i++) {
-            sum += this.dataArray[i];
+            sum += frequencyArray[i];
         }
         const average = sum / relevantBins;
         // Apply scaling for better visibility

@@ -28,6 +28,17 @@ const isTranscriptionModel = (value: string): value is TranscriptionModelOption 
 const isVadMode = (value: string): value is VadModeOption =>
     value === 'server' || value === 'local' || value === 'disabled';
 
+const toArrayBuffer = (view: Uint8Array): ArrayBuffer => {
+    const { buffer, byteOffset, byteLength } = view;
+    if (buffer instanceof ArrayBuffer) {
+        return byteOffset === 0 && byteLength === buffer.byteLength
+            ? buffer
+            : buffer.slice(byteOffset, byteOffset + byteLength);
+    }
+    const clone = Uint8Array.from(view);
+    return clone.buffer instanceof ArrayBuffer ? clone.buffer : new ArrayBuffer(0);
+};
+
 interface DictionaryExportData {
     version: string;
     definiteCorrections: CorrectionEntry[];
@@ -335,7 +346,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                                 }
 
                                 const wasmTarget = getLocalVadAssetPath(this.app, wasmFileName);
-                                await adapter.writeBinary(wasmTarget, wasmBytes);
+                                await adapter.writeBinary(wasmTarget, toArrayBuffer(wasmBytes));
 
                                 let loaderPresent = await adapter.exists(getLocalVadAssetPath(this.app, loaderFileName));
                                 if (jsFile) {

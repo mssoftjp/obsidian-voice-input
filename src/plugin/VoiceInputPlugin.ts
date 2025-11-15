@@ -1,7 +1,7 @@
 import {
     Plugin
 } from 'obsidian';
-import { VoiceInputSettings, DEFAULT_SETTINGS } from '../interfaces';
+import { VoiceInputSettings, DEFAULT_SETTINGS, Locale, SUPPORTED_LOCALES } from '../interfaces';
 import { VoiceInputView, VIEW_TYPE_VOICE_INPUT } from '../views';
 import { VoiceInputSettingTab } from '../settings';
 import { ViewManager, DraftManager } from '../managers';
@@ -11,12 +11,21 @@ import { serviceLocator, ServiceKeys, getI18nService } from '../services';
 import { getObsidianLocale } from '../types';
 import { SafeStorageService } from '../security';
 
-type LegacyVoiceInputSettings = Partial<VoiceInputSettings> & {
+type LegacyAdvancedSettings = Partial<Omit<VoiceInputSettings['advanced'], 'transcriptionLanguage'>> & {
+    transcriptionLanguage?: string;
+};
+
+type LegacyVoiceInputSettings = Partial<Omit<VoiceInputSettings, 'advanced'>> & {
+    advanced?: LegacyAdvancedSettings;
     language?: string;
     interfaceLanguage?: string;
     recordingMode?: string;
     autoStopSilenceDuration?: number;
     minSpeechDuration?: number;
+};
+
+const isSupportedLocale = (value: unknown): value is Locale => {
+    return typeof value === 'string' && (SUPPORTED_LOCALES as readonly string[]).includes(value as Locale);
 };
 
 export default class VoiceInputPlugin extends Plugin {
@@ -244,7 +253,10 @@ export default class VoiceInputPlugin extends Plugin {
 
             // interfaceLanguageからpluginLanguageへの移行
             if ('interfaceLanguage' in data && !('pluginLanguage' in data)) {
-                migratedData.pluginLanguage = data.interfaceLanguage;
+                const interfaceLanguage = data.interfaceLanguage;
+                migratedData.pluginLanguage = isSupportedLocale(interfaceLanguage)
+                    ? interfaceLanguage
+                    : this.detectPluginLanguage();
                 delete migratedData.interfaceLanguage;
                 needsSave = true;
                 this.logger?.info('Migrating interfaceLanguage to pluginLanguage');
@@ -254,7 +266,7 @@ export default class VoiceInputPlugin extends Plugin {
             if ('language' in data && !('transcriptionLanguage' in data)) {
                 // 既存のlanguageフィールドをtranscriptionLanguageに移行
                 const langValue = data.language;
-                if (langValue === 'ja' || langValue === 'en' || langValue === 'zh' || langValue === 'ko') {
+                if (isSupportedLocale(langValue)) {
                     migratedData.transcriptionLanguage = langValue;
                 } else if (langValue === 'auto') {
                     // auto は廃止: 起動環境のロケールへ固定
@@ -270,8 +282,8 @@ export default class VoiceInputPlugin extends Plugin {
             // languageからpluginLanguageへの移行（古いバージョンとの互換性のため）
             if ('language' in data && !('pluginLanguage' in data)) {
                 // 言語コードを正規化（ja → ja、en → en、zh → zh、ko → ko、その他 → en）
-                const langCode = data.language as string;
-                if (langCode === 'ja' || langCode === 'en' || langCode === 'zh' || langCode === 'ko') {
+                const langCode = data.language;
+                if (isSupportedLocale(langCode)) {
                     migratedData.pluginLanguage = langCode;
                 } else {
                     migratedData.pluginLanguage = 'en';
@@ -306,7 +318,7 @@ export default class VoiceInputPlugin extends Plugin {
             }
 
             // 保存されたデータをデフォルト設定に上書き（undefinedの値は除外）
-            mergeSettings(this.settings, migratedData);
+            mergeSettings(this.settings, migratedData as Partial<VoiceInputSettings>);
 
             // APIキーの復号化
             if (this.settings.openaiApiKey) {
@@ -363,14 +375,13 @@ export default class VoiceInputPlugin extends Plugin {
                 };
                 needsSave = true;
                 this.logger?.info('Initialized advanced settings with language linking enabled for backward compatibility');
-            } else if (data.advanced && !hasSettingsKey(data.advanced, 'languageLinkingEnabled')) {
-                // advancedオブジェクトは存在するが、languageLinkingEnabledが無い場合
-                this.settings.advanced.languageLinkingEnabled = true;
-                needsSave = true;
-                this.logger?.info('Added languageLinkingEnabled to existing advanced settings');
             } else if (data.advanced) {
-                // auto からの置換
-                const adv = data.advanced as { transcriptionLanguage?: string };
+                const adv = data.advanced as LegacyAdvancedSettings;
+                if (typeof adv.languageLinkingEnabled === 'undefined') {
+                    this.settings.advanced.languageLinkingEnabled = true;
+                    needsSave = true;
+                    this.logger?.info('Added languageLinkingEnabled to existing advanced settings');
+                }
                 if (adv.transcriptionLanguage === 'auto') {
                     this.settings.advanced.transcriptionLanguage = this.detectPluginLanguage();
                     needsSave = true;

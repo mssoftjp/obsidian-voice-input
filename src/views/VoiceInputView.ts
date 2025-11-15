@@ -1,4 +1,5 @@
 import {
+    Events,
     ItemView,
     WorkspaceLeaf
 } from 'obsidian';
@@ -41,10 +42,12 @@ export class VoiceInputView extends ItemView {
         return 'microphone';
     }
 
-    onOpen(): void {
-        void this.handleOpen().catch((error) => {
+    async onOpen(): Promise<void> {
+        try {
+            await this.handleOpen();
+        } catch (error) {
             console.error('Failed to open Voice Input view', error);
-        });
+        }
     }
 
     private async handleOpen(): Promise<void> {
@@ -75,7 +78,8 @@ export class VoiceInputView extends ItemView {
             this.setupPeriodicSave();
 
             // Subscribe to settings change events to keep UI toggles in sync
-            const eventRef = this.app.workspace.on('voice-input:settings-changed', () => {
+            const workspaceEvents = this.app.workspace as Events;
+            const eventRef = workspaceEvents.on('voice-input:settings-changed', () => {
                 this.ui?.updateSettingsUI();
                 this.actions?.updateTranscriptionService();
             });
@@ -84,10 +88,12 @@ export class VoiceInputView extends ItemView {
         }
     }
 
-    onClose(): void {
-        void this.handleClose().catch((error) => {
+    async onClose(): Promise<void> {
+        try {
+            await this.handleClose();
+        } catch (error) {
             console.error('Failed to close Voice Input view', error);
-        });
+        }
     }
 
     private async handleClose(): Promise<void> {
