@@ -376,7 +376,7 @@ export default class VoiceInputPlugin extends Plugin {
                 needsSave = true;
                 this.logger?.info('Initialized advanced settings with language linking enabled for backward compatibility');
             } else if (data.advanced) {
-                const adv = data.advanced as LegacyAdvancedSettings;
+                const adv = data.advanced;
                 if (typeof adv.languageLinkingEnabled === 'undefined') {
                     this.settings.advanced.languageLinkingEnabled = true;
                     needsSave = true;
