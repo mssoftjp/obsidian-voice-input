@@ -43,7 +43,8 @@ export class DraftManager {
             await app.vault.createFolder(folderPath);
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
-            if (!message.includes('File already exists') && !message.includes('folder already exists')) {
+            const normalized = message.toLowerCase();
+            if (!normalized.includes('already exists')) {
                 this.logger?.error('Failed to create draft folder', error);
                 throw error;
             }
