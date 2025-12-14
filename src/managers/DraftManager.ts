@@ -30,16 +30,15 @@ export class DraftManager {
         const folderPath = this.getDraftFolderPath(app);
         const abstractFile = app.vault.getAbstractFileByPath(folderPath);
 
-        if (abstractFile instanceof TFolder) {
-            return;
-        }
-
-        if (abstractFile) {
-            this.logger?.warn('Draft path exists but is not a folder', { folderPath });
-            return;
-        }
-
         try {
+            if (abstractFile instanceof TFolder) {
+                return; // already exists and is a folder
+            }
+            if (abstractFile) {
+                this.logger?.warn('Draft path exists but is not a folder', { folderPath });
+                return;
+            }
+
             await app.vault.createFolder(folderPath);
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
