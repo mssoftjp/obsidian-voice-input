@@ -37,11 +37,18 @@ export class DeferredViewHelper {
      * @returns The VoiceInputView if available, null otherwise
      */
     static async safeGetVoiceInputView(leaf: WorkspaceLeaf): Promise<VoiceInputView | null> {
-        const view = await this.safeGetView<View>(leaf);
-        // Narrow by constructor name to the concrete VoiceInputView
-        return (view && view.constructor?.name === 'VoiceInputView')
-            ? (view as unknown as VoiceInputView)
-            : null;
+        const view = await this.safeGetView<View & { getViewType?: () => string }>(leaf);
+
+        if (!view) {
+            return null;
+        }
+
+        const viewType = typeof view.getViewType === 'function' ? view.getViewType() : undefined;
+
+        // Do not rely on constructor.name because it is minified in production builds.
+        // NOTE: Keep the view type string duplicated here to avoid importing from the view module
+        // which can introduce circular dependencies in tests.
+        return viewType === 'voice-input-view' ? (view as VoiceInputView) : null;
     }
 
     /**
