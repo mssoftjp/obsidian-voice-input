@@ -114,22 +114,21 @@ export class VADProcessor extends Disposable {
         // fvad.js の内容を読み込んで評価（プラグインルートから）
         const fvadJsPath = this.getPluginAssetPath('fvad.js');
         const fvadJsContent = await this.readPluginTextAsset('fvad.js');
+        const sanitizedFvadJsContent = fvadJsContent
+            // Remove block comments
+            .replace(/\/\*[\s\S]*?\*\//g, '')
+            // Remove line comments
+            .replace(/^\s*\/\/.*$/gm, '');
 
         // モジュールを評価するための一時的な環境を作成
         return new Promise((resolve, reject) => {
             // スクリプトタグを作成
             const script = document.createElement('script');
             script.type = 'module';
-            script.textContent = `
-                // import.meta.url のポリフィル
-                const importMeta = { url: 'file:///${fvadJsPath}' };
-
-                // fvad モジュールを定義
-                ${fvadJsContent}
-
-                // グローバルに公開
-                window.__fvadModule = fvad;
-            `;
+            script.textContent =
+                `const importMeta={url:'file:///${fvadJsPath}'};` +
+                `${sanitizedFvadJsContent}` +
+                `window.__fvadModule=fvad;`;
 
             // エラーハンドリング
             script.onerror = (error) => {

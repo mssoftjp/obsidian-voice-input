@@ -43,10 +43,10 @@ const context = await esbuild.context({
 	logLevel: "info",
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,
-	minifyWhitespace: prod,
-	minifyIdentifiers: prod,
-	minifySyntax: prod,
-	legalComments: 'inline',
+	// Production builds must be minified (Obsidian dev docs: Optimize plugin load time)
+	minify: prod,
+	// Remove all other comments; banner remains
+	legalComments: 'none',
 	outfile: path.join(outDir, "main.js"),
 });
 
