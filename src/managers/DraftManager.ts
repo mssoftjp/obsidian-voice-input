@@ -91,21 +91,47 @@ export class DraftManager {
             await this.ensureDraftFolder(app);
 
             let saved = false;
+
+            const writeWithVault = async (file: TFile): Promise<boolean> => {
+                try {
+                    await app.vault.process(file, () => textToSave);
+                    return true;
+                } catch (processError) {
+                    this.logger?.warn('Vault.process failed for draft', processError);
+                }
+
+                try {
+                    await app.vault.modify(file, textToSave);
+                    return true;
+                } catch (modifyError) {
+                    this.logger?.warn('Vault.modify failed for draft', modifyError);
+                }
+                return false;
+            };
+
             const existingFile = app.vault.getFileByPath(draftPath);
             if (existingFile instanceof TFile) {
-                try {
-                    await app.vault.process(existingFile, () => textToSave);
-                    saved = true;
-                } catch (error) {
-                    this.logger?.warn('Vault.process failed for draft', error);
-                }
+                saved = await writeWithVault(existingFile);
             } else {
                 try {
                     await app.vault.create(draftPath, textToSave);
-                    saved = true;
+                    const created = app.vault.getFileByPath(draftPath);
+                    if (created instanceof TFile) {
+                        saved = await writeWithVault(created);
+                    } else {
+                        saved = true; // created but not immediately resolvable; treat as success
+                    }
                 } catch (error) {
                     const message = error instanceof Error ? error.message : String(error);
-                    if (!message.includes('already exists')) {
+                    const normalized = message.toLowerCase();
+                    if (normalized.includes('already exists')) {
+                        const file = app.vault.getFileByPath(draftPath);
+                        if (file instanceof TFile) {
+                            saved = await writeWithVault(file);
+                        } else {
+                            saved = true;
+                        }
+                    } else {
                         this.logger?.warn('Vault.create failed for draft', error);
                     }
                 }
