@@ -63,11 +63,6 @@ export class VoiceInputSettingTab extends PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
 
-        // Use Obsidian's setHeading API instead of createEl('h2')
-        new Setting(containerEl)
-            .setHeading()
-            .setName(this.i18n.t('ui.titles.settings'));
-
         // Plugin Language Setting
         new Setting(containerEl)
             .setName(this.i18n.t('ui.settings.pluginLanguage'))
@@ -493,14 +488,10 @@ export class VoiceInputSettingTab extends PluginSettingTab {
         // Create table container for dictionary tables
         const tableContainer = containerEl.createDiv('voice-input-dictionary-table-container');
 
-        // Definite Corrections Section
+        // Definite Corrections Section (no heading to comply with Obsidian guidelines)
         new Setting(tableContainer)
-            .setHeading()
-            .setName(this.i18n.t('ui.settings.dictionaryDefinite', { max: DICTIONARY_CONSTANTS.MAX_DEFINITE_CORRECTIONS }));
-        tableContainer.createEl('div', {
-            cls: 'setting-item-description',
-            text: this.i18n.t('ui.help.dictionaryFromComma')
-        });
+            .setName(this.i18n.t('ui.settings.dictionaryDefinite', { max: DICTIONARY_CONSTANTS.MAX_DEFINITE_CORRECTIONS }))
+            .setDesc(this.i18n.t('ui.help.dictionaryFromComma'));
         this.createCorrectionTable(
             tableContainer,
             this.plugin.settings.customDictionary.definiteCorrections,
@@ -785,7 +776,9 @@ export class VoiceInputSettingTab extends PluginSettingTab {
         input.onchange = (e) => {
             this.runAsync(async () => {
                 const file = (e.target as HTMLInputElement).files?.[0];
-                if (!file) return;
+                if (!file) {
+                    return;
+                }
 
                 try {
                     const text = await file.text();

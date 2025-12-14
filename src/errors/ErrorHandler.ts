@@ -187,7 +187,9 @@ export class ErrorHandler implements IDisposable {
         context: ErrorContext,
         severity: ErrorSeverity = ErrorSeverity.ERROR
     ): void {
-        if (this._isDisposed) return;
+        if (this._isDisposed) {
+            return;
+        }
 
         // エラーログに記録
         const logEntry: ErrorLogEntry = {
@@ -409,7 +411,9 @@ export class ErrorHandler implements IDisposable {
      * リソースの解放
      */
     dispose(): void {
-        if (this._isDisposed) return;
+        if (this._isDisposed) {
+            return;
+        }
 
         if (this.unhandledRejectionHandler) {
             window.removeEventListener('unhandledrejection', this.unhandledRejectionHandler);

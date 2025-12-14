@@ -65,7 +65,9 @@ export class VoiceInputViewActions {
 	 * Apply transcription settings to the service
 	 */
     private applyTranscriptionSettings() {
-        if (!this.transcriptionService) return;
+        if (!this.transcriptionService) {
+            return;
+        }
 
         this.transcriptionService.setModel(this.plugin.settings.transcriptionModel);
         // Apply transcription correction and custom dictionary settings
@@ -128,7 +130,9 @@ export class VoiceInputViewActions {
 	 * Toggle recording on/off
 	 */
     async toggleRecording() {
-        if (this.isTransitioning) return; // 二重操作防止
+        if (this.isTransitioning) {
+            return; // 二重操作防止
+        }
         this.isTransitioning = true;
         if (this.audioRecorder && this.audioRecorder.isActive()) {
             try {
@@ -353,7 +357,9 @@ export class VoiceInputViewActions {
 	 * Set status text and clear it after a timeout
 	 */
     setStatusWithTimeout(text: string, timeout = 3000): void {
-        if (!this.view.ui.statusEl) return;
+        if (!this.view.ui.statusEl) {
+            return;
+        }
 
         // Clear existing timer
         if (this.statusTimer) {
@@ -465,10 +471,14 @@ export class VoiceInputViewActions {
 	 * Update processing status display
 	 */
     private updateProcessingStatus(): void {
-        if (!this.view.ui.statusEl) return;
+        if (!this.view.ui.statusEl) {
+            return;
+        }
 
         // Don't update if a status message with timer is active
-        if (this.statusTimer) return;
+        if (this.statusTimer) {
+            return;
+        }
 
         const queueLength = this.recordingState.processingQueue.length;
 
@@ -682,7 +692,9 @@ export class VoiceInputViewActions {
 	 * Cancel recording without processing
 	 */
     async cancelRecording() {
-        if (this.isTransitioning) return; // 二重キャンセル防止
+        if (this.isTransitioning) {
+            return; // 二重キャンセル防止
+        }
         this.isTransitioning = true;
         if (!this.audioRecorder || !this.audioRecorder.isActive()) {
             this.isTransitioning = false;

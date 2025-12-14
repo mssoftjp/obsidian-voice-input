@@ -40,11 +40,7 @@ export class DraftManager {
         }
 
         try {
-            const adapter = app.vault.adapter;
-            if (await adapter.exists(folderPath)) {
-                return;
-            }
-            await adapter.mkdir(folderPath);
+            await app.vault.createFolder(folderPath);
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             if (!message.includes('File already exists') && !message.includes('folder already exists')) {
@@ -98,10 +94,10 @@ export class DraftManager {
             const existingFile = app.vault.getFileByPath(draftPath);
             if (existingFile instanceof TFile) {
                 try {
-                    await app.vault.modify(existingFile, textToSave);
+                    await app.vault.process(existingFile, () => textToSave);
                     saved = true;
                 } catch (error) {
-                    this.logger?.warn('Vault.modify failed for draft, falling back to adapter', error);
+                    this.logger?.warn('Vault.process failed for draft', error);
                 }
             } else {
                 try {
@@ -110,13 +106,14 @@ export class DraftManager {
                 } catch (error) {
                     const message = error instanceof Error ? error.message : String(error);
                     if (!message.includes('already exists')) {
-                        this.logger?.warn('Vault.create failed for draft, falling back to adapter', error);
+                        this.logger?.warn('Vault.create failed for draft', error);
                     }
                 }
             }
 
             if (!saved) {
-                await app.vault.adapter.write(draftPath, textToSave);
+                this.logger?.error('Failed to save draft via Vault API');
+                return false;
             }
 
             this.logger?.info('Draft saved successfully', {
@@ -146,13 +143,7 @@ export class DraftManager {
                 return text;
             }
 
-            if (!await app.vault.adapter.exists(draftPath)) {
-                return null;
-            }
-
-            const text = await app.vault.adapter.read(draftPath);
-            this.logger?.info('Draft loaded successfully', { textLength: text?.length });
-            return text;
+            return null;
         } catch (error) {
             this.logger?.error('Failed to load draft', error);
             return null;
@@ -171,11 +162,6 @@ export class DraftManager {
                 await app.fileManager.trashFile(draftFile);
                 this.logger?.info('Draft cleared successfully via file manager');
                 return;
-            }
-
-            if (await app.vault.adapter.exists(draftPath)) {
-                await app.vault.adapter.remove(draftPath);
-                this.logger?.info('Draft cleared successfully (adapter fallback)');
             }
         } catch (error) {
             this.logger?.error('Failed to clear draft', error);

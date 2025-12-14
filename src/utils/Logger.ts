@@ -62,10 +62,11 @@ export class Logger {
                 });
             }
 
+            const prefix = `${mainLogger.config.prefix ?? ''} [${moduleName}]`;
             const moduleLogger = new Logger({
                 debugMode: mainLogger.config.debugMode,
                 logLevel: mainLogger.config.logLevel,
-                prefix: `${mainLogger.config.prefix} [${moduleName}]`
+                prefix
             });
             mainLogger.moduleLoggers.set(moduleName, moduleLogger);
             return moduleLogger;
@@ -104,7 +105,8 @@ export class Logger {
 	 */
     private formatMessage(level: LogLevel, message: string): string {
         const timestamp = new Date().toISOString().split('T')[1].slice(0, 12);
-        return `${timestamp} ${LogLevel[level].padEnd(5)} ${this.config.prefix} ${message}`;
+        const prefix = this.config.prefix ?? '';
+        return `${timestamp} ${LogLevel[level].padEnd(5)} ${prefix} ${message}`;
     }
 
     /**
@@ -246,7 +248,8 @@ export class Logger {
 	 */
     time(label: string): void {
         if (this.shouldLog(LogLevel.DEBUG)) {
-            const timerKey = `${this.config.prefix} ${label}`;
+            const prefix = this.config.prefix ?? '';
+            const timerKey = `${prefix} ${label}`;
             const now = typeof performance !== 'undefined' && typeof performance.now === 'function'
                 ? performance.now()
                 : Date.now();
@@ -259,9 +262,12 @@ export class Logger {
 	 */
     timeEnd(label: string): void {
         if (this.shouldLog(LogLevel.DEBUG)) {
-            const timerKey = `${this.config.prefix} ${label}`;
+            const prefix = this.config.prefix ?? '';
+            const timerKey = `${prefix} ${label}`;
             const start = this.performanceTimers.get(timerKey);
-            if (start === undefined) return;
+            if (start === undefined) {
+                return;
+            }
 
             const now = typeof performance !== 'undefined' && typeof performance.now === 'function'
                 ? performance.now()
@@ -276,10 +282,11 @@ export class Logger {
 	 * Create a scoped logger for a specific operation
 	 */
     scope(scopeName: string): Logger {
+        const prefix = this.config.prefix ?? '';
         return new Logger({
             debugMode: this.config.debugMode,
             logLevel: this.config.logLevel,
-            prefix: `${this.config.prefix} [${scopeName}]`
+            prefix: `${prefix} [${scopeName}]`
         });
     }
 }

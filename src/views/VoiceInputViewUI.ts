@@ -307,7 +307,9 @@ export class VoiceInputViewUI {
                     console.error('Failed to stop recording after push-to-talk', error);
                 });
                 // Keep isPushToTalk true to prevent click handler
-                setTimeout(() => { isPushToTalk = false; }, UI_CONSTANTS.PUSH_TO_TALK_RESET_DELAY);
+                setTimeout(() => {
+                    isPushToTalk = false;
+                }, UI_CONSTANTS.PUSH_TO_TALK_RESET_DELAY);
             }
         };
 
@@ -406,7 +408,9 @@ export class VoiceInputViewUI {
 	 * Setup text change listener for auto-save
 	 */
     private setupTextChangeListener() {
-        if (!this.textArea) return;
+        if (!this.textArea) {
+            return;
+        }
 
         // Create the text change handler
         this.textChangeHandler = () => {

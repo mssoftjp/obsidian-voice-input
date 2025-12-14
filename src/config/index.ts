@@ -141,9 +141,13 @@ export const ConfigHelper = {
                 let value: string | number | boolean = process.env[key] || '';
 
                 // 型変換の試行
-                if (value === 'true') value = true;
-                else if (value === 'false') value = false;
-                else if (!isNaN(Number(value))) value = Number(value);
+                if (value === 'true') {
+                    value = true;
+                } else if (value === 'false') {
+                    value = false;
+                } else if (!isNaN(Number(value))) {
+                    value = Number(value);
+                }
 
                 // ネストされたキーの処理
                 const keys = configKey.split('.');

@@ -68,23 +68,23 @@ export class SafeStorageService {
 
                 // Obsidianのelectron環境からsafeStorageを取得
                 this.logger.debug('Checking for Electron environment');
-                this.logger.debug(`window.require exists: ${'require' in window}`);
-                this.logger.debug(`window.require is function: ${typeof (window as ElectronWindow).require === 'function'}`);
+                this.logger.debug(`window.require exists: ${String('require' in window)}`);
+                this.logger.debug(`window.require is function: ${String(typeof (window as ElectronWindow).require === 'function')}`);
 
                 const electron = resolveElectronRenderer();
 
                 if (!electron) {
                     this.logger.debug('Electron renderer not available');
                 } else {
-                    this.logger.debug(`Electron object exists: ${!!electron}`);
-                    this.logger.debug(`Electron.remote exists: ${!!electron?.remote}`);
-                    this.logger.debug(`Electron.safeStorage exists: ${!!electron?.safeStorage}`);
-                    this.logger.debug(`Electron.remote.safeStorage exists: ${!!electron?.remote?.safeStorage}`);
+                    this.logger.debug(`Electron object exists: ${String(!!electron)}`);
+                    this.logger.debug(`Electron.remote exists: ${String(!!electron?.remote)}`);
+                    this.logger.debug(`Electron.safeStorage exists: ${String(!!electron?.safeStorage)}`);
+                    this.logger.debug(`Electron.remote.safeStorage exists: ${String(!!electron?.remote?.safeStorage)}`);
 
                     this.safeStorage = electron?.remote?.safeStorage || electron?.safeStorage || null;
                 }
 
-                this.logger.debug(`SafeStorage initialized: ${!!this.safeStorage}`);
+                this.logger.debug(`SafeStorage initialized: ${String(!!this.safeStorage)}`);
             } catch (e) {
                 this.logger.error('Error during safeStorage initialization', e instanceof Error ? e : new Error(String(e)));
             }
@@ -94,11 +94,15 @@ export class SafeStorageService {
 
     /** 暗号化して保存用文字列へ変換 */
     static encryptForStore(apiKey: string): string {
-        if (!apiKey) return '';
+        if (!apiKey) {
+            return '';
+        }
 
         // Trim the API key before storing
         const trimmedKey = apiKey.trim();
-        if (!trimmedKey) return '';
+        if (!trimmedKey) {
+            return '';
+        }
 
         this.logger.debug('Encrypting API key for storage');
 
@@ -124,7 +128,9 @@ export class SafeStorageService {
 
     /** 保存文字列 -> 平文 API キー */
     static decryptFromStore(stored: string): string {
-        if (!stored) return '';
+        if (!stored) {
+            return '';
+        }
 
         this.logger.debug('Decrypting stored API key');
 

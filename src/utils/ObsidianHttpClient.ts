@@ -86,7 +86,7 @@ export class ObsidianHttpClient {
         for (const [name, value] of entries) {
             parts.push(textEncoder.encode(`--${boundary}\r\n`));
 
-            if (value != null && typeof value === 'object' && 'arrayBuffer' in value) {
+            if (value !== null && value !== undefined && typeof value === 'object' && 'arrayBuffer' in value) {
                 const blobValue = value as File | Blob;
                 const filename = blobValue instanceof File ? blobValue.name : 'blob';
                 parts.push(textEncoder.encode(

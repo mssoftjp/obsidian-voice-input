@@ -6,7 +6,9 @@ export class SecurityUtils {
      * Mask API key for display purposes
      */
     static maskAPIKey(key: string): string {
-        if (!key || key.length < 10) return '';
+        if (!key || key.length < 10) {
+            return '';
+        }
         return key.substring(0, 7) + '*'.repeat(40);
     }
 

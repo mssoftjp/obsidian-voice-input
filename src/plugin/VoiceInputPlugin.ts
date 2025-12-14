@@ -276,7 +276,7 @@ export default class VoiceInputPlugin extends Plugin {
                 }
                 delete migratedData.language;
                 needsSave = true;
-                this.logger?.info(`Migrating language (${data.language}) to transcriptionLanguage (${migratedData.transcriptionLanguage})`);
+                this.logger?.info(`Migrating language (${String(data.language ?? '')}) to transcriptionLanguage (${String(migratedData.transcriptionLanguage ?? '')})`);
             }
 
             // languageからpluginLanguageへの移行（古いバージョンとの互換性のため）
@@ -289,7 +289,7 @@ export default class VoiceInputPlugin extends Plugin {
                     migratedData.pluginLanguage = 'en';
                 }
                 needsSave = true;
-                this.logger?.info(`Migrating language (${data.language}) to pluginLanguage (${migratedData.pluginLanguage})`);
+                this.logger?.info(`Migrating language (${String(data.language ?? '')}) to pluginLanguage (${String(migratedData.pluginLanguage ?? '')})`);
             }
 
             // 不要になったlanguageフィールドの削除
@@ -303,15 +303,15 @@ export default class VoiceInputPlugin extends Plugin {
             if ('recordingMode' in data || 'autoStopSilenceDuration' in data || 'minSpeechDuration' in data) {
                 if ('recordingMode' in data) {
                     delete migratedData.recordingMode;
-                    this.logger?.info(`Removing recordingMode setting (was: ${data.recordingMode})`);
+                    this.logger?.info(`Removing recordingMode setting (was: ${String(data.recordingMode ?? '')})`);
                 }
                 if ('autoStopSilenceDuration' in data) {
                     delete migratedData.autoStopSilenceDuration;
-                    this.logger?.info(`Removing autoStopSilenceDuration setting (was: ${data.autoStopSilenceDuration})`);
+                    this.logger?.info(`Removing autoStopSilenceDuration setting (was: ${String(data.autoStopSilenceDuration ?? '')})`);
                 }
                 if ('minSpeechDuration' in data) {
                     delete migratedData.minSpeechDuration;
-                    this.logger?.info(`Removing minSpeechDuration setting (was: ${data.minSpeechDuration})`);
+                    this.logger?.info(`Removing minSpeechDuration setting (was: ${String(data.minSpeechDuration ?? '')})`);
                 }
                 needsSave = true;
                 this.logger?.info('Migrated to continuous recording only mode');

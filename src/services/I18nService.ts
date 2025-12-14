@@ -105,7 +105,9 @@ export class I18nServiceImpl implements I18nService {
    */
     private getTranslation(key: string, locale: Locale): string | undefined {
         const resource = translations[locale];
-        if (!resource) return undefined;
+        if (!resource) {
+            return undefined;
+        }
 
         // Navigate through the object using the key path
         const keys = key.split('.');

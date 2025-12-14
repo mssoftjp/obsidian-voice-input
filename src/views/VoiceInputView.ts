@@ -192,7 +192,9 @@ export class VoiceInputView extends ItemView {
 	 * Set up auto-save when text area loses focus
 	 */
     private setupAutoSaveOnBlur() {
-        if (!this.ui?.textArea) return;
+        if (!this.ui?.textArea) {
+            return;
+        }
 
         // Remove existing handler if any
         if (this.blurHandler) {
