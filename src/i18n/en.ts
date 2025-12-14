@@ -150,7 +150,7 @@ export const en: TranslationResource = {
         },
         titles: {
             main: 'Voice input',
-            settings: 'Voice input settings'
+            settings: 'Voice input'
         },
         settings: {
             apiKey: 'OpenAI API key',

@@ -1,6 +1,6 @@
 # Voice Input Plugin for Obsidian
 
-High-accuracy multilingual voice input for Obsidian. Uses OpenAI GPT-4o Audio Transcriptions to transcribe speech (with tuned prompts for ja/en/zh/ko) and insert into your notes with one click or push-to-talk.
+Capture notes with high-accuracy multilingual voice input using OpenAI Speech-to-Text. Uses GPT-4o Audio Transcriptions (with tuned prompts for ja/en/zh/ko) and inserts into your notes with one click or push-to-talk.
 
 ## Features
 
@@ -31,11 +31,11 @@ Note: OpenAI usage is billed by API.
 
 Compatibility: requires Obsidian 1.8.0 or later (per `minAppVersion`).
 
-Local VAD (optional): this plugin does not ship the WebAssembly files. If you want local VAD auto‑stop, download `fvad.wasm` and `fvad.js` from the fvad‑wasm project and place them in the same plugin folder, or use the “Choose fvad.wasm / fvad.js…” button in Settings → Voice Activity Detection to copy them. Local VAD is desktop‑only.
+Local VAD (optional): this plugin does not ship the WebAssembly files. If you want local VAD auto‑stop, download `fvad.wasm` and `fvad.js` from the fvad‑wasm project and place them in the same plugin folder, or use the “Choose fvad.wasm / fvad.js…” button in Settings → Voice Activity Detection to copy them. The loader uses `fetch` only to read these local files—no external network requests are made. Local VAD is desktop‑only.
 
 ## Commands
 
-- Open Voice Input (`open-voice-input`): opens the Voice Input view. Assign a hotkey from Obsidian’s Settings → Hotkeys if desired.
+- Open Voice Input (`open-view`): opens the Voice Input view. Assign a hotkey from Obsidian’s Settings → Hotkeys if desired.
 
 ## Usage
 
@@ -121,7 +121,7 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 
 ## コマンド
 
-- Open Voice Input（`open-voice-input`）: 音声入力ビューを開きます。必要に応じてホットキーを割り当ててください。
+- Open Voice Input（`open-view`）: 音声入力ビューを開きます。必要に応じてホットキーを割り当ててください。
 
 ## 使い方
 

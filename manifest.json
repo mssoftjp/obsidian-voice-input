@@ -3,7 +3,7 @@
 	"name": "Voice Input",
 	"version": "0.9.1",
 	"minAppVersion": "1.8.0",
-	"description": "AI-powered high-accuracy voice input using OpenAI Speech to text API",
+	"description": "Capture notes with high-accuracy multilingual voice input using OpenAI Speech-to-Text.",
 	"author": "Musashino Software",
 	"authorUrl": "https://github.com/mssoftjp",
 	"fundingUrl": "https://buymeacoffee.com/mssoft",
