@@ -27,8 +27,8 @@
 - Comments only for non-obvious logic.
 
 ## Lint & Static Analysis
-- Pin `eslint-plugin-obsidian` to the CI version and ensure `eslint.config.mjs` loads it; update the plugin and config together.
-- After `npm run build`, lint/tsc generated outputs (e.g., `build/**`, `dist/**`) to catch injected `any` or enum mismatches; do not commit temp stores (e.g., `.pnpm-store`).
+- Pin `eslint-plugin-obsidianmd` to the CI version and ensure `eslint.config.mjs` loads it; update the plugin and config together.
+- After `npm run build-plugin`, run `npm run check:artifacts` to sanity-check `build/latest/` (required files, manifest JSON, and high-risk patterns) instead of linting minified `main.js`.
 - Keep TS strict flags: `noImplicitAny`, `noFallthroughCasesInSwitch`, `noImplicitOverride` (consider `noUncheckedIndexedAccess` when helpful).
 - Prefer a single enum in comparisons/switch; use `assertUnreachable` for exhaustiveness.
 - Track Obsidian API changes and replace deprecated APIs (e.g., `getFilename`).
@@ -47,9 +47,10 @@
 - Do not run `git push`; the user will push at their discretion.
 
 ## Pre-PR Checklist
-- `npm run lint` (with `eslint-plugin-obsidian`).
-- `npm run build`, then `npm run lint -- --ext .ts,.js build/` to scan artifacts.
+- `npm run lint` (with `eslint-plugin-obsidianmd`).
 - `npm test` passes.
+- `npm run build-plugin`.
+- `npm run check:artifacts` (or `npm run check:prepr`).
 - Re-check `obsidian-developer-docs/en/Obsidian October plugin self-critique checklist.md`.
 - Any allowed `any` is justified in code comments or PR notes.
 - Confirm new/changed commands avoid default hotkeys and commandId/name duplication.
