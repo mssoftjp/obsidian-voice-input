@@ -1,59 +1,15 @@
-import js from '@eslint/js';
 import tsParser from '@typescript-eslint/parser';
-import tsPlugin from '@typescript-eslint/eslint-plugin';
+import { defineConfig } from 'eslint/config';
 import obsidianmd from 'eslint-plugin-obsidianmd';
 import globals from 'globals';
 
-const typescriptRules = {
-    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-    '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/no-empty-function': 'warn',
-    '@typescript-eslint/require-await': 'error',
-    '@typescript-eslint/no-floating-promises': 'error',
-    '@typescript-eslint/no-misused-promises': ['error', {
-        checksConditionals: true,
-        checksSpreads: true,
-        checksVoidReturn: true
-    }],
-    '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-    '@typescript-eslint/await-thenable': 'error',
-    '@typescript-eslint/no-base-to-string': 'error',
-    '@typescript-eslint/no-unsafe-member-access': 'off',
-    '@typescript-eslint/restrict-template-expressions': ['error', {
-        allowAny: false,
-        allowBoolean: false,
-        allowNullish: false,
-        allowNumber: true,
-        allowRegExp: false
-    }],
-    'no-console': ['error', { allow: ['warn', 'error', 'debug'] }],
-    'prefer-const': 'error',
-    'no-var': 'error',
-    eqeqeq: ['error', 'always'],
-    curly: ['error', 'all'],
-    'brace-style': ['error', '1tbs'],
-    indent: ['error', 4, { SwitchCase: 1 }],
-    quotes: ['error', 'single', { avoidEscape: true }],
-    semi: ['error', 'always'],
-    'no-trailing-spaces': 'error',
-    'comma-dangle': ['error', 'never'],
-    'object-curly-spacing': ['error', 'always'],
-    'array-bracket-spacing': ['error', 'never'],
-    '@typescript-eslint/restrict-template-expressions': ['error', {
-        allowAny: false,
-        allowBoolean: false,
-        allowNullish: false,
-        allowNumber: true,
-        allowRegExp: false
-    }]
-};
-
-export default [
+export default defineConfig([
     {
         ignores: [
             'node_modules/**',
             'dist/**',
             'build/**',
+            'coverage/**',
             'main.js',
             '*.config.mjs',
             'scripts/**',
@@ -61,17 +17,14 @@ export default [
             'src/lib/fvad-wasm/**'
         ]
     },
-    js.configs.recommended,
-    ...flattenConfigs([...obsidianmd.configs.recommendedWithLocalesEn]),
+    ...obsidianmd.configs.recommendedWithLocalesEn,
     {
         files: ['src/**/*.ts', 'tests/**/*.ts'],
         languageOptions: {
             parser: tsParser,
             parserOptions: {
-                project: './tsconfig.json',
-                tsconfigRootDir: import.meta.dirname ?? process.cwd(),
-                sourceType: 'module',
-                ecmaVersion: 2022
+                project: ['./tsconfig.json', './tsconfig.test.json'],
+                tsconfigRootDir: import.meta.dirname ?? process.cwd()
             },
             globals: {
                 ...globals.browser,
@@ -79,33 +32,6 @@ export default [
                 Option: 'readonly',
                 NodeJS: 'readonly'
             }
-        },
-        plugins: {
-            '@typescript-eslint': tsPlugin
-        },
-        rules: typescriptRules
+        }
     }
-];
-
-function flattenConfigs(configs) {
-    return configs.flatMap((config) => expandConfig(config));
-}
-
-function expandConfig(config) {
-    if (Array.isArray(config)) {
-        return config.flatMap((item) => expandConfig(item));
-    }
-
-    if (!config || typeof config !== 'object') {
-        return [];
-    }
-
-    if (!('extends' in config) || !config.extends) {
-        return [config];
-    }
-
-    const { extends: extendList, ...rest } = config;
-    const normalized = Array.isArray(extendList) ? extendList : [extendList];
-    const inherited = normalized.flatMap((item) => expandConfig(item));
-    return [...inherited, rest];
-}
+]);
