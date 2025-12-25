@@ -12,6 +12,8 @@
     "deploy-local": "npm run build-plugin && node scripts/deploy-local.mjs",
     "deploy:quick": "npm run deploy-local",
     "check": "npm run lint && npm run build",
+    "check:artifacts": "node scripts/check-artifacts.mjs",
+    "check:prepr": "npm run lint && npm test && npm run build-plugin && npm run check:artifacts",
     "lint": "eslint src manifest.json --ext .ts",
     "lint:fix": "eslint src manifest.json --ext .ts --fix",
     "test": "jest",
