@@ -1,7 +1,7 @@
 {
 	"id": "voice-input",
 	"name": "Voice Input",
-	"version": "0.9.2",
+	"version": "0.9.3",
 	"minAppVersion": "1.8.0",
 	"description": "Capture notes with high-accuracy multilingual voice input using OpenAI Speech-to-Text.",
 	"author": "Musashino Software",
