@@ -25,6 +25,10 @@ const manifestJsonParser = {
     }
 };
 
+const obsidianmdManifestRuleOverrides = Object.fromEntries(
+    Object.keys(obsidianmd.rules).map((ruleName) => [`obsidianmd/${ruleName}`, 'off'])
+);
+
 export default defineConfig([
     {
         ignores: [
@@ -49,6 +53,7 @@ export default defineConfig([
             obsidianmd
         },
         rules: {
+            ...obsidianmdManifestRuleOverrides,
             'obsidianmd/validate-manifest': 'error'
         }
     },

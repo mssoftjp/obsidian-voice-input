@@ -123,7 +123,7 @@ export class VADProcessor extends Disposable {
         // モジュールを評価するための一時的な環境を作成
         return new Promise((resolve, reject) => {
             // スクリプトタグを作成
-            const script = document.createElement('script');
+            const script = activeDocument.createElement('script');
             script.type = 'module';
             script.textContent =
                 `const importMeta={url:'file:///${fvadJsPath}'};` +
@@ -137,10 +137,10 @@ export class VADProcessor extends Disposable {
             };
 
             // スクリプトを実行
-            document.head.appendChild(script);
+            activeDocument.head.appendChild(script);
 
             // モジュールが読み込まれるのを待つ
-            setTimeout(() => {
+            window.setTimeout(() => {
                 const loadModule = async (): Promise<void> => {
                     if (!hasFvadModule(globalWindow)) {
                         throw new Error('fvad module not found in global scope');
@@ -172,7 +172,7 @@ export class VADProcessor extends Disposable {
                     });
 
                     // クリーンアップ
-                    document.head.removeChild(script);
+                    activeDocument.head.removeChild(script);
                     delete globalWindow.__fvadModule;
                 };
 

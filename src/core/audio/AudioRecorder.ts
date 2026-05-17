@@ -36,7 +36,7 @@ export class AudioRecorder extends Disposable {
     private isRecording: boolean = false;
     private stream: MediaStream | null = null;
     private options: AudioRecorderOptions;
-    private silenceTimer: NodeJS.Timeout | null = null;
+    private silenceTimer: number | null = null;
     private lastSpeechTime: number = 0;
     private continuousAudioData: Float32Array[] = [];
     private audioRingBuffer: AudioRingBuffer;
@@ -50,7 +50,7 @@ export class AudioRecorder extends Disposable {
     private disposables: CompositeDisposable = new CompositeDisposable();
     private logger: Logger | null = null;
     private recordingStartTime: number = 0;
-    private maxRecordingTimer: NodeJS.Timeout | null = null;
+    private maxRecordingTimer: number | null = null;
     private isStarting: boolean = false;
 
     constructor(options: AudioRecorderOptions) {
@@ -279,7 +279,7 @@ export class AudioRecorder extends Disposable {
 
             // Set up maximum recording time limit
             const maxSeconds = this.options.maxRecordingSeconds || AUDIO_CONSTANTS.MAX_RECORDING_SECONDS;
-            this.maxRecordingTimer = setTimeout(() => {
+            this.maxRecordingTimer = window.setTimeout(() => {
                 this.logger?.info(`Maximum recording time (${maxSeconds}s) reached, stopping recording`);
                 void this.stopRecording()
                     .then((audioBlob) => {
@@ -401,10 +401,10 @@ export class AudioRecorder extends Disposable {
                 this.logger?.error('Failed to process audio data from analyser fallback', error);
             }
 
-            this.analyserFrameRequest = requestAnimationFrame(processFrame);
+            this.analyserFrameRequest = window.requestAnimationFrame(processFrame);
         };
 
-        this.analyserFrameRequest = requestAnimationFrame(processFrame);
+        this.analyserFrameRequest = window.requestAnimationFrame(processFrame);
     }
 
     private stopAnalyserProcessing(): void {
@@ -489,7 +489,7 @@ export class AudioRecorder extends Disposable {
         this.lastSpeechTime = Date.now();
 
         if (this.silenceTimer) {
-            clearTimeout(this.silenceTimer);
+            window.clearTimeout(this.silenceTimer);
             this.silenceTimer = null;
         }
 
@@ -514,7 +514,7 @@ export class AudioRecorder extends Disposable {
         // Check if we should auto-stop due to silence (only in VAD mode)
         if (this.options.useVAD && this.lastSpeechTime > 0 && !this.silenceTimer) {
             const autoStopDuration = this.options.autoStopSilenceDuration ?? DEFAULT_AUDIO_SETTINGS.autoStopSilenceDuration;
-            this.silenceTimer = setTimeout(() => {
+            this.silenceTimer = window.setTimeout(() => {
                 if (!this.isRecording) {
                     return;
                 }
@@ -543,7 +543,7 @@ export class AudioRecorder extends Disposable {
 
         // Clear maximum recording timer
         if (this.maxRecordingTimer) {
-            clearTimeout(this.maxRecordingTimer);
+            window.clearTimeout(this.maxRecordingTimer);
             this.maxRecordingTimer = null;
         }
 
@@ -576,12 +576,12 @@ export class AudioRecorder extends Disposable {
 
     private cleanup(): void {
         if (this.silenceTimer) {
-            clearTimeout(this.silenceTimer);
+            window.clearTimeout(this.silenceTimer);
             this.silenceTimer = null;
         }
 
         if (this.maxRecordingTimer) {
-            clearTimeout(this.maxRecordingTimer);
+            window.clearTimeout(this.maxRecordingTimer);
             this.maxRecordingTimer = null;
         }
 

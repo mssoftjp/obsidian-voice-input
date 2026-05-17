@@ -16,7 +16,7 @@ export class AudioVisualizer extends Disposable {
 
     constructor(container: HTMLElement) {
         super();
-        this.canvas = document.createElement('canvas');
+        this.canvas = activeDocument.createElement('canvas');
         this.canvas.className = 'voice-input-audio-visualizer-canvas';
         this.canvas.width = 200;
         this.canvas.height = 56;
@@ -46,7 +46,7 @@ export class AudioVisualizer extends Disposable {
     stop(): void {
         this.isRecording = false;
         if (this.animationId) {
-            cancelAnimationFrame(this.animationId);
+            window.cancelAnimationFrame(this.animationId);
             this.animationId = null;
         }
         this.clear();
@@ -65,7 +65,7 @@ export class AudioVisualizer extends Disposable {
             return;
         }
 
-        this.animationId = requestAnimationFrame(() => this.draw());
+        this.animationId = window.requestAnimationFrame(() => this.draw());
 
         // Get time domain data (waveform)
         const waveformArray = this.dataArray as Uint8Array<ArrayBuffer>;
@@ -230,20 +230,20 @@ export class SimpleAudioLevelIndicator extends Disposable {
     }
 
     private createUI(): void {
-        const wrapper = document.createElement('div');
+        const wrapper = activeDocument.createElement('div');
         wrapper.className = 'voice-input-audio-level-indicator';
 
         // Level bar
-        const levelContainer = document.createElement('div');
+        const levelContainer = activeDocument.createElement('div');
         levelContainer.className = 'voice-input-audio-level-container';
 
-        this.levelBar = document.createElement('div');
+        this.levelBar = activeDocument.createElement('div');
         this.levelBar.className = 'voice-input-audio-level-bar';
 
         levelContainer.appendChild(this.levelBar);
 
         // VAD indicator
-        this.vadIndicator = document.createElement('div');
+        this.vadIndicator = activeDocument.createElement('div');
         this.vadIndicator.className = 'voice-input-audio-vad-indicator';
 
         wrapper.appendChild(levelContainer);
@@ -265,7 +265,7 @@ export class SimpleAudioLevelIndicator extends Disposable {
     stop(): void {
         this.isActive = false;
         if (this.animationId) {
-            cancelAnimationFrame(this.animationId);
+            window.cancelAnimationFrame(this.animationId);
             this.animationId = null;
         }
         this.setLevelBarClass(0);
@@ -284,7 +284,7 @@ export class SimpleAudioLevelIndicator extends Disposable {
             return;
         }
 
-        this.animationId = requestAnimationFrame(() => this.update());
+        this.animationId = window.requestAnimationFrame(() => this.update());
 
         const frequencyArray = this.dataArray as Uint8Array<ArrayBuffer>;
         this.analyser.getByteFrequencyData(frequencyArray);
