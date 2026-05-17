@@ -1,7 +1,8 @@
 import { App, FileSystemAdapter, normalizePath } from 'obsidian';
+import createFvadModule from '@echogarden/fvad-wasm';
 import { VAD_CONSTANTS, DEFAULT_VAD_SETTINGS, FILE_CONSTANTS } from '../../config';
 import { Disposable } from '../../interfaces';
-import { FvadModule, WindowWithFvad, hasFvadModule } from '../../types';
+import { FvadModule } from '../../types';
 import { createServiceLogger } from '../../services';
 import { Logger } from '../../utils';
 
@@ -104,85 +105,12 @@ export class VADProcessor extends Disposable {
      * fvad モジュールを初期化
      */
     private async initializeFvadModule(wasmBuffer: ArrayBuffer): Promise<void> {
-        // スクリプトタグを使用して fvad.js を読み込む
-        // これは Obsidian の制限された環境でモジュールを読み込む最も確実な方法
         this.ensureFileSystemAdapter();
 
-        // グローバルオブジェクトを準備（型安全に）
-        const globalWindow = window as WindowWithFvad;
-
-        // fvad.js の内容を読み込んで評価（プラグインルートから）
-        const fvadJsPath = this.getPluginAssetPath('fvad.js');
-        const fvadJsContent = await this.readPluginTextAsset('fvad.js');
-        const sanitizedFvadJsContent = fvadJsContent
-            // Remove block comments
-            .replace(/\/\*[\s\S]*?\*\//g, '')
-            // Remove line comments
-            .replace(/^\s*\/\/.*$/gm, '');
-
-        // モジュールを評価するための一時的な環境を作成
-        return new Promise((resolve, reject) => {
-            // スクリプトタグを作成
-            const script = activeDocument.createElement('script');
-            script.type = 'module';
-            script.textContent =
-                `const importMeta={url:'file:///${fvadJsPath}'};` +
-                `${sanitizedFvadJsContent}` +
-                `window.__fvadModule=fvad;`;
-
-            // エラーハンドリング
-            script.onerror = (error) => {
-                this.logger.error('WebRTC VAD script loading error', error);
-                reject(new Error('Failed to load fvad.js'));
-            };
-
-            // スクリプトを実行
-            activeDocument.head.appendChild(script);
-
-            // モジュールが読み込まれるのを待つ
-            window.setTimeout(() => {
-                const loadModule = async (): Promise<void> => {
-                    if (!hasFvadModule(globalWindow)) {
-                        throw new Error('fvad module not found in global scope');
-                    }
-
-                    const createModule = globalWindow.__fvadModule;
-                    if (!createModule) {
-                        throw new Error('fvad module factory is undefined');
-                    }
-                    this.logger.debug('fvad module loaded from global scope');
-
-                    // WebAssembly モジュールを初期化
-                    this.fvadModule = await createModule({
-                        wasmBinary: new Uint8Array(wasmBuffer),
-                        instantiateWasm: (
-                            imports: WebAssembly.Imports,
-                            successCallback: (instance: WebAssembly.Instance) => void
-                        ) => {
-                            WebAssembly.instantiate(new Uint8Array(wasmBuffer), imports)
-                                .then((result) => {
-                                    successCallback(result.instance);
-                                })
-                                .catch((error) => {
-                                    this.logger.error('WebRTC VAD WASM instantiation error', error);
-                                    reject(error instanceof Error ? error : new Error(String(error)));
-                                });
-                            return {};
-                        }
-                    });
-
-                    // クリーンアップ
-                    activeDocument.head.removeChild(script);
-                    delete globalWindow.__fvadModule;
-                };
-
-                loadModule()
-                    .then(() => resolve())
-                    .catch((error) => {
-                        reject(error instanceof Error ? error : new Error(String(error)));
-                    });
-            }, 100); // モジュール読み込みを待つ
+        this.fvadModule = await createFvadModule({
+            wasmBinary: new Uint8Array(wasmBuffer)
         });
+        this.logger.debug('fvad module initialized from bundled loader');
     }
 
     /**
@@ -241,21 +169,6 @@ export class VADProcessor extends Disposable {
 
     private getPluginAssetPath(fileName: string): string {
         return normalizePath(`${this.getPluginAssetBasePath()}/${fileName}`);
-    }
-
-    private async readPluginTextAsset(fileName: string): Promise<string> {
-        const fullPath = this.getPluginAssetPath(fileName);
-        const existingFile = this.app.vault.getFileByPath(fullPath);
-        if (existingFile) {
-            return this.app.vault.read(existingFile);
-        }
-
-        const adapter = this.ensureFileSystemAdapter();
-        const exists = await adapter.exists(fullPath);
-        if (!exists) {
-            throw new Error(`Asset not found: ${fullPath}`);
-        }
-        return adapter.read(fullPath);
     }
 
     private async readPluginBinaryAsset(fileName: string): Promise<ArrayBuffer> {

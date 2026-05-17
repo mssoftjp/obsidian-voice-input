@@ -2,7 +2,6 @@ import { App, normalizePath } from 'obsidian';
 import { FILE_CONSTANTS } from '../config';
 
 const FVAD_WASM = 'fvad.wasm';
-const FVAD_JS = 'fvad.js';
 
 function getPluginBasePath(app: App): string {
     return normalizePath(`${app.vault.configDir}/plugins/${FILE_CONSTANTS.PLUGIN_ID}`);
@@ -20,15 +19,8 @@ export async function hasLocalVadAssets(app: App): Promise<boolean> {
         getPluginAssetPath(app, FVAD_WASM),
         normalizePath(`${baseDir}/node_modules/@echogarden/fvad-wasm/${FVAD_WASM}`)
     ];
-    const jsCandidates = [
-        getPluginAssetPath(app, FVAD_JS),
-        normalizePath(`${baseDir}/node_modules/@echogarden/fvad-wasm/${FVAD_JS}`)
-    ];
 
-    const hasWasm = await existsInCandidates(adapter, wasmCandidates);
-    const hasJs = await existsInCandidates(adapter, jsCandidates);
-
-    return hasWasm && hasJs;
+    return existsInCandidates(adapter, wasmCandidates);
 }
 
 export function getLocalVadInstructionsPath(app: App): string {

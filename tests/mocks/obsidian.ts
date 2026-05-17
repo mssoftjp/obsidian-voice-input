@@ -17,6 +17,11 @@ export class App {
   vault = new Vault();
 }
 
+export const Platform = {
+  isMobileApp: false,
+  isDesktopApp: true,
+};
+
 export class Plugin {
   app = new App();
   

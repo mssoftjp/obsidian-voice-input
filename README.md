@@ -13,7 +13,7 @@ Capture notes with high-accuracy multilingual voice input using OpenAI Speech-to
 - Quick controls in view: copy/clear/insert at caret/append to end
 - Auto‑save drafts: periodic and on blur, automatic restore
 - Multilingual support: Japanese, English, Chinese, Korean interface languages
-- Voice activity detection modes: Off by default for maximum accuracy. Optional server-side chunking or local auto‑stop (requires fvad.wasm/fvad.js, installed manually)
+- Voice activity detection modes: Off by default for maximum accuracy. Optional server-side chunking or local auto‑stop (requires fvad.wasm, installed manually)
 
 ## Requirements
 
@@ -33,7 +33,7 @@ Compatibility: requires Obsidian 1.8.0 or later (per `minAppVersion`).
 
 Release assets: the plugin only needs `main.js`, `manifest.json`, and `styles.css` from the release bundle. Optional local VAD files are user-provided and are not included in releases.
 
-Local VAD (optional): this plugin does not ship the WebAssembly files. If you want local VAD auto‑stop, download `fvad.wasm` and `fvad.js` from the fvad‑wasm project and place them in the same plugin folder, or use the “Choose fvad.wasm / fvad.js…” button in Settings → Voice Activity Detection to copy them. The loader uses `fetch` only to read these local files from the installed plugin folder. No external network requests are made for local VAD. Local VAD is desktop‑only.
+Local VAD (optional): this plugin does not ship the WebAssembly file. If you want local VAD auto‑stop, download `fvad.wasm` from the fvad‑wasm project and place it in the same plugin folder, or use the “Choose fvad.wasm…” button in Settings → Voice Activity Detection to copy it. The plugin reads this local file from the installed plugin folder. No external network requests are made for local VAD. Local VAD is desktop‑only.
 
 ## Commands
 
@@ -60,7 +60,7 @@ Tip: A settings gear in the view header opens the plugin’s settings.
 - AI Post‑processing: enable dictionary‑based cleanup (applied to all languages when enabled)
 - Maximum Recording Duration: slider (default 5 min)
 - Plugin Language: Japanese/English/Chinese/Korean (controls UI display only, auto-detected from Obsidian, adjustable)
-- Voice Activity Detection: choose Off (default, most accurate), Server (faster turnaround via upstream silence trimming), or Local (desktop auto‑stop; requires `fvad.wasm`/`fvad.js` installed manually)
+- Voice Activity Detection: choose Off (default, most accurate), Server (faster turnaround via upstream silence trimming), or Local (desktop auto‑stop; requires `fvad.wasm` installed manually)
 
 ### Drafts and sync
 
@@ -76,7 +76,7 @@ Tip: A settings gear in the view header opens the plugin’s settings.
 - SafeStorage fallback: if Electron SafeStorage is unavailable, the plugin stores the key with a lightweight XOR/Base64 obfuscation fallback for backward compatibility. This fallback is not equivalent to OS-backed encryption.
 - Clipboard access: the Copy button writes only the current transcription text to the system clipboard. If note creation or insertion fails, the plugin may also write that same transcription text to the clipboard as a recovery fallback. The plugin does not read from the clipboard.
 - Vault file access: drafts are saved to, loaded from, and cleared from `<vault>/.obsidian/plugins/voice-input/draft.txt` using Obsidian Vault/FileManager APIs. Insert and append actions write only to the active target note, or create a timestamped `Voice-Memo-*.md` note when no suitable note is available.
-- Local files: optional local VAD reads `fvad.wasm` and `fvad.js` from the plugin folder after you install or choose those files. The release bundle does not include these WebAssembly files.
+- Local files: optional local VAD reads `fvad.wasm` from the plugin folder after you install or choose it. The release bundle does not include this WebAssembly file.
 - External links: settings may show a link to the fvad-wasm GitHub project for manual download, but the plugin does not download those files automatically.
 - Privacy policy: see [OpenAI’s Privacy Policy](https://openai.com/policies/privacy-policy/) for OpenAI API data handling.
 
@@ -105,7 +105,7 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 - ビュー内のクイック操作（コピー/クリア/カーソル位置へ挿入/末尾へ追記）
 - 自動保存（定期保存とフォーカス外れ時）。再オープン時に自動復元
 - 多言語サポート（日本語、英語、中国語、韓国語のインターフェース）
-- VADモード選択（標準はオフ＝精度重視。必要に応じてサーバーVAD（応答を速めたい場合）や `fvad.wasm` / `fvad.js` を使ったローカルVAD（デスクトップの自動停止）を利用可能）
+- VADモード選択（標準はオフ＝精度重視。必要に応じてサーバーVAD（応答を速めたい場合）や `fvad.wasm` を使ったローカルVAD（デスクトップの自動停止）を利用可能）
 
 ## 必要条件
 
@@ -123,7 +123,7 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 
 リリースアセット: プラグインの実行に必要なファイルはリリースバンドル内の `main.js`、`manifest.json`、`styles.css` です。任意のローカルVADファイルはユーザーが用意するもので、リリースには含めません。
 
-ローカルVAD（任意）: 本プラグインは WebAssembly ファイルを同梱しません。ローカルVADの自動停止を使う場合、`fvad.wasm` と `fvad.js` を fvad‑wasm プロジェクトから取得して同じフォルダに配置するか、設定 → 音声区間検出 の「fvad.wasm / fvad.js を選択…」ボタンでコピーしてください。ローダーはインストール済みプラグインフォルダ内のローカルファイルを `fetch` で読むだけで、ローカルVADのための外部ネットワーク通信は行いません。ローカルVADはデスクトップ専用です。
+ローカルVAD（任意）: 本プラグインは WebAssembly ファイルを同梱しません。ローカルVADの自動停止を使う場合、`fvad.wasm` を fvad‑wasm プロジェクトから取得して同じフォルダに配置するか、設定 → 音声区間検出 の「fvad.wasm を選択…」ボタンでコピーしてください。プラグインはインストール済みプラグインフォルダ内のこのローカルファイルを読み込みます。ローカルVADのための外部ネットワーク通信は行いません。ローカルVADはデスクトップ専用です。
 
 ## コマンド
 
@@ -150,7 +150,7 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 - AI後処理: 辞書ベースの補正（有効時は全言語に適用）
 - 最大録音時間: スライダー（初期値5分）
 - **プラグイン言語**: UI表示のみを制御。Obsidianの言語設定から自動検出（ja/zh/ko/en）。
-- 音声区間検出 (VAD): オフ（標準・精度重視）、サーバー（応答を速めたい場合の無音カット）、ローカル（デスクトップの自動停止。`fvad.wasm`/`fvad.js` を手動導入）から選択
+- 音声区間検出 (VAD): オフ（標準・精度重視）、サーバー（応答を速めたい場合の無音カット）、ローカル（デスクトップの自動停止。`fvad.wasm` を手動導入）から選択
 
 ### ドラフトと同期
 
@@ -186,7 +186,7 @@ Third‑party licensing: see `THIRD_PARTY_LICENSES.md`.
 - SafeStorage フォールバック: Electron SafeStorage が利用できない場合、後方互換性のため XOR/Base64 による軽度の難読化で保存します。この方式は OS レベルの暗号化と同等ではありません。
 - クリップボードアクセス: コピーボタンは現在の文字起こし結果だけをシステムクリップボードへ書き込みます。ノート作成や挿入に失敗した場合も、復旧用 fallback として同じ文字起こし結果をクリップボードへ書き込むことがあります。プラグインはクリップボードからの読み取りは行いません。
 - Vault ファイルアクセス: 下書きは Obsidian の Vault/FileManager API を使って `<Vault>/.obsidian/plugins/voice-input/draft.txt` に保存、読み込み、削除されます。挿入と追記は対象ノートのみに書き込み、適切なノートが見つからない場合は `Voice-Memo-*.md` 形式のノートを作成します。
-- ローカルファイル: 任意のローカルVADは、ユーザーが配置または選択した `fvad.wasm` と `fvad.js` をプラグインフォルダから読み込みます。リリースバンドルにはこれらの WebAssembly ファイルは含めません。
+- ローカルファイル: 任意のローカルVADは、ユーザーが配置または選択した `fvad.wasm` をプラグインフォルダから読み込みます。リリースバンドルにはこの WebAssembly ファイルは含めません。
 - 外部リンク: 設定画面に fvad-wasm の GitHub プロジェクトへのリンクを表示することがありますが、プラグインが自動でこれらのファイルをダウンロードすることはありません。
 - プライバシーポリシー: OpenAI API におけるデータの扱いは [OpenAI のプライバシーポリシー](https://openai.com/policies/privacy-policy/) も参照してください。
 

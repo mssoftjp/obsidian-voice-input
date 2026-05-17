@@ -142,7 +142,6 @@ export const FILE_CONSTANTS = {
 
     /** WASMファイルのパス */
     WASM_PATHS: {
-        JS: 'src/lib/fvad-wasm/fvad.js',
         WASM: 'src/lib/fvad-wasm/fvad.wasm'
     }
 } as const;

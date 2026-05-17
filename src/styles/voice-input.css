@@ -388,11 +388,11 @@
 
 /* Utility classes for JavaScript style replacements */
 .voice-input-hidden {
-    display: none !important;
+    display: none;
 }
 
 .voice-input-flex {
-    display: flex !important;
+    display: flex;
 }
 
 /* Audio Visualizer Styles */
@@ -450,6 +450,6 @@
 
 /* Form element styles */
 .voice-input-textarea-wide {
-    width: 100% !important;
-    min-height: 100px !important;
+    width: 100%;
+    min-height: 100px;
 }
