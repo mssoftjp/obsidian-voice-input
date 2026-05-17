@@ -101,7 +101,7 @@ export const en: TranslationResource = {
             serviceInitFailed: 'Service initialization failed',
             audioTooShort: 'Audio is too short',
             noAudioDetected: 'No audio detected',
-            localVadMissing: 'Local VAD module not found. Using server-side detection instead. Place fvad.wasm and fvad.js under {path}.'
+            localVadMissing: 'Local VAD module not found. Using server-side detection instead. Place fvad.wasm under {path}.'
         },
         error: {
             clipboardFailed: 'Failed to copy to clipboard',
@@ -180,20 +180,20 @@ export const en: TranslationResource = {
             dictionaryImportExport: 'Dictionary import/export',
             dictionaryImportExportDesc: 'Import or export your correction dictionary as JSON',
             vadMode: 'Voice activity detection',
-            vadModeDesc: 'Off keeps the raw audio for maximum accuracy. Server VAD can trim silence upstream for quicker turnaround but may slightly affect segmentation accuracy. Local VAD requires fvad.wasm/fvad.js and stops recording automatically on the desktop.',
-            vadModeLocalMissing: 'Local VAD requires fvad.wasm and fvad.js under {path}. Install them before switching.',
+            vadModeDesc: 'Off keeps the raw audio for maximum accuracy. Server VAD can trim silence upstream for quicker turnaround but may slightly affect segmentation accuracy. Local VAD requires fvad.wasm and stops recording automatically on the desktop.',
+            vadModeLocalMissing: 'Local VAD requires fvad.wasm under {path}. Install it before switching.',
             vadModeLocalAvailable: 'Local VAD files found in {path}. Recording will auto-stop on silence.',
             vadModeDisabledDesc: 'Voice activity detection is disabled – audio is recorded continuously and sent untouched.',
             vadModeSummaryServer: 'Cuts silence on the server for faster turnaround (cloud processing).',
-            vadModeSummaryLocal: 'Detects silence locally and auto-stops on desktop (requires fvad.wasm/fvad.js).',
-            vadModeInstallButton: 'Choose fvad.wasm / fvad.js…',
-            vadModeInstallDesc: 'Download fvad.wasm (and fvad.js) from the official WebRTC voice activity detection port, then choose the wasm file to copy it into the plugin folder (desktop only).',
+            vadModeSummaryLocal: 'Detects silence locally and auto-stops on desktop (requires fvad.wasm).',
+            vadModeInstallButton: 'Choose fvad.wasm…',
+            vadModeInstallDesc: 'Download fvad.wasm from the official WebRTC voice activity detection port, then choose the wasm file to copy it into the plugin folder (desktop only).',
             vadModeInstallLinkLabel: 'Visit the fvad-wasm project',
             vadModeInstallInvalidName: 'Please select a file named fvad.wasm.',
             vadModeInstallInvalidType: 'The selected file does not appear to be a WebAssembly module.',
             vadModeInstallSuccess: 'The fvad.wasm file is installed. Local voice activity detection will run the next time you record.',
             vadModeInstallWriteError: 'Failed to install VAD assets: {error}',
-            vadModeInstallJsMissing: 'Local voice activity detection also needs fvad.js in the same plugin folder. Copy it manually if it is not present.'
+            vadModeInstallJsMissing: 'Local voice activity detection now only requires fvad.wasm. Update the plugin if this message appears.'
         },
         options: {
             modelMini: 'GPT-4o mini transcribe',

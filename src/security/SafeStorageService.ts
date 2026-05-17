@@ -175,6 +175,14 @@ export class SafeStorageService {
         return '';
     }
 
+    private static encodeBinaryString(text: string): string {
+        return Buffer.from(text, 'latin1').toString('base64');
+    }
+
+    private static decodeBinaryString(encoded: string): string {
+        return Buffer.from(encoded, 'base64').toString('latin1');
+    }
+
     private static xorEncrypt(text: string, key: string): string {
         let result = '';
         for (let i = 0; i < text.length; i++) {
@@ -182,12 +190,12 @@ export class SafeStorageService {
                 text.charCodeAt(i) ^ key.charCodeAt(i % key.length)
             );
         }
-        return btoa(result);
+        return this.encodeBinaryString(result);
     }
 
     private static xorDecrypt(encoded: string, key: string): string {
         try {
-            const text = atob(encoded);
+            const text = this.decodeBinaryString(encoded);
             let result = '';
             for (let i = 0; i < text.length; i++) {
                 result += String.fromCharCode(

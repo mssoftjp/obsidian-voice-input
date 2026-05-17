@@ -262,7 +262,6 @@ export class VoiceInputSettingTab extends PluginSettingTab {
 
         const FVAD_DOWNLOAD_URL = 'https://github.com/echogarden-project/fvad-wasm';
         const wasmFileName = 'fvad.wasm';
-        const loaderFileName = 'fvad.js';
         const vadInstructionsPath = getLocalVadInstructionsPath(this.app);
         const initialVadMode = this.plugin.settings.vadMode ?? 'disabled';
         const vadModeSetting = new Setting(containerEl)
@@ -307,13 +306,11 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                 helperButton.addEventListener('click', () => {
                     const input = activeDocument.createElement('input');
                     input.type = 'file';
-                    input.accept = '.wasm,.js,application/wasm';
-                    input.multiple = true;
+                    input.accept = '.wasm,application/wasm';
                     input.onchange = () => {
                         this.runAsync(async () => {
                             const files = input.files ? Array.from(input.files) : [];
                             const wasmFile = files.find(file => file.name === wasmFileName);
-                            const jsFile = files.find(file => file.name === loaderFileName);
 
                             if (!wasmFile) {
                                 new Notice(this.i18n.t('ui.settings.vadModeInstallInvalidName'));
@@ -342,20 +339,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
 
                                 const wasmTarget = getLocalVadAssetPath(this.app, wasmFileName);
                                 await adapter.writeBinary(wasmTarget, toArrayBuffer(wasmBytes));
-
-                                let loaderPresent = await adapter.exists(getLocalVadAssetPath(this.app, loaderFileName));
-                                if (jsFile) {
-                                    const loaderContent = await jsFile.text();
-                                    const loaderTarget = getLocalVadAssetPath(this.app, loaderFileName);
-                                    await adapter.write(loaderTarget, loaderContent);
-                                    loaderPresent = true;
-                                }
-
-                                if (!loaderPresent) {
-                                    new Notice(this.i18n.t('ui.settings.vadModeInstallJsMissing'));
-                                } else {
-                                    new Notice(this.i18n.t('ui.settings.vadModeInstallSuccess'));
-                                }
+                                new Notice(this.i18n.t('ui.settings.vadModeInstallSuccess'));
                             } catch (error) {
                                 console.error(error);
                                 new Notice(this.i18n.t('notification.error.fileWrite'));

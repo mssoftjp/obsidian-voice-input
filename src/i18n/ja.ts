@@ -101,7 +101,7 @@ export const ja: TranslationResource = {
             serviceInitFailed: 'サービスの初期化に失敗しました',
             audioTooShort: '音声が短すぎます',
             noAudioDetected: '音声が検出されませんでした',
-            localVadMissing: 'ローカルVADモジュールが見つからないため、サーバーVADに切り替えます。{path} に fvad.wasm と fvad.js を配置してください。'
+            localVadMissing: 'ローカルVADモジュールが見つからないため、サーバーVADに切り替えます。{path} に fvad.wasm を配置してください。'
         },
         error: {
             clipboardFailed: 'クリップボードへのコピーに失敗しました',
@@ -180,20 +180,20 @@ export const ja: TranslationResource = {
             dictionaryImportExport: '辞書のインポート/エクスポート',
             dictionaryImportExportDesc: '補正辞書をJSONファイルとしてインポート・エクスポート',
             vadMode: '音声区間検出（VAD）',
-            vadModeDesc: 'オフ（標準）は録音をそのまま送信するため精度重視です。サーバーVADを有効にすると無音区間を先にカットし、応答が速くなる場合がありますが、切り分けによって文字起こし精度に影響する可能性があります。ローカルVAD（fvad.wasm/fvad.js が必要）はPC側で無音を検出し自動停止します。',
-            vadModeLocalMissing: 'ローカルVADを有効にするには {path} に fvad.wasm と fvad.js を配置してください。',
+            vadModeDesc: 'オフ（標準）は録音をそのまま送信するため精度重視です。サーバーVADを有効にすると無音区間を先にカットし、応答が速くなる場合がありますが、切り分けによって文字起こし精度に影響する可能性があります。ローカルVAD（fvad.wasm が必要）はPC側で無音を検出し自動停止します。',
+            vadModeLocalMissing: 'ローカルVADを有効にするには {path} に fvad.wasm を配置してください。',
             vadModeLocalAvailable: '{path} でローカルVAD用モジュールを検出しました。無音で自動停止します。',
             vadModeDisabledDesc: 'VADを無効化すると録音は常に継続し、加工せず送信されます。',
             vadModeSummaryServer: 'サーバー側で無音をカット（応答を速めたい場合）',
-            vadModeSummaryLocal: 'デスクトップで無音を検出して自動停止（fvad.wasm/fvad.js 必須）',
-            vadModeInstallButton: 'fvad.wasm / fvad.js を選択…',
-            vadModeInstallDesc: '公式の WebRTC VAD 移植プロジェクトから fvad.wasm（および fvad.js）をダウンロードし、ここで wasm ファイルを選択するとプラグインフォルダにコピーされます（デスクトップのみ）。',
+            vadModeSummaryLocal: 'デスクトップで無音を検出して自動停止（fvad.wasm 必須）',
+            vadModeInstallButton: 'fvad.wasm を選択…',
+            vadModeInstallDesc: '公式の WebRTC VAD 移植プロジェクトから fvad.wasm をダウンロードし、ここで wasm ファイルを選択するとプラグインフォルダにコピーされます（デスクトップのみ）。',
             vadModeInstallLinkLabel: 'fvad-wasm プロジェクト',
             vadModeInstallInvalidName: 'fvad.wasm というファイルを選択してください。',
             vadModeInstallInvalidType: 'WebAssembly モジュールではないファイルが選択されました。',
             vadModeInstallSuccess: 'fvad.wasm を配置しました。次回の録音からローカルVADを試行します。',
             vadModeInstallWriteError: 'VAD関連ファイルの配置に失敗しました: {error}',
-            vadModeInstallJsMissing: 'ローカルVADには fvad.js も同じフォルダに必要です。存在しない場合は手動で配置してください。'
+            vadModeInstallJsMissing: '現在のローカルVADは fvad.wasm のみを必要とします。この表示が出る場合はプラグインを更新してください。'
         },
         options: {
             modelMini: 'GPT-4o mini Transcribe',
