@@ -19,8 +19,8 @@ export class VoiceInputView extends ItemView {
     ui: VoiceInputViewUI;
     actions: VoiceInputViewActions;
     private blurHandler: ((e: FocusEvent) => void) | null = null;
-    private autoSaveTimeout: NodeJS.Timeout | null = null;
-    private periodicSaveInterval: NodeJS.Timeout | null = null;
+    private autoSaveTimeout: number | null = null;
+    private periodicSaveInterval: number | null = null;
     private static readonly AUTO_SAVE_DELAY = 2000; // 2 seconds
     private static readonly PERIODIC_SAVE_INTERVAL = 5000; // 5 seconds
 
@@ -52,7 +52,7 @@ export class VoiceInputView extends ItemView {
 
     private async handleOpen(): Promise<void> {
         const containerElement = this.containerEl.children[1];
-        if (containerElement instanceof HTMLElement) {
+        if (containerElement.instanceOf(HTMLElement)) {
             const container = containerElement;
             container.empty();
             container.addClass('voice-input-view');
@@ -99,13 +99,13 @@ export class VoiceInputView extends ItemView {
     private async handleClose(): Promise<void> {
         // Clear any pending auto-save timeout
         if (this.autoSaveTimeout) {
-            clearTimeout(this.autoSaveTimeout);
+            window.clearTimeout(this.autoSaveTimeout);
             this.autoSaveTimeout = null;
         }
 
         // Clear periodic save interval
         if (this.periodicSaveInterval) {
-            clearInterval(this.periodicSaveInterval);
+            window.clearInterval(this.periodicSaveInterval);
             this.periodicSaveInterval = null;
         }
 
@@ -149,7 +149,7 @@ export class VoiceInputView extends ItemView {
     refreshUI() {
         // Re-create the UI with new language
         const containerElement = this.containerEl.children[1];
-        if (containerElement instanceof HTMLElement) {
+        if (containerElement.instanceOf(HTMLElement)) {
             const container = containerElement;
             container.empty();
             container.addClass('voice-input-view');
@@ -234,11 +234,11 @@ export class VoiceInputView extends ItemView {
     private setupPeriodicSave() {
         // Clear existing interval if any
         if (this.periodicSaveInterval) {
-            clearInterval(this.periodicSaveInterval);
+            window.clearInterval(this.periodicSaveInterval);
         }
 
         // Set up periodic save every 5 seconds
-        this.periodicSaveInterval = setInterval(() => {
+        this.periodicSaveInterval = window.setInterval(() => {
             if (this.ui?.textArea) {
                 const content = this.ui.textArea.value;
                 if (content.trim()) {
@@ -258,11 +258,11 @@ export class VoiceInputView extends ItemView {
     onTextChanged() {
         // Clear existing timeout
         if (this.autoSaveTimeout) {
-            clearTimeout(this.autoSaveTimeout);
+            window.clearTimeout(this.autoSaveTimeout);
         }
 
         // Set new timeout for auto-save (for responsiveness, keeps existing behavior)
-        this.autoSaveTimeout = setTimeout(() => {
+        this.autoSaveTimeout = window.setTimeout(() => {
             if (this.ui?.textArea) {
                 const content = this.ui.textArea.value;
                 if (content.trim()) {

@@ -390,7 +390,7 @@ export class ErrorHandler implements IDisposable {
      * 遅延処理
      */
     private delay(ms: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        return new Promise(resolve => window.setTimeout(resolve, ms));
     }
 
     /**

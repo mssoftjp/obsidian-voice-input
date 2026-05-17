@@ -194,13 +194,13 @@ export class VoiceInputViewUI {
         this.setupRecordButtonHandlers();
 
         // Legacy buttons (hidden)
-        this.formatButton = document.createElement('button');
+        this.formatButton = activeDocument.createElement('button');
         this.formatButton.classList.add('voice-input-hidden');
 
-        this.contextCorrectionButton = document.createElement('button');
+        this.contextCorrectionButton = activeDocument.createElement('button');
         this.contextCorrectionButton.classList.add('voice-input-hidden');
 
-        this.cleanupButton = document.createElement('button');
+        this.cleanupButton = activeDocument.createElement('button');
         this.cleanupButton.classList.add('voice-input-hidden');
     }
 
@@ -255,7 +255,7 @@ export class VoiceInputViewUI {
 	 * Setup record button event handlers for both click and push-to-talk
 	 */
     private setupRecordButtonHandlers() {
-        let longPressTimer: NodeJS.Timeout | null = null;
+        let longPressTimer: number | null = null;
         let isPushToTalk = false;
         // let pressStartTime = 0;
 
@@ -275,7 +275,7 @@ export class VoiceInputViewUI {
             // pressStartTime = Date.now();
 
             // Start a timer to begin recording after threshold
-            longPressTimer = setTimeout(() => {
+            longPressTimer = window.setTimeout(() => {
                 isPushToTalk = true;
                 longPressTimer = null;
 
@@ -295,7 +295,7 @@ export class VoiceInputViewUI {
 
             // Cancel timer if still running (short press)
             if (longPressTimer) {
-                clearTimeout(longPressTimer);
+                window.clearTimeout(longPressTimer);
                 longPressTimer = null;
                 return;
             }
@@ -307,7 +307,7 @@ export class VoiceInputViewUI {
                     console.error('Failed to stop recording after push-to-talk', error);
                 });
                 // Keep isPushToTalk true to prevent click handler
-                setTimeout(() => {
+                window.setTimeout(() => {
                     isPushToTalk = false;
                 }, UI_CONSTANTS.PUSH_TO_TALK_RESET_DELAY);
             }

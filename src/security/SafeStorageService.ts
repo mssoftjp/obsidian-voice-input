@@ -49,7 +49,7 @@ const resolveElectronRenderer = (): ElectronRenderer | null => {
     if (windowElectron) {
         return windowElectron ?? null;
     }
-    return (globalThis as ElectronGlobal).electron ?? null;
+    return (window as ElectronGlobal).electron ?? null;
 };
 
 export class SafeStorageService {

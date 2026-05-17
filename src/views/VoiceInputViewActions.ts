@@ -32,8 +32,8 @@ export class VoiceInputViewActions {
     private isProcessingAudio = false;
     // 連打や高速操作による並行実行を防ぐための遷移ロック
     private isTransitioning = false;
-    private statusTimer: NodeJS.Timeout | null = null;
-    private clearConfirmTimer: NodeJS.Timeout | null = null;
+    private statusTimer: number | null = null;
+    private clearConfirmTimer: number | null = null;
     private clearPressCount = 0;
     private pendingVadAutoStop = false;
 
@@ -363,7 +363,7 @@ export class VoiceInputViewActions {
 
         // Clear existing timer
         if (this.statusTimer) {
-            clearTimeout(this.statusTimer);
+            window.clearTimeout(this.statusTimer);
             this.statusTimer = null;
         }
 
@@ -373,7 +373,7 @@ export class VoiceInputViewActions {
         this.view.ui.statusEl.removeClass('error');
 
         // Set timer to clear status
-        this.statusTimer = setTimeout(() => {
+        this.statusTimer = window.setTimeout(() => {
             if (this.view.ui.statusEl && !this.recordingState.isRecording && !this.isProcessingAudio) {
                 this.view.ui.statusEl.setText(this.i18n.t('status.idle'));
             }
@@ -459,7 +459,7 @@ export class VoiceInputViewActions {
         // Check if new items were added while processing
         if (this.recordingState.processingQueue.length > 0) {
             // Use setTimeout to avoid potential stack overflow
-            setTimeout(() => {
+            window.setTimeout(() => {
                 void this.processQueue().catch((error) => {
                     this.logger.error('Failed to continue processing audio queue', error);
                 });
@@ -609,14 +609,14 @@ export class VoiceInputViewActions {
             this.setStatusWithTimeout(this.i18n.t('status.warning.clearConfirm'));
 
             // Set timer to reset press count
-            this.clearConfirmTimer = setTimeout(() => {
+            this.clearConfirmTimer = window.setTimeout(() => {
                 this.clearPressCount = 0;
                 this.clearConfirmTimer = null;
             }, 3000);
         } else if (this.clearPressCount === 2) {
             // Second press within timeout - clear the text
             if (this.clearConfirmTimer) {
-                clearTimeout(this.clearConfirmTimer);
+                window.clearTimeout(this.clearConfirmTimer);
                 this.clearConfirmTimer = null;
             }
             this.clearPressCount = 0;
@@ -891,13 +891,13 @@ export class VoiceInputViewActions {
 
         // Clear status timer
         if (this.statusTimer) {
-            clearTimeout(this.statusTimer);
+            window.clearTimeout(this.statusTimer);
             this.statusTimer = null;
         }
 
         // Clear clear confirm timer
         if (this.clearConfirmTimer) {
-            clearTimeout(this.clearConfirmTimer);
+            window.clearTimeout(this.clearConfirmTimer);
             this.clearConfirmTimer = null;
         }
 

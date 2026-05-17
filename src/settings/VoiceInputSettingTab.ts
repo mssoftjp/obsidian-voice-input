@@ -217,7 +217,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                                 button.setCta();
 
                                 // 3秒後に元に戻す
-                                setTimeout(() => {
+                                window.setTimeout(() => {
                                     button.setButtonText(this.i18n.t('ui.buttons.connectionTest'));
                                     button.removeCta();
                                     button.setDisabled(false);
@@ -227,7 +227,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
                                 button.setButtonText(this.i18n.t('ui.buttons.testFailed'));
 
                                 // 3秒後に元に戻す
-                                setTimeout(() => {
+                                window.setTimeout(() => {
                                     button.setButtonText(this.i18n.t('ui.buttons.connectionTest'));
                                     button.setDisabled(false);
                                 }, 3000);
@@ -299,13 +299,13 @@ export class VoiceInputSettingTab extends PluginSettingTab {
             helperNote = helperContainer.createDiv({ cls: 'setting-item-description' });
             const buttonElement = helperContainer.createEl('button', { text: this.i18n.t('ui.settings.vadModeInstallButton') });
 
-            if (buttonElement instanceof HTMLButtonElement) {
+            if (buttonElement.instanceOf(HTMLButtonElement)) {
                 helperButton = buttonElement;
                 helperButton.classList.add('mod-cta');
                 helperContainer.classList.add('voice-input-hidden');
 
                 helperButton.addEventListener('click', () => {
-                    const input = document.createElement('input');
+                    const input = activeDocument.createElement('input');
                     input.type = 'file';
                     input.accept = '.wasm,.js,application/wasm';
                     input.multiple = true;
@@ -375,27 +375,27 @@ export class VoiceInputSettingTab extends PluginSettingTab {
         }
 
         const createVadDescription = (includeMissing: boolean, includeLocal: boolean): DocumentFragment => {
-            const fragment = document.createDocumentFragment();
+            const fragment = activeDocument.createDocumentFragment();
             fragment.appendText(this.i18n.t('ui.settings.vadModeDesc'));
-            fragment.appendChild(document.createElement('br'));
+            fragment.appendChild(activeDocument.createElement('br'));
             fragment.appendText(`${this.i18n.t('ui.options.vadServer')}: ${this.i18n.t('ui.settings.vadModeSummaryServer')}`);
-            fragment.appendChild(document.createElement('br'));
+            fragment.appendChild(activeDocument.createElement('br'));
             fragment.appendText(`${this.i18n.t('ui.options.vadLocal')}: ${this.i18n.t('ui.settings.vadModeSummaryLocal')}`);
 
             if (includeMissing) {
-                fragment.appendChild(document.createElement('br'));
-                fragment.appendChild(document.createElement('br'));
+                fragment.appendChild(activeDocument.createElement('br'));
+                fragment.appendChild(activeDocument.createElement('br'));
                 fragment.appendText(this.i18n.t('ui.settings.vadModeLocalMissing', { path: vadInstructionsPath }));
-                fragment.appendChild(document.createElement('br'));
-                const link = document.createElement('a');
+                fragment.appendChild(activeDocument.createElement('br'));
+                const link = activeDocument.createElement('a');
                 link.href = FVAD_DOWNLOAD_URL;
                 link.textContent = this.i18n.t('ui.settings.vadModeInstallLinkLabel');
                 link.target = '_blank';
                 link.rel = 'noopener noreferrer';
                 fragment.appendChild(link);
             } else if (includeLocal) {
-                fragment.appendChild(document.createElement('br'));
-                fragment.appendChild(document.createElement('br'));
+                fragment.appendChild(activeDocument.createElement('br'));
+                fragment.appendChild(activeDocument.createElement('br'));
                 fragment.appendText(this.i18n.t('ui.settings.vadModeLocalAvailable', { path: vadInstructionsPath }));
             }
 
@@ -743,17 +743,17 @@ export class VoiceInputSettingTab extends PluginSettingTab {
             const blob = new Blob([jsonStr], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
 
-            const a = document.createElement('a');
+            const a = activeDocument.createElement('a');
             a.href = url;
             a.download = `voice-input-dictionary-${new Date().toISOString().split('T')[0]}.json`;
 
             // Add link to document temporarily
-            document.body.appendChild(a);
+            activeDocument.body.appendChild(a);
             a.click();
 
             // Clean up
-            setTimeout(() => {
-                document.body.removeChild(a);
+            window.setTimeout(() => {
+                activeDocument.body.removeChild(a);
                 URL.revokeObjectURL(url);
             }, 100);
 
@@ -769,7 +769,7 @@ export class VoiceInputSettingTab extends PluginSettingTab {
 	 * Import dictionary from JSON
 	 */
     private importDictionary() {
-        const input = document.createElement('input');
+        const input = activeDocument.createElement('input');
         input.type = 'file';
         input.accept = '.json';
 

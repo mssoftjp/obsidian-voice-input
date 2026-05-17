@@ -200,7 +200,7 @@ export default class VoiceInputPlugin extends Plugin {
                         // Add timeout to prevent hanging
                         return Promise.race([
                             view.actions.stopRecording(),
-                            new Promise(resolve => setTimeout(resolve, 1000)) // 1 second timeout
+                            new Promise(resolve => window.setTimeout(resolve, 1000)) // 1 second timeout
                         ]).catch(error => {
                             this.logger.error('Error stopping recording during unload', error);
                         });

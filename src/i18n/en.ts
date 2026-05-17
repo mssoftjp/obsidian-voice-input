@@ -131,7 +131,7 @@ export const en: TranslationResource = {
             cleanup: 'Clean up',
             copy: 'Copy',
             insert: 'Insert to note',
-            insertAtCursor: 'Insert at cursor',
+            insertAtCursor: 'Insert at caret',
             append: 'Append to end',
             clear: 'Clear',
             cancel: 'Cancel',
@@ -180,7 +180,7 @@ export const en: TranslationResource = {
             dictionaryImportExport: 'Dictionary import/export',
             dictionaryImportExportDesc: 'Import or export your correction dictionary as JSON',
             vadMode: 'Voice activity detection',
-            vadModeDesc: 'Off (default) keeps the raw audio for maximum accuracy. Server VAD can trim silence upstream for quicker turnaround but may slightly affect segmentation accuracy. Local VAD (requires fvad.wasm/fvad.js) stops recording automatically on the desktop.',
+            vadModeDesc: 'Off keeps the raw audio for maximum accuracy. Server VAD can trim silence upstream for quicker turnaround but may slightly affect segmentation accuracy. Local VAD requires fvad.wasm/fvad.js and stops recording automatically on the desktop.',
             vadModeLocalMissing: 'Local VAD requires fvad.wasm and fvad.js under {path}. Install them before switching.',
             vadModeLocalAvailable: 'Local VAD files found in {path}. Recording will auto-stop on silence.',
             vadModeDisabledDesc: 'Voice activity detection is disabled – audio is recorded continuously and sent untouched.',
@@ -209,8 +209,8 @@ export const en: TranslationResource = {
         },
         tooltips: {
             copy: 'Copy to clipboard',
-            insert: 'Insert at cursor',
-            insertAtCursor: 'Insert at cursor position',
+            insert: 'Insert at caret',
+            insertAtCursor: 'Insert at caret position',
             append: 'Append to end of note',
             clear: 'Press twice to clear text area',
             settingsButton: 'Open settings'
